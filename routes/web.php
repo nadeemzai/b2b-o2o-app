@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Web\Retailer\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Retailer\Auth\Login;
 use App\Livewire\Retailer\Auth\Register;
@@ -19,6 +20,7 @@ Route::prefix('retailer')->name('retailer.')->middleware('guest')->group(functio
 // ── Retailer auth-only (any retailer, pending or approved) ─────
 Route::prefix('retailer')->name('retailer.')->middleware(['auth', 'retailer'])->group(function () {
     Route::get('/pending', fn () => view('retailer.pending'))->name('pending');
+    Route::get('/kyc', \App\Livewire\Kyc\UploadDocuments::class)->name('kyc');
 });
 
 // ── Retailer fully approved routes ────────────────────────────
