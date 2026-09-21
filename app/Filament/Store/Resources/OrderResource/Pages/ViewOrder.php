@@ -3,6 +3,7 @@
 namespace App\Filament\Store\Resources\OrderResource\Pages;
 
 use App\Filament\Store\Resources\OrderResource;
+use App\Filament\Store\StoreStaffContext;
 use App\Models\Order;
 use App\Services\OrderService;
 use App\Services\OrderStatusTransitionService;
@@ -21,13 +22,18 @@ class ViewOrder extends ViewRecord
     {
         return [
             // ── Prepare ─────────────────────────────────────────────────────
+            // Manager + Operator only (riders do not prepare orders)
             Action::make('prepare')
                 ->label('Start Preparing')
                 ->icon('heroicon-o-fire')
                 ->color('info')
                 ->requiresConfirmation()
                 ->modalHeading('Start preparing this order?')
-                ->visible(fn (): bool => $this->record->status === Order::STATUS_PENDING)
+                ->visible(
+                    fn (): bool =>
+                        $this->record->status === Order::STATUS_PENDING
+                        && StoreStaffContext::canManageOperations()
+                )
                 ->action(function (): void {
                     try {
                         app(OrderStatusTransitionService::class)
@@ -40,13 +46,18 @@ class ViewOrder extends ViewRecord
                 }),
 
             // ── Ready for Delivery ───────────────────────────────────────────
+            // Manager + Operator only
             Action::make('ready_for_delivery')
                 ->label('Mark Ready')
                 ->icon('heroicon-o-cube')
                 ->color('primary')
                 ->requiresConfirmation()
                 ->modalHeading('Mark order as ready for delivery?')
-                ->visible(fn (): bool => $this->record->status === Order::STATUS_PREPARING)
+                ->visible(
+                    fn (): bool =>
+                        $this->record->status === Order::STATUS_PREPARING
+                        && StoreStaffContext::canManageOperations()
+                )
                 ->action(function (): void {
                     try {
                         app(OrderStatusTransitionService::class)
@@ -59,11 +70,16 @@ class ViewOrder extends ViewRecord
                 }),
 
             // ── Deliver (with COD collection) ────────────────────────────────
+            // Manager + Rider only (operators do not go out for delivery)
             Action::make('deliver')
                 ->label('Mark Delivered')
                 ->icon('heroicon-o-check-badge')
                 ->color('success')
-                ->visible(fn (): bool => $this->record->status === Order::STATUS_READY_FOR_DELIVERY)
+                ->visible(
+                    fn (): bool =>
+                        $this->record->status === Order::STATUS_READY_FOR_DELIVERY
+                        && StoreStaffContext::canDeliver()
+                )
                 ->form(function (): array {
                     $fields = [];
                     if ($this->record->payment_method === 'cod') {
@@ -88,11 +104,16 @@ class ViewOrder extends ViewRecord
                 }),
 
             // ── Cancel ───────────────────────────────────────────────────────
+            // Manager + Operator only (riders cannot cancel)
             Action::make('cancel')
                 ->label('Cancel Order')
                 ->icon('heroicon-o-x-circle')
                 ->color('danger')
-                ->visible(fn (): bool => $this->record->isCancellable())
+                ->visible(
+                    fn (): bool =>
+                        $this->record->isCancellable()
+                        && StoreStaffContext::canManageOperations()
+                )
                 ->form([
                     Textarea::make('reason')
                         ->label('Cancellation Reason')

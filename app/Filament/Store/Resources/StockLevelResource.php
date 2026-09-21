@@ -17,6 +17,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Filament\Store\StoreStaffContext;
 
 class StockLevelResource extends Resource
 {
@@ -24,6 +25,18 @@ class StockLevelResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-archive-box';
     protected static ?string $navigationGroup = 'Inventory';
     protected static ?string $navigationLabel = 'Stock Levels';
+    /** Hide this resource in the sidebar for riders entirely. */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return ! StoreStaffContext::isRider();
+    }
+
+    /** Block direct URL access for riders. */
+    public static function canAccess(): bool
+    {
+        return ! StoreStaffContext::isRider();
+    }
+
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
