@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role'               => \App\Http\Middleware\EnsureRole::class,
             'retailer'           => \App\Http\Middleware\EnsureRetailer::class,
             'retailer.approved'  => \App\Http\Middleware\EnsureRetailerApproved::class,
+            'retailer.auth'      => \App\Http\Middleware\RetailerAuth::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
