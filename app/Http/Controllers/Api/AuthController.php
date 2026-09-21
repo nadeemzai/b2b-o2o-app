@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LoginRequest;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,15 +19,12 @@ class AuthController extends Controller
     /**
      * Authenticate and return a Sanctum token.
      *
-     * Body: { email, password }
+     * Body: { email, password, device_name? }
      * Response: { data: { token, user } }
      */
-    public function login(Request $request): JsonResponse
+    public function login(LoginRequest $request): JsonResponse
     {
-        $credentials = $request->validate([
-            'email'    => ['required', 'email'],
-            'password' => ['required', 'string'],
-        ]);
+        $credentials = $request->only('email', 'password');
 
         if (! Auth::attempt($credentials)) {
             throw ValidationException::withMessages([
@@ -44,8 +42,7 @@ class AuthController extends Controller
             ]);
         }
 
-        // Revoke any previous tokens for this device name (optional — prevents
-        // orphaned tokens if the client loses its stored token)
+        // Revoke any previous tokens for this device name (prevents orphaned tokens)
         $deviceName = $request->input('device_name', 'api');
         $user->tokens()->where('name', $deviceName)->delete();
 

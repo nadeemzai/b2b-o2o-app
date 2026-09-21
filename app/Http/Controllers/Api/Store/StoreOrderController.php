@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Store;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\DeliverOrderRequest;
+use App\Http\Requests\UpdateOrderStatusRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Services\OrderService;
@@ -27,8 +29,10 @@ class StoreOrderController extends Controller
      * Return the order queue for the staff member's store.
      *
      * Query params:
-     *   - status (string, optional) — default: excludes delivered + cancelled
+     *   - status   (string, optional) — default: active orders only
      *   - per_page (int, default 20)
+     *
+     * Middleware: auth:sanctum, role:store_staff
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -38,7 +42,7 @@ class StoreOrderController extends Controller
             ->when(
                 $request->query('status'),
                 fn ($q, $s) => $q->status($s),
-                fn ($q)     => $q->active()       // default: pending + preparing + ready_for_delivery
+                fn ($q)     => $q->active()   // pending + preparing + ready_for_delivery
             )
             ->with(['retailer.user', 'items.product'])
             ->orderBy('created_at')
@@ -51,6 +55,11 @@ class StoreOrderController extends Controller
     // GET /api/store/orders/{order}
     // ──────────────────────────────────────────────
 
+    /**
+     * Return a single order with full detail.
+     *
+     * Middleware: auth:sanctum, role:store_staff
+     */
     public function show(Request $request, Order $order): JsonResponse
     {
         $this->authorize('manageOrder', $order);
@@ -68,15 +77,14 @@ class StoreOrderController extends Controller
      * Transition an order's status (pending → preparing → ready_for_delivery).
      *
      * Body: { "status": "preparing", "note": "optional" }
+     *
+     * Middleware: auth:sanctum, role:store_staff
      */
-    public function updateStatus(Request $request, Order $order): JsonResponse
+    public function updateStatus(UpdateOrderStatusRequest $request, Order $order): JsonResponse
     {
         $this->authorize('manageOrder', $order);
 
-        $validated = $request->validate([
-            'status' => ['required', 'string', 'in:' . implode(',', Order::STATUSES)],
-            'note'   => ['nullable', 'string', 'max:500'],
-        ]);
+        $validated = $request->validated();
 
         $order = $this->transitionService->transition(
             $order,
@@ -97,8 +105,10 @@ class StoreOrderController extends Controller
      * Only riders and managers may call this.
      *
      * Body: { "collected_pkr": 1250.00 }
+     *
+     * Middleware: auth:sanctum, role:store_staff
      */
-    public function deliver(Request $request, Order $order): JsonResponse
+    public function deliver(DeliverOrderRequest $request, Order $order): JsonResponse
     {
         $this->authorize('deliverOrder', $order);
 
@@ -108,9 +118,7 @@ class StoreOrderController extends Controller
             "Order must be in 'ready_for_delivery' status before marking as delivered."
         );
 
-        $validated = $request->validate([
-            'collected_pkr' => ['required', 'numeric', 'min:0'],
-        ]);
+        $validated = $request->validated();
 
         $order = $this->orderService->deliverOrder(
             $order,
