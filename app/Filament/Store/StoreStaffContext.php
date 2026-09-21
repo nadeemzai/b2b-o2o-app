@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\Auth;
 
 /**
  * Lightweight, per-request helper that exposes the logged-in
- * store-staff user's position (manager | operator | rider).
+ * store-staff user's position (manager | operator | rider) and store_id.
  *
- * The result is memoised so the query only runs once per request,
+ * The result is memoised so the DB query only runs once per request,
  * regardless of how many places call it on the same page-load.
  */
 class StoreStaffContext
@@ -35,10 +35,16 @@ class StoreStaffContext
         return static::$cached;
     }
 
-    /** Returns 'manager', 'operator', 'rider', or null (unauthenticated / not store-staff). */
+    /** Returns 'manager', 'operator', 'rider', or null. */
     public static function position(): ?string
     {
         return static::staff()?->position;
+    }
+
+    /** Returns the store_id for the current user, or null. */
+    public static function storeId(): ?int
+    {
+        return static::staff()?->store_id;
     }
 
     public static function isManager(): bool

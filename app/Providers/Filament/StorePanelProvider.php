@@ -19,6 +19,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use App\Filament\Store\Widgets\StoreOverviewWidget;
 
 class StorePanelProvider extends PanelProvider
 {
@@ -42,6 +43,9 @@ class StorePanelProvider extends PanelProvider
             ])
             ->pages([
                 Pages\Dashboard::class,
+            ])
+            ->widgets([
+                StoreOverviewWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
