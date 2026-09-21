@@ -17,7 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ])
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'role' => \App\Http\Middleware\EnsureRole::class,
+            'role'               => \App\Http\Middleware\EnsureRole::class,
+            'retailer'           => \App\Http\Middleware\EnsureRetailer::class,
+            'retailer.approved'  => \App\Http\Middleware\EnsureRetailerApproved::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
