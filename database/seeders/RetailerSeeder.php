@@ -29,6 +29,27 @@ class RetailerSeeder extends Seeder
             'address'       => 'Plot 22, DHA Phase 4, Lahore',
             'kyc_status'    => 'approved',
         ],
+        // ── Rejected — blurry CNIC ───────────────────────────────
+        [
+            'email'                => 'sara.boutique@retailer.com',
+            'name'                 => 'Sara Noor',
+            'business_name'        => 'Sara Boutique & General',
+            'cnic'                 => '35202-9988776-5',
+            'phone'                => '0311-2233445',
+            'address'              => 'Shop 12, Township Market, Lahore',
+            'kyc_status'           => 'rejected',
+            'kyc_rejection_reason' => 'CNIC front image is blurry and unreadable. Please resubmit a clear, well-lit photo showing all four corners of the card.',
+        ],
+        // ── Pending — docs uploaded, awaiting review ─────────────
+        [
+            'email'         => 'bilal.wholesale@retailer.com',
+            'name'          => 'Bilal Hussain',
+            'business_name' => 'Bilal Wholesale Mart',
+            'cnic'          => '35202-5544332-7',
+            'phone'         => '0345-6677889',
+            'address'       => 'Warehouse 3, Quaid-e-Azam Industrial Estate, Lahore',
+            'kyc_status'    => 'pending',
+        ],
     ];
 
     public function run(): void
@@ -50,16 +71,17 @@ class RetailerSeeder extends Seeder
             Retailer::firstOrCreate(
                 ['user_id' => $user->id],
                 [
-                    'store_id'      => $store->id,
-                    'business_name' => $data['business_name'],
-                    'cnic'          => $data['cnic'],
-                    'phone'         => $data['phone'],
-                    'address'       => $data['address'],
-                    'kyc_status'    => $data['kyc_status'],
+                    'store_id'             => $store->id,
+                    'business_name'        => $data['business_name'],
+                    'cnic'                 => $data['cnic'],
+                    'phone'                => $data['phone'],
+                    'address'              => $data['address'],
+                    'kyc_status'           => $data['kyc_status'],
+                    'kyc_rejection_reason' => $data['kyc_rejection_reason'] ?? null,
                 ]
             );
         }
 
-        $this->command->info('Retailers seeded: 2 approved retailers for Lahore store.');
+        $this->command->info('Retailers seeded: 2 approved, 1 rejected, 1 pending — Lahore store.');
     }
 }
