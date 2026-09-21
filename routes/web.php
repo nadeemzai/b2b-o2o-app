@@ -36,3 +36,13 @@ Route::post('/retailer/logout', function () {
     request()->session()->regenerateToken();
     return redirect()->route('retailer.login');
 })->middleware('auth')->name('retailer.logout');
+
+// ──────────────────────────────────────────────────────────────────────────
+// Admin: secure KYC document viewer
+// Served from the private 'kyc' disk — never publicly accessible
+// ──────────────────────────────────────────────────────────────────────────
+Route::get(
+    '/admin/retailers/{retailer}/kyc/{field}',
+    \App\Http\Controllers\Admin\KycDocumentController::class
+)->middleware(['auth'])->name('admin.kyc.document');
+
