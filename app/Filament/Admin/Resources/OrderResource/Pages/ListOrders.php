@@ -24,27 +24,27 @@ class ListOrders extends ListRecords
 
         return [
             'pending' => Tab::make('Pending')
-                ->modifyQueryUsing(fn (Builder $q) => $q->where('status', Order::STATUS_PENDING))
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', Order::STATUS_PENDING))
                 ->badge($badge(Order::STATUS_PENDING))
                 ->badgeColor('warning'),
 
             'preparing' => Tab::make('Preparing')
-                ->modifyQueryUsing(fn (Builder $q) => $q->where('status', Order::STATUS_PREPARING))
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', Order::STATUS_PREPARING))
                 ->badge($badge(Order::STATUS_PREPARING))
                 ->badgeColor('info'),
 
             'ready_for_delivery' => Tab::make('Ready for Delivery')
-                ->modifyQueryUsing(fn (Builder $q) => $q->where('status', Order::STATUS_READY_FOR_DELIVERY))
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', Order::STATUS_READY_FOR_DELIVERY))
                 ->badge($badge(Order::STATUS_READY_FOR_DELIVERY))
                 ->badgeColor('primary'),
 
             'delivered' => Tab::make('Delivered')
-                ->modifyQueryUsing(fn (Builder $q) => $q->where('status', Order::STATUS_DELIVERED))
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', Order::STATUS_DELIVERED))
                 ->badge($badge(Order::STATUS_DELIVERED))
                 ->badgeColor('success'),
 
             'cancelled' => Tab::make('Cancelled')
-                ->modifyQueryUsing(fn (Builder $q) => $q->where('status', Order::STATUS_CANCELLED))
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', Order::STATUS_CANCELLED))
                 ->badge($badge(Order::STATUS_CANCELLED))
                 ->badgeColor('danger'),
 

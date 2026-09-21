@@ -108,8 +108,8 @@ class StockLevelResource extends Resource
                             StockMovement::create([
                                 'store_id'            => $fresh->store_id,
                                 'product_id'          => $fresh->product_id,
-                                'type'                => $delta > 0 ? 'adjustment_in' : 'adjustment_out',
-                                'qty'                 => abs($delta),
+                                'type'                => 'adjustment',
+                                'qty'                 => $delta,
                                 'note'                => $data['reason'],
                                 'created_by_user_id'  => Auth::id(),
                             ]);
