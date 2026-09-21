@@ -62,8 +62,8 @@ class CartPage extends Component
                     'order_id'    => $order->id,
                     'product_id'  => $productId,
                     'qty'         => $item['qty'],
-                    'unit_price'  => $item['price'],
-                    'line_total'  => $item['price'] * $item['qty'],
+                    'unit_price_pkr'  => $item['price'],
+                    'line_total_pkr'  => $item['price'] * $item['qty'],
                 ]);
 
                 // Reserve stock

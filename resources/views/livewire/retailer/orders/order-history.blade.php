@@ -93,7 +93,7 @@
                             <div class="text-right">
                                 <p class="text-xs text-gray-400">Total</p>
                                 <p class="text-sm font-semibold text-gray-900">
-                                    PKR {{ number_format($order->total_amount, 2) }}
+                                    PKR {{ number_format($order->total_pkr, 2) }}
                                 </p>
                             </div>
 
@@ -141,10 +141,10 @@
                                                 {{ $item->qty }}
                                             </td>
                                             <td class="py-2 text-right text-gray-600 font-mono">
-                                                PKR {{ number_format($item->unit_price, 2) }}
+                                                PKR {{ number_format($item->unit_price_pkr, 2) }}
                                             </td>
                                             <td class="py-2 text-right font-semibold text-gray-800 font-mono">
-                                                PKR {{ number_format($item->line_total, 2) }}
+                                                PKR {{ number_format($item->line_total_pkr, 2) }}
                                             </td>
                                         </tr>
                                     @endforeach
@@ -155,7 +155,7 @@
                                             Order Total
                                         </td>
                                         <td class="pt-3 text-right font-bold text-blue-700 font-mono">
-                                            PKR {{ number_format($order->total_amount, 2) }}
+                                            PKR {{ number_format($order->total_pkr, 2) }}
                                         </td>
                                     </tr>
                                 </tfoot>
