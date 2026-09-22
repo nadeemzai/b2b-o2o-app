@@ -5,7 +5,6 @@ namespace App\Filament\Store\Resources;
 use App\Filament\Store\Resources\StockLevelResource\Pages;
 use App\Models\StockLevel;
 use App\Models\StockMovement;
-use App\Models\StoreStaff;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -40,9 +39,10 @@ class StockLevelResource extends Resource
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        $staff = StoreStaff::where('user_id', Auth::id())->where('is_active', true)->first();
+        $storeId = StoreStaffContext::storeId();
+
         return parent::getEloquentQuery()
-            ->when($staff, fn ($q) => $q->where('store_id', $staff->store_id))
+            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
             ->with(['product.category']);
     }
 

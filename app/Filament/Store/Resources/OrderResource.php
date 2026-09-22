@@ -3,8 +3,8 @@
 namespace App\Filament\Store\Resources;
 
 use App\Filament\Store\Resources\OrderResource\Pages;
+use App\Filament\Store\StoreStaffContext;
 use App\Models\Order;
-use App\Models\StoreStaff;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section;
@@ -15,7 +15,6 @@ use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Auth;
 
 class OrderResource extends Resource
 {
@@ -26,10 +25,10 @@ class OrderResource extends Resource
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        $staff = StoreStaff::where('user_id', Auth::id())->where('is_active', true)->first();
+        $storeId = StoreStaffContext::storeId();
 
         return parent::getEloquentQuery()
-            ->when($staff, fn ($q) => $q->where('store_id', $staff->store_id))
+            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
             ->with(['retailer', 'store', 'items.product', 'statusHistory.changedBy']);
     }
 

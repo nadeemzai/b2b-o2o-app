@@ -143,7 +143,7 @@ class OrderService
     // Cancel Order (by retailer)
     // ──────────────────────────────────────────────
 
-    public function cancelOrder(Order $order, int $cancelledByUserId): Order
+    public function cancelOrder(Order $order, int $cancelledByUserId, ?string $note = null): Order
     {
         return DB::transaction(function () use ($order, $cancelledByUserId) {
 
@@ -158,7 +158,7 @@ class OrderService
                 'from_status'        => $from,
                 'to_status'          => Order::STATUS_CANCELLED,
                 'changed_by_user_id' => $cancelledByUserId,
-                'note'               => 'Cancelled.',
+                'note'               => $note ?? 'Cancelled.',
             ]);
 
             return $order->fresh();

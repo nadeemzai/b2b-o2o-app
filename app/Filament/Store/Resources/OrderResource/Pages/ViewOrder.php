@@ -122,7 +122,7 @@ class ViewOrder extends ViewRecord
                 ])
                 ->action(function (array $data): void {
                     try {
-                        app(OrderService::class)->cancelOrder($this->record, Auth::id());
+                        app(OrderService::class)->cancelOrder($this->record, Auth::id(), $data['reason'] ?? null);
                         $this->record->refresh();
                         Notification::make()->title('Order cancelled')->warning()->send();
                     } catch (\Exception $e) {
