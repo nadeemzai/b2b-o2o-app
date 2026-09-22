@@ -2,14 +2,14 @@
 
 namespace App\Livewire\Retailer\Cart;
 
-use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\Product;
-use App\Models\StockLevel;
+use App\Exceptions\InsufficientStockException;
+use App\Models\Retailer;
 use App\Services\CartService;
-use Illuminate\Support\Facades\DB;
+use App\Services\OrderService;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 
+#[Layout('layouts.retailer')]
 class CartPage extends Component
 {
     public string $notes = '';
@@ -24,56 +24,38 @@ class CartPage extends Component
         $cart->remove($productId);
     }
 
-    public function placeOrder(CartService $cart): void
+    public function placeOrder(CartService $cart, OrderService $orderService): void
     {
         if ($cart->isEmpty()) {
             session()->flash('error', 'Your cart is empty.');
             return;
         }
 
+        /** @var Retailer $retailer */
         $retailer = auth()->user()->retailerProfile;
-        $storeId  = $retailer->store_id;
-        $items    = $cart->items();
 
-        // Validate stock before placing
-        foreach ($items as $productId => $item) {
-            $stock = StockLevel::where('product_id', $productId)
-                ->where('store_id', $storeId)
-                ->first();
+        // Build items array in the format OrderService expects
+        $items = collect($cart->items())
+            ->map(fn ($item, $productId) => [
+                'product_id' => (int) $productId,
+                'qty'        => $item['qty'],
+            ])
+            ->values()
+            ->all();
 
-            if (! $stock || $stock->qty_available < $item['qty']) {
-                session()->flash('error', "Insufficient stock for: {$item['name']}");
-                return;
-            }
+        try {
+            $order = $orderService->placeOrder($retailer, $items);
+        } catch (InsufficientStockException $e) {
+            session()->flash('error', "Insufficient stock for: {$e->productName}");
+            return;
         }
 
-        DB::transaction(function () use ($cart, $retailer, $storeId, $items) {
-            $order = Order::create([
-                'retailer_id'    => $retailer->id,
-                'store_id'       => $storeId,
-                'status'         => Order::STATUS_PENDING,
-                'total_pkr'      => $cart->totalPkr(),
-                'payment_method' => 'cod',
-                'notes'          => $this->notes ?: null,
-            ]);
+        // Append optional notes (not part of OrderService signature — update after)
+        if ($this->notes !== '') {
+            $order->update(['notes' => $this->notes]);
+        }
 
-            foreach ($items as $productId => $item) {
-                OrderItem::create([
-                    'order_id'    => $order->id,
-                    'product_id'  => $productId,
-                    'qty'         => $item['qty'],
-                    'unit_price_pkr'  => $item['price'],
-                    'line_total_pkr'  => $item['price'] * $item['qty'],
-                ]);
-
-                // Reserve stock
-                StockLevel::where('product_id', $productId)
-                    ->where('store_id', $storeId)
-                    ->increment('qty_reserved', $item['qty']);
-            }
-
-            $cart->clear();
-        });
+        $cart->clear();
 
         session()->flash('success', 'Order placed successfully! Your store will prepare it shortly.');
         $this->redirect(route('retailer.orders'), navigate: true);
@@ -85,7 +67,7 @@ class CartPage extends Component
         $products = [];
 
         if (! empty($items)) {
-            $productModels = Product::whereIn('id', array_keys($items))->get()->keyBy('id');
+            $productModels = \App\Models\Product::whereIn('id', array_keys($items))->get()->keyBy('id');
             foreach ($items as $productId => $item) {
                 $products[$productId] = array_merge($item, [
                     'product' => $productModels[$productId] ?? null,
@@ -96,6 +78,6 @@ class CartPage extends Component
         return view('livewire.retailer.cart.cart-page', [
             'cartProducts' => $products,
             'total'        => $cart->totalPkr(),
-        ])->layout('layouts.retailer', ['title' => 'My Cart']);
+        ])->title('My Cart');
     }
 }

@@ -43,26 +43,24 @@ class OrderHistory extends Component
     public function statusLabel(string $status): string
     {
         return match ($status) {
-            'pending'    => 'Pending',
-            'confirmed'  => 'Confirmed',
-            'preparing'  => 'Preparing',
-            'dispatched' => 'Dispatched',
-            'delivered'  => 'Delivered',
-            'cancelled'  => 'Cancelled',
-            default      => ucfirst($status),
+            Order::STATUS_PENDING            => 'Pending',
+            Order::STATUS_PREPARING          => 'Preparing',
+            Order::STATUS_READY_FOR_DELIVERY => 'Ready for Delivery',
+            Order::STATUS_DELIVERED          => 'Delivered',
+            Order::STATUS_CANCELLED          => 'Cancelled',
+            default                          => ucfirst(str_replace('_', ' ', $status)),
         };
     }
 
     public function statusColor(string $status): string
     {
         return match ($status) {
-            'pending'    => 'bg-yellow-100 text-yellow-800',
-            'confirmed'  => 'bg-blue-100 text-blue-800',
-            'preparing'  => 'bg-purple-100 text-purple-800',
-            'dispatched' => 'bg-indigo-100 text-indigo-800',
-            'delivered'  => 'bg-green-100 text-green-800',
-            'cancelled'  => 'bg-red-100 text-red-800',
-            default      => 'bg-gray-100 text-gray-800',
+            Order::STATUS_PENDING            => 'bg-yellow-100 text-yellow-800',
+            Order::STATUS_PREPARING          => 'bg-purple-100 text-purple-800',
+            Order::STATUS_READY_FOR_DELIVERY => 'bg-indigo-100 text-indigo-800',
+            Order::STATUS_DELIVERED          => 'bg-green-100 text-green-800',
+            Order::STATUS_CANCELLED          => 'bg-red-100 text-red-800',
+            default                          => 'bg-gray-100 text-gray-800',
         };
     }
 }
