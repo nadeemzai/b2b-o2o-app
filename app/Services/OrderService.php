@@ -59,7 +59,7 @@ class OrderService
                 ->where('psp.store_id', $storeId)
                 ->where('psp.is_active', true)
                 ->whereIn('products.id', $productIds)
-                ->select('products.id', 'products.name', 'psp.price_pkr')
+                ->select('products.id', 'products.name_en as name', 'psp.price_pkr')
                 ->get()
                 ->keyBy('id');
 

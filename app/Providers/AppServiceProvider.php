@@ -8,6 +8,7 @@ use App\Models\StoreStaff;
 use App\Policies\AdminRetailerPolicy;
 use App\Policies\RetailerPolicy;
 use App\Policies\StoreStaffPolicy;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -34,5 +35,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Order::class,      RetailerPolicy::class);
         Gate::policy(StoreStaff::class, StoreStaffPolicy::class);
         Gate::policy(Retailer::class,   AdminRetailerPolicy::class);
+
+        // Allows <x-layouts.retailer> to resolve resources/views/layouts/retailer.blade.php,
+        // the same file Livewire full-page components use via ->layout('layouts.retailer').
+        Blade::component('layouts.retailer', 'layouts.retailer');
     }
 }

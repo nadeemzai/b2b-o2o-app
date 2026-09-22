@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StockLevel extends Model
 {
+    use HasFactory;
+
     /**
      * StockLevel has no created_at — only updated_at (managed by the DB CURRENT_TIMESTAMP).
      * We disable Laravel's auto-manage of timestamps and declare the single column manually.

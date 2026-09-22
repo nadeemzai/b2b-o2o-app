@@ -4,6 +4,7 @@ namespace App\Livewire\Kyc;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -17,6 +18,7 @@ use Livewire\WithFileUploads;
  * Route:  GET /retailer/kyc
  * Usage:  @livewire('kyc.upload-documents')
  */
+#[Layout('layouts.retailer')]
 class UploadDocuments extends Component
 {
     use WithFileUploads;
