@@ -36,10 +36,18 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained()->restrictOnDelete();
             $table->unsignedInteger('qty');
             $table->decimal('unit_price_pkr', 12, 2);   // price frozen at order time
-            // line_total added as generated column below
+
+            // SQLite supports GENERATED ALWAYS AS only in CREATE TABLE, not ALTER TABLE.
+            // Include it inline here for SQLite; PostgreSQL uses the ALTER below.
+            if (DB::connection()->getDriverName() === 'sqlite') {
+                $table->decimal('line_total_pkr', 12, 2)->storedAs('qty * unit_price_pkr');
+            }
         });
 
-        DB::statement('ALTER TABLE order_items ADD COLUMN line_total_pkr NUMERIC(12,2) GENERATED ALWAYS AS (qty * unit_price_pkr) STORED');
+        // PostgreSQL: add the generated column via ALTER TABLE
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE order_items ADD COLUMN line_total_pkr NUMERIC(12,2) GENERATED ALWAYS AS (qty * unit_price_pkr) STORED');
+        }
 
         Schema::create('order_status_history', function (Blueprint $table) {
             $table->id();
