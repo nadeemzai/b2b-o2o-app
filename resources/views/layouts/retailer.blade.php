@@ -37,25 +37,25 @@
 <body class="h-full flex flex-col">
 
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
-{{-- GLOBAL LEFT SIDEBAR — 1688-style collapsible category panel               --}}
+{{-- GLOBAL LEFT SIDEBAR — Quick-nav drawer                                     --}}
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
 @auth
-<div x-data="{ catOpen: false }" class="relative">
+<div x-data="{ navOpen: false }" class="relative">
 
     {{-- Collapsed tab (always visible on left edge) --}}
-    <div @click="catOpen = true"
-         x-show="!catOpen"
+    <div @click="navOpen = true"
+         x-show="!navOpen"
          class="fixed left-0 top-1/2 -translate-y-1/2 z-50 cursor-pointer select-none hidden md:flex">
         <div class="bg-brand hover:bg-brand-dark text-white py-10 px-2.5 rounded-r-xl shadow-xl flex flex-col items-center gap-3 transition-colors">
             <svg class="w-4 h-4 text-orange-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
             </svg>
-            <span class="writing-vertical text-[11px] font-bold tracking-[3px] text-orange-100 uppercase">Categories</span>
+            <span class="writing-vertical text-[11px] font-bold tracking-[3px] text-orange-100 uppercase">OZ Menu</span>
         </div>
     </div>
 
     {{-- Backdrop --}}
-    <div x-show="catOpen" @click="catOpen = false" x-cloak
+    <div x-show="navOpen" @click="navOpen = false" x-cloak
          class="fixed inset-0 bg-black/40 z-40"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
@@ -65,7 +65,7 @@
          x-transition:leave-end="opacity-0"></div>
 
     {{-- Sidebar panel --}}
-    <div x-show="catOpen" x-cloak
+    <div x-show="navOpen" x-cloak
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="-translate-x-full opacity-0"
          x-transition:enter-end="translate-x-0 opacity-100"
@@ -74,7 +74,7 @@
          x-transition:leave-end="-translate-x-full opacity-0"
          class="fixed left-0 top-0 h-full w-72 bg-white z-50 shadow-2xl flex flex-col">
 
-        {{-- Sidebar header --}}
+        {{-- Header --}}
         <div class="bg-brand px-5 py-4 flex items-center justify-between shrink-0">
             <div class="flex items-center gap-3">
                 <div class="bg-white/20 rounded-lg p-1.5">
@@ -84,44 +84,130 @@
                 </div>
                 <div>
                     <span class="text-white font-black text-lg leading-none">OZ Wholesale</span>
-                    <p class="text-orange-200 text-[10px] font-medium tracking-wide uppercase mt-0.5">All Categories</p>
+                    <p class="text-orange-200 text-[10px] font-medium tracking-wide uppercase mt-0.5">B2B Portal</p>
                 </div>
             </div>
-            <button @click="catOpen = false" class="text-white/60 hover:text-white transition p-1">
+            <button @click="navOpen = false" class="text-white/60 hover:text-white transition p-1">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
         </div>
 
-        {{-- All products link --}}
-        <a href="{{ route('retailer.catalogue') }}" @click="catOpen = false"
-           class="flex items-center gap-3 px-5 py-3.5 text-sm font-semibold text-brand bg-orange-50 border-b border-orange-100 hover:bg-orange-100 transition shrink-0">
-            <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z"/>
-            </svg>
-            All Products
-        </a>
+        {{-- Nav items --}}
+        <nav class="flex-1 overflow-y-auto py-3">
 
-        {{-- Category list --}}
-        <nav class="flex-1 overflow-y-auto divide-y divide-slate-50">
-            @php
-                $sidebarCategories = \App\Models\Category::where('is_active', true)
-                    ->orderBy('name')->get();
-            @endphp
-            @foreach($sidebarCategories as $cat)
-            <a href="{{ route('retailer.catalogue') }}?category={{ $cat->id }}"
-               @click="catOpen = false"
-               class="flex items-center gap-3 px-5 py-3 text-sm text-slate-700 hover:bg-orange-50 hover:text-brand transition group">
-                <span class="w-2 h-2 rounded-full bg-slate-200 group-hover:bg-brand transition shrink-0"></span>
-                <span>{{ app()->getLocale() === 'zh_CN' && $cat->name_zh ? $cat->name_zh : $cat->name }}</span>
+            {{-- Home --}}
+            <a href="{{ route('retailer.dashboard') }}" @click="navOpen = false"
+               class="flex items-center gap-4 px-5 py-4 group transition
+                      {{ request()->routeIs('retailer.dashboard') ? 'bg-orange-50 border-l-4 border-brand' : 'border-l-4 border-transparent hover:bg-orange-50 hover:border-brand/40' }}">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0
+                            {{ request()->routeIs('retailer.dashboard') ? 'bg-brand text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-brand' }} transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold {{ request()->routeIs('retailer.dashboard') ? 'text-brand' : 'text-slate-800 group-hover:text-brand' }} transition">Home</p>
+                    <p class="text-[11px] text-slate-400">Dashboard overview</p>
+                </div>
+                <svg class="w-4 h-4 text-slate-300 group-hover:text-brand/60 transition shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
             </a>
-            @endforeach
+
+            {{-- Orders --}}
+            <a href="{{ route('retailer.orders') }}" @click="navOpen = false"
+               class="flex items-center gap-4 px-5 py-4 group transition
+                      {{ request()->routeIs('retailer.orders*') ? 'bg-orange-50 border-l-4 border-brand' : 'border-l-4 border-transparent hover:bg-orange-50 hover:border-brand/40' }}">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0
+                            {{ request()->routeIs('retailer.orders*') ? 'bg-brand text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-brand' }} transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold {{ request()->routeIs('retailer.orders*') ? 'text-brand' : 'text-slate-800 group-hover:text-brand' }} transition">Orders</p>
+                    <p class="text-[11px] text-slate-400">My order history</p>
+                </div>
+                <svg class="w-4 h-4 text-slate-300 group-hover:text-brand/60 transition shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+
+            {{-- Wishlist --}}
+            <a href="#" @click="navOpen = false"
+               class="flex items-center gap-4 px-5 py-4 group transition border-l-4 border-transparent hover:bg-orange-50 hover:border-brand/40">
+                <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-brand flex items-center justify-center shrink-0 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-slate-800 group-hover:text-brand transition">Wishlist</p>
+                    <p class="text-[11px] text-slate-400">Saved products</p>
+                </div>
+                <span class="text-[9px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded font-medium shrink-0">Soon</span>
+            </a>
+
+            {{-- Products --}}
+            <a href="{{ route('retailer.catalogue') }}" @click="navOpen = false"
+               class="flex items-center gap-4 px-5 py-4 group transition
+                      {{ request()->routeIs('retailer.catalogue*') ? 'bg-orange-50 border-l-4 border-brand' : 'border-l-4 border-transparent hover:bg-orange-50 hover:border-brand/40' }}">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0
+                            {{ request()->routeIs('retailer.catalogue*') ? 'bg-brand text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-brand' }} transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold {{ request()->routeIs('retailer.catalogue*') ? 'text-brand' : 'text-slate-800 group-hover:text-brand' }} transition">Products</p>
+                    <p class="text-[11px] text-slate-400">Browse catalogue</p>
+                </div>
+                <svg class="w-4 h-4 text-slate-300 group-hover:text-brand/60 transition shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+
+            {{-- Me / Profile --}}
+            <a href="#" @click="navOpen = false"
+               class="flex items-center gap-4 px-5 py-4 group transition border-l-4 border-transparent hover:bg-orange-50 hover:border-brand/40">
+                <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-brand flex items-center justify-center shrink-0 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-slate-800 group-hover:text-brand transition">Me</p>
+                    <p class="text-[11px] text-slate-400 truncate">{{ auth()->user()->name }}</p>
+                </div>
+                <span class="text-[9px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded font-medium shrink-0">Soon</span>
+            </a>
+
         </nav>
 
-        {{-- Sidebar footer --}}
-        <div class="px-5 py-3 border-t border-slate-100 bg-slate-50 shrink-0">
-            <p class="text-[10px] text-slate-400 text-center">OZ Tech · B2B Wholesale Portal</p>
+        {{-- Footer: user info + sign out --}}
+        <div class="shrink-0 border-t border-slate-100">
+            <div class="px-5 py-3 bg-slate-50 flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-semibold text-slate-700 truncate">{{ auth()->user()->name }}</p>
+                    <p class="text-[10px] text-slate-400 truncate">{{ auth()->user()->email }}</p>
+                </div>
+                <form method="POST" action="{{ route('retailer.logout') }}">
+                    @csrf
+                    <button type="submit" title="Sign Out"
+                            class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
