@@ -40,7 +40,7 @@ class ProductDetail extends Component
 
         $storeId = auth()->user()->retailerProfile->store_id;
 
-        $this->product = $product->load(['category', 'variantTypes.activeOptions']);
+        $this->product = $product->load(['category', 'variantTypes.activeOptions', 'images']);
 
         // Check for variants
         $this->hasVariants = $this->product->variantTypes
@@ -182,7 +182,7 @@ class ProductDetail extends Component
             ->withPrice()
             ->where('category_id', $this->product->category_id)
             ->where('id', '!=', $this->product->id)
-            ->with(['category'])
+            ->with(['category', 'images'])
             ->limit(8)
             ->get();
 

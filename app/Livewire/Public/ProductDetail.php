@@ -18,6 +18,7 @@ class ProductDetail extends Component
 
         $this->product = $product->load([
             'category',
+            'images',
             'storePrices' => fn ($q) => $q->where('is_active', true)->orderBy('price_pkr'),
         ]);
     }
@@ -29,7 +30,7 @@ class ProductDetail extends Component
             ->where('is_active', true)
             ->where('category_id', $this->product->category_id)
             ->where('id', '!=', $this->product->id)
-            ->with(['category'])
+            ->with(['category', 'images'])
             ->addSelect([
                 'min_price' => \App\Models\ProductStorePrice::selectRaw('MIN(price_pkr)')
                     ->whereColumn('product_id', 'products.id')

@@ -26,20 +26,50 @@
 
                 {{-- ── LEFT: Product Image ──────────────────────────────── --}}
                 <div class="lg:w-[420px] shrink-0 bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center min-h-[280px] lg:min-h-[420px] relative">
-                    @if($product->image_path)
-                        <img src="{{ asset('storage/' . $product->image_path) }}"
+                {{-- ── Gallery ────────────────────────────────────── --}}
+                @php
+                    $productImages = $product->images->count()
+                        ? $product->images->map(fn($img) => $img->display_url)->values()
+                        : ($product->image_path ? collect([asset('storage/' . $product->image_path)]) : collect());
+                @endphp
+
+                @if($productImages->count())
+                <div x-data="{ active: 0 }" class="w-full flex flex-col">
+                    {{-- Main image --}}
+                    <div class="flex-1 flex items-center justify-center p-4 min-h-[260px] lg:min-h-[340px]">
+                        @foreach($productImages as $i => $src)
+                        <img src="{{ $src }}"
+                             x-show="active === {{ $i }}"
                              alt="{{ $product->name_en }}"
-                             class="w-full h-full object-contain p-6 max-h-[420px]" />
-                    @else
-                        <div class="flex flex-col items-center justify-center p-12 text-center">
-                            <div class="w-24 h-24 rounded-3xl bg-brand/10 flex items-center justify-center mb-4">
-                                <svg class="w-12 h-12 text-brand/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
-                                </svg>
-                            </div>
-                            <p class="text-sm text-slate-400 font-mono tracking-widest">{{ $product->sku }}</p>
-                        </div>
+                             loading="{{ $i === 0 ? 'eager' : 'lazy' }}"
+                             class="max-w-full max-h-[340px] object-contain rounded-lg"
+                             onerror="this.style.display='none'" />
+                        @endforeach
+                    </div>
+                    {{-- Thumbnails --}}
+                    @if($productImages->count() > 1)
+                    <div class="flex gap-2 px-4 pb-3 overflow-x-auto justify-center">
+                        @foreach($productImages as $i => $src)
+                        <button type="button"
+                                @click="active = {{ $i }}"
+                                :class="active === {{ $i }} ? 'ring-2 ring-brand' : 'ring-1 ring-slate-200 opacity-60'"
+                                class="shrink-0 w-14 h-14 rounded-lg overflow-hidden bg-white ring-offset-1 transition">
+                            <img src="{{ $src }}" class="w-full h-full object-cover" alt="" />
+                        </button>
+                        @endforeach
+                    </div>
                     @endif
+                </div>
+                @else
+                <div class="flex flex-col items-center justify-center p-12 text-center">
+                    <div class="w-24 h-24 rounded-3xl bg-brand/10 flex items-center justify-center mb-4">
+                        <svg class="w-12 h-12 text-brand/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm text-slate-400 font-mono tracking-widest">{{ $product->sku }}</p>
+                </div>
+                @endif
 
                     {{-- Category badge --}}
                     @if($product->category)
@@ -168,9 +198,14 @@
                    class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden flex flex-col group hover:shadow-md hover:border-orange-100 transition-all duration-150">
 
                     <div class="aspect-square bg-gradient-to-br from-slate-50 to-slate-100 relative overflow-hidden">
-                        @if($rel->image_path)
-                            <img src="{{ asset('storage/' . $rel->image_path) }}"
+                        @php
+                            $relSrc = ($rel->images->firstWhere('is_primary', true) ?? $rel->images->first())?->display_url
+                                ?? ($rel->image_path ? asset('storage/' . $rel->image_path) : null);
+                        @endphp
+                        @if($relSrc)
+                            <img src="{{ $relSrc }}"
                                  alt="{{ $rel->name_en }}"
+                                 loading="lazy"
                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" />
                         @else
                             <div class="w-full h-full flex items-center justify-center">
