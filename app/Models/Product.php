@@ -22,12 +22,16 @@ class Product extends Model
         'category_id',
         'unit',
         'pieces_per_carton',
+        'huashu_base_price_pkr',
+        'moq',
         'image_path',
         'is_active',
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
+        'is_active'             => 'boolean',
+        'huashu_base_price_pkr' => 'decimal:2',
+        'moq'                   => 'integer',
     ];
 
     // ──────────────────────────────────────────────
@@ -44,6 +48,9 @@ class Product extends Model
         return $this->belongsToMany(Category::class, 'product_categories');
     }
 
+    /**
+     * @deprecated — legacy per-store prices; use PricingService instead.
+     */
     public function storePrices(): HasMany
     {
         return $this->hasMany(ProductStorePrice::class);
@@ -59,6 +66,19 @@ class Product extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function variantTypes(): HasMany
+    {
+        return $this->hasMany(ProductVariantType::class)
+            ->orderBy('display_order')
+            ->orderBy('id');
+    }
+
+    /** True if at least one active variant type with options exists. */
+    public function hasVariants(): bool
+    {
+        return $this->variantTypes()->whereHas('activeOptions')->exists();
+    }
+
     public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class);
@@ -69,7 +89,7 @@ class Product extends Model
     // ──────────────────────────────────────────────
 
     /**
-     * Price for a specific store (null if not listed).
+     * @deprecated — legacy per-store price lookup; use PricingService::retailerPrice() instead.
      */
     public function priceForStore(int $storeId): ?ProductStorePrice
     {
@@ -89,7 +109,15 @@ class Product extends Model
     }
 
     /**
-     * Only products that have an active price in the given store.
+     * Products that have a Huashu base price set (i.e. available for sale).
+     */
+    public function scopeWithPrice($query)
+    {
+        return $query->whereNotNull('huashu_base_price_pkr');
+    }
+
+    /**
+     * @deprecated — legacy scope; use scopeWithPrice() for new code.
      */
     public function scopeAvailableInStore($query, int $storeId)
     {

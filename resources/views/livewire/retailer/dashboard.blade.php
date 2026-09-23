@@ -7,8 +7,8 @@
             <p class="text-sm text-slate-500 mt-0.5">{{ $retailer->business_name }} &middot; {{ $retailer->store->name ?? '—' }}</p>
         </div>
         <a href="{{ route('retailer.catalogue') }}"
-           class="bg-brand text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-blue-800 transition">
-            Browse Catalogue
+           class="bg-brand text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-brand-dark transition">
+            {{ __('ui.browse_catalogue_btn') }}
         </a>
     </div>
 
@@ -16,10 +16,10 @@
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
         @php
             $tiles = [
-                ['label' => 'Pending Orders',   'value' => $stats['pending'],   'color' => 'text-yellow-600', 'bg' => 'bg-yellow-50'],
-                ['label' => 'Preparing',         'value' => $stats['preparing'], 'color' => 'text-blue-600',   'bg' => 'bg-blue-50'],
-                ['label' => 'Delivered',         'value' => $stats['delivered'], 'color' => 'text-emerald-600','bg' => 'bg-emerald-50'],
-                ['label' => 'Total Orders',      'value' => $stats['total'],     'color' => 'text-slate-700',  'bg' => 'bg-slate-100'],
+                ['label' => __('ui.pending_orders'),   'value' => $stats['pending'],     'color' => 'text-yellow-600', 'bg' => 'bg-yellow-50'],
+                ['label' => __('ui.in_progress'),      'value' => $stats['in_progress'], 'color' => 'text-blue-600',   'bg' => 'bg-blue-50'],
+                ['label' => __('ui.status_delivered'),  'value' => $stats['delivered'],   'color' => 'text-emerald-600','bg' => 'bg-emerald-50'],
+                ['label' => __('ui.total_orders'),     'value' => $stats['total'],       'color' => 'text-slate-700',  'bg' => 'bg-slate-100'],
             ];
         @endphp
         @foreach($tiles as $tile)
@@ -33,13 +33,14 @@
     {{-- Recent orders --}}
     <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-            <h2 class="text-sm font-semibold text-slate-700">Recent Orders</h2>
-            <a href="{{ route('retailer.orders') }}" class="text-xs text-brand hover:underline">View all →</a>
+            <h2 class="text-sm font-semibold text-slate-700">{{ __('ui.recent_orders') }}</h2>
+            <a href="{{ route('retailer.orders') }}" class="text-xs text-brand hover:underline">{{ __('ui.view_all') }}</a>
         </div>
 
         @if($recentOrders->isEmpty())
         <div class="px-5 py-10 text-center text-slate-400 text-sm">
-            No orders yet. <a href="{{ route('retailer.catalogue') }}" class="text-brand hover:underline">Browse the catalogue</a> to place your first order.
+            {{ __('ui.no_orders') }}
+            <a href="{{ route('retailer.catalogue') }}" class="text-brand hover:underline">{{ __('ui.browse_the_catalogue') }}</a>
         </div>
         @else
         <div class="divide-y divide-slate-50">
@@ -55,12 +56,13 @@
                     </span>
                     @php
                         $badge = match($order->status) {
-                            'pending'            => 'bg-yellow-100 text-yellow-700',
-                            'preparing'          => 'bg-blue-100 text-blue-700',
-                            'ready_for_delivery' => 'bg-purple-100 text-purple-700',
-                            'delivered'          => 'bg-emerald-100 text-emerald-700',
-                            'cancelled'          => 'bg-red-100 text-red-700',
-                            default              => 'bg-slate-100 text-slate-600',
+                            'pending'          => 'bg-yellow-100 text-yellow-700',
+                            'payment_verified' => 'bg-sky-100 text-sky-700',
+                            'transferred'      => 'bg-blue-100 text-blue-700',
+                            'fulfilling'       => 'bg-indigo-100 text-indigo-700',
+                            'delivered'        => 'bg-emerald-100 text-emerald-700',
+                            'cancelled'        => 'bg-red-100 text-red-700',
+                            default            => 'bg-slate-100 text-slate-600',
                         };
                     @endphp
                     <span class="text-xs font-medium px-2 py-0.5 rounded-full {{ $badge }}">
@@ -76,31 +78,31 @@
     {{-- Quick links --}}
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <a href="{{ route('retailer.catalogue') }}" class="group bg-white border border-slate-100 rounded-xl p-5 shadow-sm hover:border-brand transition">
-            <div class="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center mb-3">
+            <div class="w-9 h-9 bg-orange-50 rounded-lg flex items-center justify-center mb-3">
                 <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                 </svg>
             </div>
-            <p class="font-semibold text-slate-800 text-sm">Browse Catalogue</p>
-            <p class="text-xs text-slate-400 mt-0.5">View available products</p>
+            <p class="font-semibold text-slate-800 text-sm">{{ __('ui.browse_catalogue_btn') }}</p>
+            <p class="text-xs text-slate-400 mt-0.5">{{ __('ui.view_products') }}</p>
         </a>
         <a href="{{ route('retailer.cart') }}" class="group bg-white border border-slate-100 rounded-xl p-5 shadow-sm hover:border-brand transition">
-            <div class="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center mb-3">
+            <div class="w-9 h-9 bg-orange-50 rounded-lg flex items-center justify-center mb-3">
                 <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                 </svg>
             </div>
-            <p class="font-semibold text-slate-800 text-sm">My Cart</p>
-            <p class="text-xs text-slate-400 mt-0.5">{{ $cartCount }} item(s) waiting</p>
+            <p class="font-semibold text-slate-800 text-sm">{{ __('ui.your_cart') }}</p>
+            <p class="text-xs text-slate-400 mt-0.5">{{ $cartCount }} {{ __('ui.cart_items_waiting') }}</p>
         </a>
         <a href="{{ route('retailer.orders') }}" class="group bg-white border border-slate-100 rounded-xl p-5 shadow-sm hover:border-brand transition">
-            <div class="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center mb-3">
+            <div class="w-9 h-9 bg-orange-50 rounded-lg flex items-center justify-center mb-3">
                 <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                 </svg>
             </div>
-            <p class="font-semibold text-slate-800 text-sm">Order History</p>
-            <p class="text-xs text-slate-400 mt-0.5">Track all your orders</p>
+            <p class="font-semibold text-slate-800 text-sm">{{ __('ui.order_history') }}</p>
+            <p class="text-xs text-slate-400 mt-0.5">{{ __('ui.track_orders') }}</p>
         </a>
     </div>
 

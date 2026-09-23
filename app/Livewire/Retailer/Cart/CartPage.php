@@ -14,14 +14,29 @@ class CartPage extends Component
 {
     public string $notes = '';
 
-    public function updateQty(int $productId, int $qty, CartService $cart): void
+    /**
+     * Update qty for any cart line — works for both plain product keys (int)
+     * and variant keys (string like "p5_v12").
+     */
+    public function updateQty(string $key, int $qty, CartService $cart): void
     {
-        $cart->update($productId, $qty);
+        $items = $cart->items();
+        $key   = is_numeric($key) ? (int) $key : $key;
+
+        if (isset($items[$key])) {
+            $moq = (int) ($items[$key]['moq'] ?? 1);
+            if ($qty > 0 && $qty < $moq) {
+                session()->flash('moq_warning_' . $key, "Minimum order quantity is {$moq}.");
+            }
+        }
+
+        $cart->updateByKey($key, $qty);
     }
 
-    public function remove(int $productId, CartService $cart): void
+    public function remove(string $key, CartService $cart): void
     {
-        $cart->remove($productId);
+        $key = is_numeric($key) ? (int) $key : $key;
+        $cart->removeByKey($key);
     }
 
     public function placeOrder(CartService $cart, OrderService $orderService): void
@@ -34,11 +49,14 @@ class CartPage extends Component
         /** @var Retailer $retailer */
         $retailer = auth()->user()->retailerProfile;
 
-        // Build items array in the format OrderService expects
+        // Build items array in the format OrderService expects.
+        // Variant items and plain items both carry 'product_id' in their data.
         $items = collect($cart->items())
-            ->map(fn ($item, $productId) => [
-                'product_id' => (int) $productId,
-                'qty'        => $item['qty'],
+            ->map(fn ($item) => [
+                'product_id'        => (int) $item['product_id'],
+                'qty'               => $item['qty'],
+                'variant_option_id' => isset($item['variant_option_id']) ? (int) $item['variant_option_id'] : null,
+                'variant_label'     => $item['variant_label'] ?? null,
             ])
             ->values()
             ->all();
@@ -46,11 +64,16 @@ class CartPage extends Component
         try {
             $order = $orderService->placeOrder($retailer, $items);
         } catch (InsufficientStockException $e) {
-            session()->flash('error', "Insufficient stock for: {$e->productName}");
+            session()->flash('error', "Insufficient stock for \"{$e->productName}\". Available: {$e->available}, requested: {$e->requested}.");
+            return;
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            session()->flash('error', $e->getMessage());
+            return;
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            session()->flash('error', $e->getMessage());
             return;
         }
 
-        // Append optional notes (not part of OrderService signature — update after)
         if ($this->notes !== '') {
             $order->update(['notes' => $this->notes]);
         }
@@ -67,10 +90,15 @@ class CartPage extends Component
         $products = [];
 
         if (! empty($items)) {
-            $productModels = \App\Models\Product::whereIn('id', array_keys($items))->get()->keyBy('id');
-            foreach ($items as $productId => $item) {
-                $products[$productId] = array_merge($item, [
-                    'product' => $productModels[$productId] ?? null,
+            // Collect unique product IDs from all cart items (works for both key types)
+            $productIds    = array_unique(array_column(array_values($items), 'product_id'));
+            $productModels = \App\Models\Product::whereIn('id', $productIds)->get()->keyBy('id');
+
+            foreach ($items as $key => $item) {
+                $productId         = $item['product_id'];
+                $products[$key]    = array_merge($item, [
+                    'cart_key' => $key,
+                    'product'  => $productModels[$productId] ?? null,
                 ]);
             }
         }

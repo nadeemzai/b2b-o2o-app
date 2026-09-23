@@ -10,27 +10,32 @@ use Illuminate\Database\Seeder;
 class StockSeeder extends Seeder
 {
     /**
-     * Seed opening stock for all active products in the Lahore store.
-     * Qty defaults to 100 units per product (adjust for go-live).
+     * Seed 200 units of opening stock for every active product across all active stores.
+     * Safe to re-run — uses firstOrCreate (won't reset existing stock).
      */
     public function run(): void
     {
-        $store    = TownshipStore::where('code', 'TS-LHR-01')->firstOrFail();
+        $stores   = TownshipStore::where('is_active', true)->get();
         $products = Product::active()->get();
 
-        foreach ($products as $product) {
-            StockLevel::firstOrCreate(
-                [
-                    'product_id' => $product->id,
-                    'store_id'   => $store->id,
-                ],
-                [
-                    'qty_on_hand'  => 100,
-                    'qty_reserved' => 0,
-                ]
-            );
+        $seeded = 0;
+
+        foreach ($stores as $store) {
+            foreach ($products as $product) {
+                StockLevel::firstOrCreate(
+                    [
+                        'product_id' => $product->id,
+                        'store_id'   => $store->id,
+                    ],
+                    [
+                        'qty_on_hand'  => 200,
+                        'qty_reserved' => 0,
+                    ]
+                );
+                $seeded++;
+            }
         }
 
-        $this->command->info("Stock seeded: {$products->count()} products × 100 units in {$store->name}.");
+        $this->command->info("Stock seeded: {$products->count()} products × {$stores->count()} stores = {$seeded} records.");
     }
 }

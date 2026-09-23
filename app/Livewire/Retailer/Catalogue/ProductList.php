@@ -5,6 +5,7 @@ namespace App\Livewire\Retailer\Catalogue;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\CartService;
+use App\Services\PricingService;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -14,54 +15,73 @@ class ProductList extends Component
 
     public string $search     = '';
     public string $categoryId = '';
+    public string $sortBy     = 'name_asc';
 
-    public function updatingSearch(): void  { $this->resetPage(); }
+    public function updatingSearch(): void     { $this->resetPage(); }
     public function updatingCategoryId(): void { $this->resetPage(); }
+    public function updatingSortBy(): void     { $this->resetPage(); }
 
-    public function addToCart(int $productId, CartService $cart): void
+    public function addToCart(int $productId, CartService $cart, PricingService $pricing): void
     {
-        $storeId = auth()->user()->retailerProfile->store_id;
+        $product = Product::withPrice()->findOrFail($productId);
 
-        $product = Product::with(['storePrices' => fn($q) => $q->where('store_id', $storeId)->where('is_active', true)])
-            ->findOrFail($productId);
+        $price = $pricing->retailerPrice($product);
+        if (! $price) {
+            return;
+        }
 
-        $price = $product->storePrices->first()?->price_pkr ?? 0;
+        $moq = max(1, (int) $product->moq);
 
         $cart->add(
             productId: $productId,
-            qty: 1,
-            price: (float) $price,
-            name: $product->name_en,
-            unit: $product->unit,
+            qty:       $moq,
+            price:     $price,
+            name:      $product->name_en,
+            unit:      $product->unit,
+            moq:       $moq,
         );
 
+        $this->dispatch('cart-updated');
         session()->flash('cart_added', $product->name_en);
     }
 
-    public function render()
+    public function render(PricingService $pricing)
     {
         $storeId = auth()->user()->retailerProfile->store_id;
 
-        $products = Product::active()
+        $query = Product::active()
+            ->withPrice()
             ->with([
                 'category',
-                'storePrices' => fn($q) => $q->where('store_id', $storeId)->where('is_active', true),
                 'stockLevels' => fn($q) => $q->where('store_id', $storeId),
             ])
-            ->whereHas('storePrices', fn($q) => $q->where('store_id', $storeId)->where('is_active', true))
             ->when($this->categoryId, fn($q) => $q->where('category_id', $this->categoryId))
             ->when($this->search, fn($q) => $q->where(function ($q) {
                 $q->where('name_en', 'like', "%{$this->search}%")
                   ->orWhere('sku', 'like', "%{$this->search}%");
-            }))
-            ->orderBy('name_en')
-            ->paginate(12);
+            }));
 
-        $categories = Category::orderBy('name')->get(['id', 'name']);
+        match ($this->sortBy) {
+            'price_asc'  => $query->orderBy('huashu_base_price_pkr'),
+            'price_desc' => $query->orderByDesc('huashu_base_price_pkr'),
+            'newest'     => $query->latest('products.created_at'),
+            default      => $query->orderBy('name_en'),
+        };
+
+        $products = $query->paginate(20);
+
+        // Batch-load commission rates for all categories on this page (no N+1)
+        $categoryIds     = $products->pluck('category_id')->unique()->filter()->values()->all();
+        $commissionRates = $pricing->ratesForCategories($categoryIds);
+
+        $categories    = Category::orderBy('name')->get(['id', 'name', 'name_zh', 'slug']);
+        $totalProducts = $products->total();
 
         return view('livewire.retailer.catalogue.product-list', [
-            'products'   => $products,
-            'categories' => $categories,
+            'products'        => $products,
+            'categories'      => $categories,
+            'totalProducts'   => $totalProducts,
+            'commissionRates' => $commissionRates,
         ])->layout('layouts.retailer', ['title' => 'Catalogue']);
     }
 }

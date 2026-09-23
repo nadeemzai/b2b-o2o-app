@@ -2,12 +2,14 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Admin\Resources\CategoryResource;
 use App\Filament\Admin\Resources\OrderResource;
-use App\Filament\Admin\Resources\ProductResource;
 use App\Filament\Admin\Resources\RetailerResource;
 use App\Filament\Admin\Resources\TownshipStoreResource;
 use App\Filament\Admin\Resources\UserResource;
+use App\Filament\Admin\Pages\CommissionDashboard;
+use App\Filament\Admin\Widgets\OrdersByStatusChart;
+use App\Filament\Admin\Widgets\OrderStatsOverview;
+use App\Filament\Admin\Widgets\RecentOrdersTable;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -31,6 +33,7 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->id('admin')
             ->path('admin')
+            ->authGuard('admin')
             ->login()
             ->colors([
                 'primary' => Color::Blue,
@@ -38,7 +41,6 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('B2B O2O — Admin')
             ->navigationGroups([
                 NavigationGroup::make('KYC & Retailers'),
-                NavigationGroup::make('Catalogue'),
                 NavigationGroup::make('Operations'),
                 NavigationGroup::make('System')
                     ->collapsed(),
@@ -46,13 +48,17 @@ class AdminPanelProvider extends PanelProvider
             ->resources([
                 RetailerResource::class,
                 TownshipStoreResource::class,
-                CategoryResource::class,
-                ProductResource::class,
                 OrderResource::class,
                 UserResource::class,
             ])
             ->pages([
                 Pages\Dashboard::class,
+                CommissionDashboard::class,
+            ])
+            ->widgets([
+                OrderStatsOverview::class,
+                OrdersByStatusChart::class,
+                RecentOrdersTable::class,
             ])
             ->middleware([
                 EncryptCookies::class,

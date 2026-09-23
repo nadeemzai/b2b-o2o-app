@@ -6,10 +6,37 @@ use App\Livewire\Retailer\Auth\Login;
 use App\Livewire\Retailer\Auth\Register;
 use App\Livewire\Retailer\Dashboard;
 use App\Livewire\Retailer\Catalogue\ProductList;
+use App\Livewire\Retailer\Catalogue\ProductDetail as RetailerProductDetail;
 use App\Livewire\Retailer\Cart\CartPage;
 use App\Livewire\Retailer\Orders\OrderHistory;
+use App\Livewire\Public\ProductCatalogue;
+use App\Livewire\Public\ProductDetail as PublicProductDetail;
 
-Route::get('/', fn () => redirect()->route('retailer.login'));
+
+// ── Locale & currency switching (works for guests and authenticated users) ──
+Route::post('/switch-locale/{locale}', function (string $locale) {
+    if (in_array($locale, ['en', 'zh_CN'], true)) {
+        session(['locale' => $locale]);
+        app()->setLocale($locale);
+    }
+    return redirect()->back();
+})->name('switch.locale');
+
+Route::post('/switch-currency/{currency}', function (string $currency) {
+    if (in_array($currency, ['PKR', 'USD', 'CNY'], true)) {
+        session(['currency' => $currency]);
+    }
+    return redirect()->back();
+})->name('switch.currency');
+
+// ── Root: public catalogue ─────────────────────────────────────
+Route::get('/', ProductCatalogue::class)->name('public.catalogue');
+
+// ── Public catalogue (same component, explicit path) ──────────
+Route::get('/catalogue', ProductCatalogue::class)->name('public.catalogue.browse');
+
+// ── Public product detail (no login required) ─────────────────
+Route::get('/product/{product}', PublicProductDetail::class)->name('public.product');
 
 // ── Retailer guest routes ──────────────────────────────────────
 Route::prefix('retailer')->name('retailer.')->middleware('guest')->group(function () {
@@ -27,6 +54,7 @@ Route::prefix('retailer')->name('retailer.')->middleware(['auth', 'retailer'])->
 Route::prefix('retailer')->name('retailer.')->middleware(['auth', 'retailer', 'retailer.approved'])->group(function () {
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
     Route::get('/catalogue', ProductList::class)->name('catalogue');
+    Route::get('/catalogue/{product}', RetailerProductDetail::class)->name('catalogue.product');
     Route::get('/cart',      CartPage::class)->name('cart');
     Route::get('/orders',    OrderHistory::class)->name('orders');
 });
@@ -41,7 +69,6 @@ Route::post('/retailer/logout', function () {
 
 // ──────────────────────────────────────────────────────────────────────────
 // Admin: secure KYC document viewer
-// Served from the private 'kyc' disk — never publicly accessible
 // ──────────────────────────────────────────────────────────────────────────
 Route::get(
     '/admin/retailers/{retailer}/kyc/{field}',

@@ -14,6 +14,7 @@ class Category extends Model
 
     protected $fillable = [
         'name',
+        'name_zh',
         'slug',
         'parent_id',
         'is_active',
@@ -40,6 +41,22 @@ class Category extends Model
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'product_categories');
+    }
+
+    public function commissions(): HasMany
+    {
+        return $this->hasMany(CategoryCommission::class);
+    }
+
+    /**
+     * The current active commission rate for this category.
+     */
+    public function activeCommission(): HasMany
+    {
+        return $this->hasMany(CategoryCommission::class)
+            ->where('effective_from', '<=', now()->toDateString())
+            ->orderByDesc('effective_from')
+            ->limit(1);
     }
 
     // ──────────────────────────────────────────────

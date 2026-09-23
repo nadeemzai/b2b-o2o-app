@@ -10,14 +10,16 @@ class Dashboard extends Component
 {
     public function render(CartService $cart)
     {
-        $retailer  = auth()->user()->retailerProfile;
+        $retailer   = auth()->user()->retailerProfile;
         $retailerId = $retailer->id;
 
+        $baseQuery = Order::where('retailer_id', $retailerId);
+
         $stats = [
-            'pending'   => Order::where('retailer_id', $retailerId)->where('status', 'pending')->count(),
-            'preparing' => Order::where('retailer_id', $retailerId)->where('status', 'preparing')->count(),
-            'delivered' => Order::where('retailer_id', $retailerId)->where('status', 'delivered')->count(),
-            'total'     => Order::where('retailer_id', $retailerId)->count(),
+            'pending'     => (clone $baseQuery)->where('status', 'pending')->count(),
+            'in_progress' => (clone $baseQuery)->whereIn('status', ['payment_verified', 'transferred', 'fulfilling'])->count(),
+            'delivered'   => (clone $baseQuery)->where('status', 'delivered')->count(),
+            'total'       => (clone $baseQuery)->count(),
         ];
 
         $recentOrders = Order::where('retailer_id', $retailerId)

@@ -53,7 +53,7 @@
                     @endif
                 </div>
             </div>
-            <p class="mt-4 text-xs text-indigo-600 dark:text-indigo-400 group-hover:underline">
+            <p class="mt-4 text-xs text-brand group-hover:underline">
                 @if (in_array($kycStatus, ['pending', 'rejected'])) Upload / update documents →
                 @else View KYC details →
                 @endif

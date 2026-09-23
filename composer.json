@@ -1,7 +1,12 @@
 {
     "name": "oztech/b2b-o2o-api",
-    "description": "B2B O2O Wholesale Marketplace API — Oz Tech / Huashu partnership",
-    "keywords": ["laravel", "framework", "b2b", "o2o"],
+    "description": "B2B O2O Wholesale Marketplace API \u2014 Oz Tech / Huashu partnership",
+    "keywords": [
+        "laravel",
+        "framework",
+        "b2b",
+        "o2o"
+    ],
     "license": "proprietary",
     "require": {
         "php": "^8.3",
@@ -25,7 +30,10 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "app/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

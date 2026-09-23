@@ -15,6 +15,8 @@ class DatabaseSeeder extends Seeder
             RetailerSeeder::class,
             StockSeeder::class,
             RolesAndPermissionsSeeder::class,
+            BigCatalogueSeeder::class,
+            CategoryChineseNamesSeeder::class,
         ]);
     }
 }
