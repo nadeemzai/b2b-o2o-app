@@ -2,96 +2,46 @@
 <div class="-mx-4 sm:-mx-6 lg:-mx-8 -mt-6">
 
 
-    {{-- ══ HUASHU TECH PARTNER BANNER ═══════════════════════════════════════ --}}
-    <a href="https://www.huashu-tech.com/" target="_blank" rel="noopener"
-       class="block w-full group cursor-pointer select-none mt-4 mb-4"
-       title="{{ __('ui.visit_partner_site') }}">
 
-        <div class="relative overflow-hidden bg-gradient-to-r from-[#0b1d45] via-[#122461] to-[#0f2d7a] px-4 sm:px-6 lg:px-8 py-16 sm:py-20 min-h-[300px] sm:min-h-[340px] flex items-center">
-            <div class="pointer-events-none absolute inset-0 opacity-10"
-                 style="background-image:linear-gradient(90deg,transparent 49%,#5b8af0 49%,#5b8af0 51%,transparent 51%),linear-gradient(0deg,transparent 49%,#5b8af0 49%,#5b8af0 51%,transparent 51%);background-size:40px 40px;"></div>
-            <div class="pointer-events-none absolute -top-16 -right-16 w-72 h-72 rounded-full opacity-20"
-                 style="background: radial-gradient(circle, #4a7cf7 0%, transparent 70%);"></div>
+    {{-- ══ FILTER BAR ═════════════════════════════════════════════════════ --}}
+    <div class="bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-2.5">
+        <div class="flex flex-wrap items-center gap-3 max-w-screen-xl mx-auto">
 
-            <div class="relative max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div class="flex items-center gap-4 sm:gap-6">
-                    <div class="hidden sm:flex flex-col items-center shrink-0">
-                        <div class="bg-[#ff5b00] text-white text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-t-md leading-tight">Official</div>
-                        <div class="bg-orange-100 text-[#ff5b00] text-[9px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-b-md leading-tight border-t border-orange-200">Partner</div>
-                    </div>
-                    <div class="hidden sm:block w-px h-14 bg-white/20 shrink-0"></div>
-                    <div class="shrink-0">
-                        <svg width="80" height="80" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <polygon points="26,3 47,14.5 47,37.5 26,49 5,37.5 5,14.5" fill="none" stroke="#4a7cf7" stroke-width="1.8" opacity="0.7"/>
-                            <rect x="14" y="16" width="5" height="20" rx="1.5" fill="#4a7cf7"/>
-                            <rect x="33" y="16" width="5" height="20" rx="1.5" fill="#4a7cf7"/>
-                            <rect x="19" y="24" width="14" height="4" rx="1.5" fill="#4a7cf7"/>
-                            <circle cx="14" cy="12" r="2" fill="#ff5b00"/>
-                            <circle cx="38" cy="12" r="2" fill="#4a7cf7" opacity="0.6"/>
-                            <circle cx="14" cy="40" r="2" fill="#4a7cf7" opacity="0.6"/>
-                            <circle cx="38" cy="40" r="2" fill="#ff5b00"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <div class="flex items-baseline gap-2">
-                            <span class="text-white font-black text-4xl sm:text-5xl tracking-tight leading-none" style="font-family:'Segoe UI',system-ui,sans-serif;letter-spacing:-0.5px;">HUASHU</span>
-                            <span class="text-[#4a7cf7] text-xs font-semibold tracking-widest uppercase self-end mb-0.5">technologies</span>
-                        </div>
-                        <p class="text-blue-200 text-sm sm:text-base font-medium mt-1.5 tracking-wide">{{ __('ui.sourcing_solutions') }}</p>
-                        <p class="text-blue-300/60 text-xs sm:text-sm mt-2 max-w-sm leading-relaxed hidden sm:block">{{ __('ui.trusted_supplier') }}</p>
-                        <div class="flex items-center gap-2 mt-1.5 sm:hidden">
-                            <span class="bg-[#ff5b00] text-white text-[9px] font-bold tracking-widest uppercase px-2 py-0.5 rounded">{{ __('ui.official_partner') }}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex items-center gap-4 shrink-0">
-                    <p class="text-blue-300/70 text-xs text-right hidden lg:block leading-relaxed max-w-[180px]">{{ __('ui.powering_supply_chain') }}</p>
-                    <div class="flex items-center gap-2 bg-white/10 group-hover:bg-white/20 border border-white/20 group-hover:border-white/40 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-all duration-200 shrink-0">
-                        <span>{{ __('ui.visit_partner_site') }}</span>
-                        <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="h-1 bg-gradient-to-r from-[#ff5b00] via-[#ff7a33] to-[#4a7cf7]"></div>
-    </a>
-
-    {{-- ══ SEARCH BAR ══════════════════════════════════════════════════════ --}}
-    <div class="bg-brand px-4 sm:px-6 lg:px-8 py-5">
-        <div class="flex items-center gap-3 max-w-4xl mx-auto">
-            {{-- Category quick-select --}}
-            <select wire:model.live="categoryId"
-                    class="h-11 rounded-l-lg border-0 bg-white/10 text-white text-sm pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-white/30 min-w-[140px] shrink-0">
-                <option value="" class="text-slate-800">{{ __('ui.filter_category') }}</option>
-                @foreach($categories as $cat)
-                    <option value="{{ $cat->id }}" class="text-slate-800">{{ app()->getLocale() === 'zh_CN' && $cat->name_zh ? $cat->name_zh : $cat->name }}</option>
-                @endforeach
-            </select>
-
-            {{-- Search input --}}
-            <div class="flex flex-1 bg-white rounded-r-lg overflow-hidden shadow-md">
+            {{-- Inline keyword filter --}}
+            <div class="flex items-center border border-slate-300 rounded overflow-hidden h-8 flex-1 min-w-[180px] max-w-xs">
                 <input type="text"
                        wire:model.live.debounce.350ms="search"
                        placeholder="{{ __('ui.search_placeholder') }}"
-                       class="flex-1 h-11 px-4 text-sm text-slate-800 placeholder-slate-400 focus:outline-none" />
-                <button class="h-11 px-5 bg-brand-dark text-white text-sm font-semibold hover:bg-brand-dark transition shrink-0 flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="flex-1 h-full px-3 text-sm text-slate-700 placeholder-slate-400 focus:outline-none" />
+                <span class="px-2.5 text-slate-400">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
-                    {{ __('ui.search_btn') }}
-                </button>
+                </span>
             </div>
 
-            {{-- Cart link --}}
-            <a href="{{ route('retailer.cart') }}"
-               class="h-11 shrink-0 flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white text-sm font-medium px-4 rounded-lg transition border border-white/20">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-                </svg>
-                <span class="hidden sm:inline">{{ __('ui.nav_cart') }}</span>
-            </a>
+            {{-- Category filter --}}
+            <select wire:model.live="categoryId"
+                    class="h-8 border border-slate-300 rounded text-sm text-slate-700 pl-3 pr-7 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand min-w-[150px]">
+                <option value="">{{ __('ui.filter_category') }}</option>
+                @foreach($categories as $cat)
+                    <option value="{{ $cat->id }}">{{ app()->getLocale() === 'zh_CN' && $cat->name_zh ? $cat->name_zh : $cat->name }}</option>
+                @endforeach
+            </select>
+
+            {{-- Sort --}}
+            <select wire:model.live="sortBy"
+                    class="h-8 border border-slate-300 rounded text-sm text-slate-700 pl-3 pr-7 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand min-w-[140px]">
+                <option value="name_asc">{{ __('ui.sort_name_az') }}</option>
+                <option value="name_desc">{{ __('ui.sort_name_desc') }}</option>
+                <option value="price_asc">{{ __('ui.sort_price_asc') }}</option>
+                <option value="price_desc">{{ __('ui.sort_price_desc') }}</option>
+            </select>
+
+            {{-- Result count --}}
+            <span class="ml-auto text-xs text-slate-400 whitespace-nowrap hidden sm:inline">
+                {{ $products->total() }} {{ __('ui.products_found') }}
+            </span>
         </div>
     </div>
 

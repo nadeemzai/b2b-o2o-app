@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Admin\Resources\BannerResource;
 use App\Filament\Admin\Resources\OrderResource;
 use App\Filament\Admin\Resources\RetailerResource;
 use App\Filament\Admin\Resources\TownshipStoreResource;
@@ -40,12 +41,14 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->brandName('B2B O2O — Admin')
             ->navigationGroups([
+                    NavigationGroup::make('Content'),
                 NavigationGroup::make('KYC & Retailers'),
                 NavigationGroup::make('Operations'),
                 NavigationGroup::make('System')
                     ->collapsed(),
             ])
             ->resources([
+                BannerResource::class,
                 RetailerResource::class,
                 TownshipStoreResource::class,
                 OrderResource::class,

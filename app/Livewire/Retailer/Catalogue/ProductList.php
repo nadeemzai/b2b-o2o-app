@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Services\CartService;
 use App\Services\PricingService;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -13,8 +14,11 @@ class ProductList extends Component
 {
     use WithPagination;
 
+    #[Url]
     public string $search     = '';
+    #[Url(as: 'category')]
     public string $categoryId = '';
+    #[Url]
     public string $sortBy     = 'name_asc';
 
     public function updatingSearch(): void     { $this->resetPage(); }

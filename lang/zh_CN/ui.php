@@ -96,6 +96,8 @@ return [
     'sort_price_asc'        => '价格升序',
     'sort_price_desc'       => '价格降序',
     'sort_newest'           => '最新',
+    'sort_name_desc'           => '名称 Z-A',
+    'products_found'           => '件商品',
     'loading'               => '加载商品中...',
     'no_products'           => '未找到商品',
     'no_products_hint'      => '试试其他关键词或分类',

@@ -96,6 +96,8 @@ return [
     'sort_price_asc'        => 'Price ↑',
     'sort_price_desc'       => 'Price ↓',
     'sort_newest'           => 'Newest',
+    'sort_name_desc'           => 'Name Z-A',
+    'products_found'           => 'products found',
     'loading'               => 'Loading products...',
     'no_products'           => 'No products found',
     'no_products_hint'      => 'Try a different keyword or category',
