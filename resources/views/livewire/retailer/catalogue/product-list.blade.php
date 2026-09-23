@@ -182,10 +182,18 @@
                         {{-- Product image (clickable → detail page) --}}
                         <a href="{{ route('retailer.catalogue.product', $product) }}"
                            class="aspect-square bg-gradient-to-br from-slate-50 to-slate-100 relative overflow-hidden block">
-                            @if($product->image_path)
-                                <img src="{{ asset('storage/' . $product->image_path) }}"
+                            @php
+                                $primaryImg = $product->primaryImage();
+                                $displaySrc = $primaryImg
+                                    ? $primaryImg->display_url
+                                    : ($product->image_path ? asset('storage/' . $product->image_path) : null);
+                            @endphp
+                            @if($displaySrc)
+                                <img src="{{ $displaySrc }}"
                                      alt="{{ $product->name_en }}"
-                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" />
+                                     loading="lazy"
+                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                     onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex flex-col items-center justify-center p-4\'><div class=\'w-14 h-14 rounded-2xl bg-orange-50 flex items-center justify-center mb-2\'><svg class=\'w-7 h-7 text-orange-200\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10\'/></svg></div></div>'" />
                             @else
                                 {{-- Branded placeholder --}}
                                 <div class="w-full h-full flex flex-col items-center justify-center p-4">

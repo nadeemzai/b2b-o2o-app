@@ -68,19 +68,40 @@ class ProductResource extends Resource
                         ->helperText('Minimum units a retailer must order in one cart line.'),
                 ])->columns(2),
 
-            Section::make('Product Image')
+            Section::make('Product Images')
+                ->description('Upload up to 6 product images. The first image is used as the primary listing image.')
                 ->schema([
-                    FileUpload::make('image_path')
-                        ->label('Product Image')
-                        ->image()
-                        ->disk('public')
-                        ->directory('products')
-                        ->imageResizeMode('cover')
-                        ->imageResizeTargetWidth('800')
-                        ->imageResizeTargetHeight('800')
-                        ->maxSize(2048)
-                        ->helperText('Upload a product photo. Max 2MB. Will be resized to 800×800.'),
-                ])->columns(1),
+                    Repeater::make('images')
+                        ->relationship('images')
+                        ->label(false)
+                        ->schema([
+                            FileUpload::make('image_url')
+                                ->label('Image')
+                                ->image()
+                                ->disk('public')
+                                ->directory('products')
+                                ->imageResizeMode('cover')
+                                ->imageResizeTargetWidth('800')
+                                ->imageResizeTargetHeight('800')
+                                ->maxSize(3072)
+                                ->columnSpan(2),
+                            \Filament\Forms\Components\TextInput::make('sort_order')
+                                ->label('Order')
+                                ->numeric()
+                                ->default(0)
+                                ->minValue(0)
+                                ->maxValue(99),
+                            \Filament\Forms\Components\Toggle::make('is_primary')
+                                ->label('Primary')
+                                ->default(false),
+                        ])
+                        ->columns(4)
+                        ->defaultItems(0)
+                        ->maxItems(6)
+                        ->addActionLabel('Add Image')
+                        ->reorderable()
+                        ->collapsible(),
+                ]),
 
             Section::make('Product Variants')
                 ->description('Add variant dimensions (e.g. Color, Size, Fabric). Each dimension can have multiple options with optional price adjustments.')
@@ -147,11 +168,12 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
-                ImageColumn::make('image_path')
+                ImageColumn::make('images.image_url')
                     ->label('Image')
                     ->disk('public')
                     ->square()
-                    ->size(48),
+                    ->size(48)
+                    ->defaultImageUrl('https://placehold.co/48x48?text=No+Img'),
                 TextColumn::make('name_en')->label('Name')->searchable()->sortable(),
                 TextColumn::make('sku')->label('SKU')->searchable(),
                 TextColumn::make('category.name')->label('Category')->sortable(),

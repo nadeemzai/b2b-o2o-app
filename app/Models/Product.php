@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\ProductImage;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -59,6 +60,18 @@ class Product extends Model
     public function stockLevels(): HasMany
     {
         return $this->hasMany(StockLevel::class);
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
+    }
+
+    /** Returns the primary image or the first image available. */
+    public function primaryImage(): ?ProductImage
+    {
+        return $this->images->firstWhere('is_primary', true)
+            ?? $this->images->first();
     }
 
     public function orderItems(): HasMany

@@ -57,6 +57,7 @@ class ProductList extends Component
             ->withPrice()
             ->with([
                 'category',
+                'images',
                 'stockLevels' => fn($q) => $q->where('store_id', $storeId),
             ])
             ->when($this->categoryId, fn($q) => $q->where('category_id', $this->categoryId))
