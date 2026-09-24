@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
+    @livewireScripts
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -25,6 +26,7 @@
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; background: #f5f5f5; }
+        [wire\:loading] { opacity: .6; pointer-events: none; }
         [x-cloak] { display: none !important; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -253,7 +255,7 @@
             </form>
 
             {{-- Right-side action icons --}}
-            <div class="flex items-center shrink-0 gap-1">
+            <div class="flex items-center shrink-0">
 
                 {{-- Sign In --}}
                 <a href="{{ route('retailer.login') }}"
@@ -334,6 +336,5 @@
     OZ Tech &mdash; B2B Wholesale Portal &copy; {{ date('Y') }}
 </footer>
 
-@livewireScripts
 </body>
 </html>
