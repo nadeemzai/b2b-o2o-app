@@ -59,6 +59,26 @@ class ListOrders extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [];
+        return [
+            \Filament\Actions\Action::make('export_xlsx')
+                ->label('Export Excel')
+                ->icon('heroicon-o-table-cells')
+                ->color('success')
+                ->url(fn () => route('admin.orders.export') . '?' . http_build_query(array_filter([
+                    'format' => 'xlsx',
+                    'status' => ($tab = $this->activeTab) && $tab !== 'all' ? $tab : null,
+                ])))
+                ->openUrlInNewTab(),
+
+            \Filament\Actions\Action::make('export_csv')
+                ->label('Export CSV')
+                ->icon('heroicon-o-document-text')
+                ->color('gray')
+                ->url(fn () => route('admin.orders.export') . '?' . http_build_query(array_filter([
+                    'format' => 'csv',
+                    'status' => ($tab = $this->activeTab) && $tab !== 'all' ? $tab : null,
+                ])))
+                ->openUrlInNewTab(),
+        ];
     }
 }

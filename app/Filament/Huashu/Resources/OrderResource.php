@@ -209,6 +209,14 @@ class OrderResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
 
+                // ── Download PDF ───────────────────────────────────────────────
+                Action::make('download_pdf')
+                    ->label('PDF')
+                    ->icon('heroicon-o-document')
+                    ->color('gray')
+                    ->url(fn (Order $record) => route('huashu.orders.pdf', $record))
+                    ->openUrlInNewTab(),
+
                 // ── Mark as Fulfilling ──────────────────────────────────────
                 Action::make('mark_fulfilling')
                     ->label('Mark as Fulfilling')

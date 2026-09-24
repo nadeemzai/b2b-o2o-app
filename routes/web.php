@@ -75,3 +75,26 @@ Route::get(
     \App\Http\Controllers\Admin\KycDocumentController::class
 )->middleware(['auth'])->name('admin.kyc.document');
 
+
+// ──────────────────────────────────────────────────────────────────────────
+// Order Exports (xlsx / csv / pdf)
+// ──────────────────────────────────────────────────────────────────────────
+use App\Http\Controllers\Export\OrderExportController;
+
+// Retailer — scoped to authenticated retailer's own orders
+Route::prefix('retailer')->name('retailer.')->middleware(['auth', 'retailer', 'retailer.approved'])->group(function () {
+    Route::get('/orders/export',             [OrderExportController::class, 'retailerListing'])  ->name('orders.export');
+    Route::get('/orders/{order}/pdf',        [OrderExportController::class, 'retailerOrderPdf']) ->name('orders.pdf');
+});
+
+// Admin — all orders (Filament admin guard)
+Route::middleware(['auth:admin'])->group(function () {
+    Route::get('/admin-exports/orders',              [OrderExportController::class, 'adminListing'])  ->name('admin.orders.export');
+    Route::get('/admin-exports/orders/{order}/pdf',  [OrderExportController::class, 'adminOrderPdf']) ->name('admin.orders.pdf');
+});
+
+// Huashu — forHuashu() scope (Filament huashu guard)
+Route::middleware(['auth:huashu'])->group(function () {
+    Route::get('/huashu-exports/orders',               [OrderExportController::class, 'huashuListing'])  ->name('huashu.orders.export');
+    Route::get('/huashu-exports/orders/{order}/pdf',   [OrderExportController::class, 'huashuOrderPdf']) ->name('huashu.orders.pdf');
+});

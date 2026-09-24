@@ -274,6 +274,14 @@ class OrderResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
 
+                // ── Download PDF ───────────────────────────────────────────────
+                Action::make('download_pdf')
+                    ->label('PDF')
+                    ->icon('heroicon-o-document')
+                    ->color('gray')
+                    ->url(fn (Order $record) => route('admin.orders.pdf', $record))
+                    ->openUrlInNewTab(),
+
                 // ── Verify Payment ─────────────────────────────────────────
                 Action::make('verify_payment')
                     ->label('Verify Payment')
