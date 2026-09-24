@@ -67,6 +67,51 @@
                 </table>
             </div>
 
+
+            {{-- ── Order Progress Bar ── --}}
+            @php
+                $huashuSteps = ['transferred', 'fulfilling', 'delivered'];
+                $huashuLabels = [
+                    'transferred' => 'Received',
+                    'fulfilling'  => 'Fulfilling',
+                    'delivered'   => 'Delivered',
+                ];
+                $huashuCurrentIndex = array_search($order->status, $huashuSteps, true);
+                if ($huashuCurrentIndex === false) { $huashuCurrentIndex = 0; }
+            @endphp
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm px-4 py-5">
+                <div class="relative">
+                    <div class="flex items-center justify-between">
+                        @foreach ($huashuSteps as $hIdx => $hStep)
+                            <div class="flex flex-col items-center flex-1 relative">
+                                @if ($hIdx > 0)
+                                    <div class="absolute top-3 right-1/2 w-full h-0.5 -translate-y-1/2 {{ $hIdx <= $huashuCurrentIndex ? 'bg-brand' : 'bg-gray-200' }}"></div>
+                                @endif
+                                <div class="relative z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center text-white text-xs
+                                    {{ $hIdx < $huashuCurrentIndex
+                                        ? 'bg-brand border-brand'
+                                        : ($hIdx === $huashuCurrentIndex
+                                            ? 'bg-brand border-brand ring-4 ring-brand/20'
+                                            : 'bg-white border-gray-300') }}">
+                                    @if ($hIdx < $huashuCurrentIndex)
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                    @elseif ($hIdx === $huashuCurrentIndex)
+                                        <div class="w-2 h-2 rounded-full bg-white"></div>
+                                    @endif
+                                </div>
+                                <p class="mt-1.5 text-center text-xs leading-tight
+                                    {{ $hIdx <= $huashuCurrentIndex ? 'text-brand font-semibold' : 'text-gray-400' }}"
+                                   style="max-width:70px">
+                                    {{ $huashuLabels[$hStep] }}
+                                </p>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
             {{-- Status History ── --}}
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
                 <div class="px-4 py-3 border-b border-slate-100 font-semibold text-slate-700">History</div>

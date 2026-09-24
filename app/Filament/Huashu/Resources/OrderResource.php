@@ -9,6 +9,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\View as InfolistView;
 use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -66,6 +67,9 @@ class OrderResource extends Resource
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist->schema([
+
+            InfolistView::make('filament.huashu.infolists.order-progress-bar')
+                ->columnSpanFull(),
 
             Section::make('Order Summary')
                 ->columns(3)
