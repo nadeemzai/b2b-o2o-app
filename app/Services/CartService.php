@@ -76,7 +76,7 @@ class CartService
             if ($qty <= 0) {
                 unset($cart[$key]);
             } else {
-                $cart[$key]['qty'] = $qty;   // set, not accumulate — user typed explicit qty
+                $cart[$key]['qty'] = max($moq, $qty);   // enforce MOQ floor
             }
         } else {
             if ($qty > 0) {
@@ -84,7 +84,7 @@ class CartService
                     'product_id'        => $productId,
                     'variant_option_id' => $variantOptionId,
                     'variant_label'     => $variantLabel,
-                    'qty'               => $qty,
+                    'qty'               => max($moq, $qty),   // enforce MOQ floor on add
                     'price'             => $price,
                     'name'              => $name,
                     'unit'              => $unit,

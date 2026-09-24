@@ -13,6 +13,7 @@ use Livewire\Component;
 class CartPage extends Component
 {
     public string $notes = '';
+    public array  $moqWarnings = [];
 
     /**
      * Update qty for any cart line — works for both plain product keys (int)
@@ -26,7 +27,9 @@ class CartPage extends Component
         if (isset($items[$key])) {
             $moq = (int) ($items[$key]['moq'] ?? 1);
             if ($qty > 0 && $qty < $moq) {
-                session()->flash('moq_warning_' . $key, "Minimum order quantity is {$moq}.");
+                $this->moqWarnings[(string) $key] = "Minimum order quantity is {$moq} " . ($moq === 1 ? 'unit' : 'units') . '.';
+            } else {
+                unset($this->moqWarnings[(string) $key]);
             }
         }
 
@@ -36,6 +39,7 @@ class CartPage extends Component
     public function remove(string $key, CartService $cart): void
     {
         $key = is_numeric($key) ? (int) $key : $key;
+        unset($this->moqWarnings[(string) $key]);
         $cart->removeByKey($key);
     }
 

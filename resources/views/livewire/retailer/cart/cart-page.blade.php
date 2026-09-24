@@ -42,19 +42,26 @@
 
                     <p class="text-xs text-slate-400 mt-0.5">{{ $item['unit'] }} &middot; {{ \App\Services\CurrencyService::format($item['price']) }} each</p>
 
-                    @if(! $isVariant && ($item['moq'] ?? 1) > 1)
+                    @if(($item['moq'] ?? 1) > 1)
                     <span class="inline-block mt-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">Min {{ $item['moq'] }} units</span>
                     @endif
 
-                    @if(session()->has('moq_warning_' . $key))
-                    <span class="inline-block mt-1 text-xs text-red-600 bg-red-50 border border-red-200 rounded px-1.5 py-0.5">{{ session('moq_warning_' . $key) }}</span>
+                    @if(isset($moqWarnings[(string) $key]))
+                    <span class="inline-block mt-1 text-xs text-red-600 bg-red-50 border border-red-200 rounded px-1.5 py-0.5">
+                        <svg class="inline w-3 h-3 mr-0.5 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                        {{ $moqWarnings[(string) $key] }}
+                    </span>
                     @endif
                 </div>
 
                 {{-- Qty controls --}}
                 <div class="flex items-center gap-2 mt-0.5">
+                    @php $atMoq = $item['qty'] <= ($item['moq'] ?? 1); @endphp
                     <button wire:click="updateQty('{{ $key }}', {{ max(0, $item['qty'] - 1) }})"
-                            class="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition text-sm font-bold">-</button>
+                            @disabled($atMoq)
+                            title="{{ $atMoq ? 'Minimum order quantity reached' : '' }}"
+                            class="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center transition text-sm font-bold
+                                   {{ $atMoq ? 'opacity-40 cursor-not-allowed text-slate-400' : 'text-slate-600 hover:bg-slate-50' }}">-</button>
                     <span class="w-8 text-center text-sm font-semibold text-slate-800 tabular-nums">{{ $item['qty'] }}</span>
                     <button wire:click="updateQty('{{ $key }}', {{ $item['qty'] + 1 }})"
                             class="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition text-sm font-bold">+</button>
