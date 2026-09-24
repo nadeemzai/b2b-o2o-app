@@ -6,13 +6,16 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Services\PricingService;
 use Livewire\Component;
+use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 
 class ProductCatalogue extends Component
 {
     use WithPagination;
 
+    #[Url]
     public string $search     = '';
+    #[Url(as: 'category')]
     public string $categoryId = '';
     public string $sortBy     = 'name_asc';
 
