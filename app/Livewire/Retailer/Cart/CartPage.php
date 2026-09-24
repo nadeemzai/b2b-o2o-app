@@ -39,7 +39,7 @@ class CartPage extends Component
         $cart->removeByKey($key);
     }
 
-    public function placeOrder(CartService $cart, OrderService $orderService): void
+    public function placeOrder(CartService $cart, OrderService $orderService)
     {
         if ($cart->isEmpty()) {
             session()->flash('error', 'Your cart is empty.');
@@ -80,8 +80,8 @@ class CartPage extends Component
 
         $cart->clear();
 
-        session()->flash('success', 'Order placed successfully! Your store will prepare it shortly.');
-        $this->redirect(route('retailer.orders'), navigate: true);
+        session()->put('order_placed_success', 'Order placed successfully! Your store will prepare it shortly.');
+        $this->redirect(route('retailer.orders'));
     }
 
     public function render(CartService $cart)
