@@ -68,11 +68,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // ── Store Staff routes ────────────────────────────────────
     Route::prefix('store')->middleware('role:store_staff')->group(function () {
 
-        // Order queue
+        // Order visibility (read-only — Huashu owns status transitions/delivery now)
         Route::get('orders',                   [StoreOrderController::class, 'index']);
         Route::get('orders/{order}',           [StoreOrderController::class, 'show']);
-        Route::post('orders/{order}/status',   [StoreOrderController::class, 'updateStatus']);
-        Route::post('orders/{order}/deliver',  [StoreOrderController::class, 'deliver']);
 
         // Stock management
         Route::get('stock',           [StoreStockController::class, 'index']);   // GET  /api/store/stock

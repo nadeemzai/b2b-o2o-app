@@ -28,15 +28,20 @@ class ListOrders extends ListRecords
                 ->badge($badge(Order::STATUS_PENDING))
                 ->badgeColor('warning'),
 
-            'preparing' => Tab::make('Preparing')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', Order::STATUS_PREPARING))
-                ->badge($badge(Order::STATUS_PREPARING))
+            'payment_verified' => Tab::make('Payment Verified')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', Order::STATUS_PAYMENT_VERIFIED))
+                ->badge($badge(Order::STATUS_PAYMENT_VERIFIED))
                 ->badgeColor('info'),
 
-            'ready_for_delivery' => Tab::make('Ready for Delivery')
-                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', Order::STATUS_READY_FOR_DELIVERY))
-                ->badge($badge(Order::STATUS_READY_FOR_DELIVERY))
+            'transferred' => Tab::make('Transferred to Huashu')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', Order::STATUS_TRANSFERRED))
+                ->badge($badge(Order::STATUS_TRANSFERRED))
                 ->badgeColor('primary'),
+
+            'fulfilling' => Tab::make('Fulfilling')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('status', Order::STATUS_FULFILLING))
+                ->badge($badge(Order::STATUS_FULFILLING))
+                ->badgeColor('info'),
 
             'delivered' => Tab::make('Delivered')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('status', Order::STATUS_DELIVERED))

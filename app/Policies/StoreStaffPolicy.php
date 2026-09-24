@@ -20,18 +20,6 @@ class StoreStaffPolicy
     }
 
     /**
-     * Only riders or managers may mark delivery (collect COD).
-     */
-    public function deliverOrder(User $user, Order $order): bool
-    {
-        if (! $this->manageOrder($user, $order)) {
-            return false;
-        }
-
-        return in_array($user->activeStoreStaff->position, ['rider', 'manager']);
-    }
-
-    /**
      * Managers and operators may update stock.
      */
     public function manageStock(User $user): bool

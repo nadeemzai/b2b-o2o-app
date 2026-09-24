@@ -55,10 +55,6 @@ class Order extends Model
     public const STATUS_DELIVERED         = 'delivered';
     public const STATUS_CANCELLED         = 'cancelled';
 
-    // Legacy — kept for backward compat with old Filament pages
-    public const STATUS_PREPARING          = 'preparing';
-    public const STATUS_READY_FOR_DELIVERY = 'ready_for_delivery';
-
     public const STATUSES = [
         self::STATUS_PENDING,
         self::STATUS_PAYMENT_VERIFIED,

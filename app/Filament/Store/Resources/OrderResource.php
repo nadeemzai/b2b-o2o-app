@@ -23,6 +23,36 @@ class OrderResource extends Resource
     protected static ?string $navigationLabel = 'Orders';
     protected static ?string $navigationGroup = 'Orders';
 
+    // ──────────────────────────────────────────────
+    // Status helpers (shared across table + infolist)
+    // ──────────────────────────────────────────────
+
+    private static function statusColor(string $state): string
+    {
+        return match ($state) {
+            Order::STATUS_PENDING           => 'warning',
+            Order::STATUS_PAYMENT_VERIFIED  => 'info',
+            Order::STATUS_TRANSFERRED       => 'primary',
+            Order::STATUS_FULFILLING        => 'info',
+            Order::STATUS_DELIVERED         => 'success',
+            Order::STATUS_CANCELLED         => 'danger',
+            default                         => 'gray',
+        };
+    }
+
+    private static function statusLabel(string $state): string
+    {
+        return match ($state) {
+            Order::STATUS_PENDING          => 'Pending',
+            Order::STATUS_PAYMENT_VERIFIED => 'Payment Verified',
+            Order::STATUS_TRANSFERRED      => 'Transferred to Huashu',
+            Order::STATUS_FULFILLING       => 'Fulfilling',
+            Order::STATUS_DELIVERED        => 'Delivered',
+            Order::STATUS_CANCELLED        => 'Cancelled',
+            default                        => ucwords(str_replace('_', ' ', $state)),
+        };
+    }
+
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
         $storeId = StoreStaffContext::storeId();
@@ -47,15 +77,8 @@ class OrderResource extends Resource
                         TextEntry::make('id')->label('Order #'),
                         TextEntry::make('status')
                             ->badge()
-                            ->color(fn (string $state): string => match ($state) {
-                                Order::STATUS_PENDING            => 'warning',
-                                Order::STATUS_PREPARING          => 'info',
-                                Order::STATUS_READY_FOR_DELIVERY => 'primary',
-                                Order::STATUS_DELIVERED          => 'success',
-                                Order::STATUS_CANCELLED          => 'danger',
-                                default                          => 'gray',
-                            })
-                            ->formatStateUsing(fn (string $state): string => ucfirst(str_replace('_', ' ', $state))),
+                            ->color(fn (string $state): string => self::statusColor($state))
+                            ->formatStateUsing(fn (string $state): string => self::statusLabel($state)),
                         TextEntry::make('payment_method')->badge()->color('gray'),
                         TextEntry::make('retailer.business_name')->label('Retailer'),
                         TextEntry::make('store.name')->label('Store'),
@@ -83,18 +106,11 @@ class OrderResource extends Resource
                             ->columns(5)
                             ->schema([
                                 TextEntry::make('from_status')
-                                    ->formatStateUsing(fn (?string $state): string => $state ? ucfirst(str_replace('_', ' ', $state)) : '—'),
+                                    ->formatStateUsing(fn (?string $state): string => $state ? self::statusLabel($state) : '—'),
                                 TextEntry::make('to_status')
                                     ->badge()
-                                    ->color(fn (string $state): string => match ($state) {
-                                        Order::STATUS_PENDING            => 'warning',
-                                        Order::STATUS_PREPARING          => 'info',
-                                        Order::STATUS_READY_FOR_DELIVERY => 'primary',
-                                        Order::STATUS_DELIVERED          => 'success',
-                                        Order::STATUS_CANCELLED          => 'danger',
-                                        default                          => 'gray',
-                                    })
-                                    ->formatStateUsing(fn (string $state): string => ucfirst(str_replace('_', ' ', $state))),
+                                    ->color(fn (string $state): string => self::statusColor($state))
+                                    ->formatStateUsing(fn (string $state): string => self::statusLabel($state)),
                                 TextEntry::make('changedBy.name')->label('By')->placeholder('—'),
                                 TextEntry::make('note')->placeholder('—'),
                                 TextEntry::make('created_at')->dateTime()->label('At'),
@@ -111,15 +127,8 @@ class OrderResource extends Resource
                 TextColumn::make('retailer.business_name')->label('Retailer')->searchable(),
                 TextColumn::make('status')
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => ucfirst(str_replace('_', ' ', $state)))
-                    ->color(fn (string $state): string => match ($state) {
-                        Order::STATUS_PENDING            => 'warning',
-                        Order::STATUS_PREPARING          => 'info',
-                        Order::STATUS_READY_FOR_DELIVERY => 'primary',
-                        Order::STATUS_DELIVERED          => 'success',
-                        Order::STATUS_CANCELLED          => 'danger',
-                        default                          => 'gray',
-                    }),
+                    ->formatStateUsing(fn (string $state): string => self::statusLabel($state))
+                    ->color(fn (string $state): string => self::statusColor($state)),
                 TextColumn::make('total_pkr')->label('Total (PKR)')->money('PKR')->sortable(),
                 TextColumn::make('items_count')->label('Items')->counts('items'),
                 TextColumn::make('created_at')->dateTime()->sortable()->label('Placed'),
@@ -127,9 +136,10 @@ class OrderResource extends Resource
             ->filters([
                 SelectFilter::make('status')
                     ->options([
-                        Order::STATUS_PENDING            => 'Pending',
-                        Order::STATUS_PREPARING          => 'Preparing',
-                        Order::STATUS_READY_FOR_DELIVERY => 'Ready for Delivery',
+                        Order::STATUS_PENDING           => 'Pending',
+                        Order::STATUS_PAYMENT_VERIFIED   => 'Payment Verified',
+                        Order::STATUS_TRANSFERRED        => 'Transferred to Huashu',
+                        Order::STATUS_FULFILLING         => 'Fulfilling',
                         Order::STATUS_DELIVERED          => 'Delivered',
                         Order::STATUS_CANCELLED          => 'Cancelled',
                     ]),
