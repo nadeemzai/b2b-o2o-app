@@ -27,6 +27,10 @@ class Order extends Model
         'transferred_by',
         'oz_commission_pkr',
         'huashu_ref',
+        'payment_currency',
+        'fx_usd_rate',
+        'fx_cny_rate',
+        'fx_captured_at',
     ];
 
     protected $casts = [
@@ -35,6 +39,9 @@ class Order extends Model
         'oz_commission_pkr'        => 'decimal:2',
         'payment_verified_at'      => 'datetime',
         'transferred_to_huashu_at' => 'datetime',
+        'fx_usd_rate'             => 'decimal:6',
+        'fx_cny_rate'             => 'decimal:6',
+        'fx_captured_at'          => 'datetime',
     ];
 
     // ──────────────────────────────────────────────
@@ -181,4 +188,43 @@ class Order extends Model
             self::STATUS_DELIVERED,
         ]);
     }
+
+    // ──────────────────────────────────────────────
+    // FX / Currency helpers
+    // ──────────────────────────────────────────────
+
+    /**
+     * PKR→{currency} rate stored at order creation, with live fallback.
+     */
+    public function fxRate(string $currency): float
+    {
+        if ($currency === 'PKR') {
+            return 1.0;
+        }
+
+        $stored = match ($currency) {
+            'USD'   => (float) ($this->fx_usd_rate ?? 0),
+            'CNY'   => (float) ($this->fx_cny_rate ?? 0),
+            default => 0.0,
+        };
+
+        if ($stored > 0) {
+            return $stored;
+        }
+
+        $rates = \App\Services\CurrencyService::getRates();
+        return (float) ($rates[$currency] ?? 1.0);
+    }
+
+    /**
+     * total_pkr converted to the requested currency.
+     */
+    public function convertedTotal(string $currency): float
+    {
+        if ($currency === 'PKR') {
+            return round((float) $this->total_pkr, 2);
+        }
+        return round((float) $this->total_pkr * $this->fxRate($currency), 2);
+    }
+
 }

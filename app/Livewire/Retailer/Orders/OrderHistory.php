@@ -16,13 +16,49 @@ class OrderHistory extends Component
 {
     use WithPagination, WithFileUploads;
 
-    public string $statusFilter = '';
+    public string $statusFilter    = '';
+    public string $displayCurrency = 'PKR';
 
-    /** Which order is currently showing the upload panel */
+    /** ID of the order whose slide-over drawer is open */
+    public ?int $detailOrderId = null;
+
+    /** Which order is currently showing the inline upload panel */
     public ?int $uploadingFor = null;
 
     #[Validate('required|image|mimes:jpg,jpeg,png,webp|max:5120')]
     public $proofFile = null;
+
+    // ──────────────────────────────────────────────
+    // Currency toggle
+    // ──────────────────────────────────────────────
+
+    public function setCurrency(string $currency): void
+    {
+        if (in_array($currency, ['PKR', 'USD', 'CNY'], true)) {
+            $this->displayCurrency = $currency;
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    // Order detail drawer
+    // ──────────────────────────────────────────────
+
+    public function openDetail(int $orderId): void
+    {
+        $retailer = auth()->user()->retailerProfile;
+        if (Order::where('id', $orderId)->where('retailer_id', $retailer->id)->exists()) {
+            $this->detailOrderId = $orderId;
+        }
+    }
+
+    public function closeDetail(): void
+    {
+        $this->detailOrderId = null;
+    }
+
+    // ──────────────────────────────────────────────
+    // Proof upload
+    // ──────────────────────────────────────────────
 
     public function updatedStatusFilter(): void
     {
@@ -57,12 +93,21 @@ class OrderHistory extends Component
 
         $order->update(['payment_proof_path' => $path]);
 
-        $this->uploadingFor = null;
-        $this->proofFile    = null;
+        $this->uploadingFor  = null;
+        $this->proofFile     = null;
+
+        // If the drawer is open for this order, refresh it
+        if ($this->detailOrderId === $orderId) {
+            // Livewire will re-render; detailOrder is reloaded in render()
+        }
+
         session()->flash('proof_uploaded', $orderId);
     }
 
-    /** Re-order: push items from a past order back into cart */
+    // ──────────────────────────────────────────────
+    // Re-order
+    // ──────────────────────────────────────────────
+
     public function reorder(int $orderId): void
     {
         $retailer = auth()->user()->retailerProfile;
@@ -109,6 +154,10 @@ class OrderHistory extends Component
         }
     }
 
+    // ──────────────────────────────────────────────
+    // Render
+    // ──────────────────────────────────────────────
+
     public function render()
     {
         $retailer = auth()->user()->retailerProfile;
@@ -123,10 +172,22 @@ class OrderHistory extends Component
 
         $orders = $query->paginate(10);
 
+        // Load detail order separately with full relations for the drawer
+        $detailOrder = $this->detailOrderId
+            ? Order::with(['items.product', 'statusHistory.changedBy'])
+                   ->where('retailer_id', $retailer->id)
+                   ->find($this->detailOrderId)
+            : null;
+
         return view('livewire.retailer.orders.order-history', [
-            'orders' => $orders,
+            'orders'      => $orders,
+            'detailOrder' => $detailOrder,
         ]);
     }
+
+    // ──────────────────────────────────────────────
+    // Display helpers
+    // ──────────────────────────────────────────────
 
     public function statusLabel(string $status): string
     {
@@ -154,7 +215,6 @@ class OrderHistory extends Component
         };
     }
 
-    /** Returns ordered list of all statuses for the timeline */
     public function timelineSteps(): array
     {
         return [
@@ -166,11 +226,20 @@ class OrderHistory extends Component
         ];
     }
 
-    /** Index of a status in the timeline (cancelled sits outside) */
     public function timelineIndex(string $status): int
     {
         $map = array_keys($this->timelineSteps());
         $idx = array_search($status, $map, true);
         return $idx === false ? -1 : $idx;
+    }
+
+    /** Currency symbol for the selected display currency */
+    public function currencySymbol(string $currency): string
+    {
+        return match ($currency) {
+            'USD'   => '$',
+            'CNY'   => '¥',
+            default => 'PKR',
+        };
     }
 }

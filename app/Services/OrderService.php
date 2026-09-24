@@ -18,6 +18,7 @@ use App\Events\OrderPlaced;
 use App\Events\OrderTransferred;
 use App\Events\PaymentVerified;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Event;
 
 class OrderService
@@ -179,6 +180,21 @@ class OrderService
 
             return $order->load('items.product', 'statusHistory');
         });
+
+        // Snapshot FX rates at order-creation time (outside transaction to avoid
+        // holding DB locks during the HTTP call; CurrencyService caches 24h).
+        try {
+            $rates = CurrencyService::getRates();
+            $order->update([
+                'fx_usd_rate'    => $rates['USD'] ?? null,
+                'fx_cny_rate'    => $rates['CNY'] ?? null,
+                'fx_captured_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('OrderService: could not snapshot FX rates for order #' . $order->id, [
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         Event::dispatch(new OrderPlaced($order));
 
