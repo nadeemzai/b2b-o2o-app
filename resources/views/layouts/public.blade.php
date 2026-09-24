@@ -98,17 +98,17 @@
         <nav class="flex-1 overflow-y-auto py-3">
 
             {{-- Home --}}
-            <a href="{{ route('public.catalogue') }}" @click="navOpen = false"
+            <a href="{{ route('public.home') }}" @click="navOpen = false"
                class="flex items-center gap-4 px-5 py-4 group transition
-                      {{ request()->routeIs('public.catalogue') && !request('category') ? 'bg-orange-50 border-l-4 border-brand' : 'border-l-4 border-transparent hover:bg-orange-50 hover:border-brand/40' }}">
+                      {{ request()->routeIs('public.home') ? 'bg-orange-50 border-l-4 border-brand' : 'border-l-4 border-transparent hover:bg-orange-50 hover:border-brand/40' }}">
                 <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0
-                            {{ request()->routeIs('public.catalogue') && !request('category') ? 'bg-brand text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-brand' }} transition">
+                            {{ request()->routeIs('public.home') ? 'bg-brand text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-brand' }} transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                     </svg>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold {{ request()->routeIs('public.catalogue') && !request('category') ? 'text-brand' : 'text-slate-800 group-hover:text-brand' }} transition">Home</p>
+                    <p class="text-sm font-semibold {{ request()->routeIs('public.home') ? 'text-brand' : 'text-slate-800 group-hover:text-brand' }} transition">Home</p>
                     <p class="text-[11px] text-slate-400">Browse wholesale</p>
                 </div>
                 <svg class="w-4 h-4 text-slate-300 group-hover:text-brand/60 transition shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,7 +210,7 @@
         <div class="flex items-center gap-4 lg:gap-6 h-[60px]">
 
             {{-- Logo --}}
-            <a href="{{ route('public.catalogue') }}" class="shrink-0 flex items-baseline gap-1">
+            <a href="{{ route('public.home') }}" class="shrink-0 flex items-baseline gap-1">
                 <span class="text-brand font-black text-2xl tracking-tight leading-none">OZ</span>
                 <span class="text-slate-700 font-bold text-[13px] leading-none">Wholesale</span>
                 <span class="text-brand/40 text-[9px] font-semibold tracking-widest uppercase ml-0.5 self-end mb-0.5">B2B</span>

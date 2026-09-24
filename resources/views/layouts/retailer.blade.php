@@ -99,17 +99,17 @@
         <nav class="flex-1 overflow-y-auto py-3">
 
             {{-- Home --}}
-            <a href="{{ route('retailer.dashboard') }}" @click="navOpen = false"
+            <a href="{{ route('retailer.home') }}" @click="navOpen = false"
                class="flex items-center gap-4 px-5 py-4 group transition
-                      {{ request()->routeIs('retailer.dashboard') ? 'bg-orange-50 border-l-4 border-brand' : 'border-l-4 border-transparent hover:bg-orange-50 hover:border-brand/40' }}">
+                      {{ request()->routeIs('retailer.home') ? 'bg-orange-50 border-l-4 border-brand' : 'border-l-4 border-transparent hover:bg-orange-50 hover:border-brand/40' }}">
                 <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0
-                            {{ request()->routeIs('retailer.dashboard') ? 'bg-brand text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-brand' }} transition">
+                            {{ request()->routeIs('retailer.home') ? 'bg-brand text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-brand' }} transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                     </svg>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold {{ request()->routeIs('retailer.dashboard') ? 'text-brand' : 'text-slate-800 group-hover:text-brand' }} transition">Home</p>
+                    <p class="text-sm font-semibold {{ request()->routeIs('retailer.home') ? 'text-brand' : 'text-slate-800 group-hover:text-brand' }} transition">Home</p>
                     <p class="text-[11px] text-slate-400">Dashboard overview</p>
                 </div>
                 <svg class="w-4 h-4 text-slate-300 group-hover:text-brand/60 transition shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -226,8 +226,8 @@
                 @livewire('language-switcher')
                 @livewire('currency-switcher')
                 <span class="text-slate-600 hidden sm:inline">|</span>
-                <a href="{{ route('retailer.dashboard') }}"
-                   class="hidden sm:inline hover:text-white transition {{ request()->routeIs('retailer.dashboard') ? 'text-white' : '' }}">
+                <a href="{{ route('retailer.home') }}"
+                   class="hidden sm:inline hover:text-white transition {{ request()->routeIs('retailer.home') ? 'text-white' : '' }}">
                     Dashboard
                 </a>
                 <a href="{{ route('retailer.orders') }}"
@@ -253,7 +253,7 @@
         <div class="flex items-center gap-4 lg:gap-6 h-[60px]">
 
             {{-- ── Logo ─────────────────────────────────────────────────── --}}
-            <a href="{{ route('retailer.dashboard') }}" class="shrink-0 flex items-baseline gap-1">
+            <a href="{{ route('retailer.home') }}" class="shrink-0 flex items-baseline gap-1">
                 <span class="text-brand font-black text-2xl tracking-tight leading-none">OZ</span>
                 <span class="text-slate-700 font-bold text-[13px] leading-none">Wholesale</span>
                 <span class="text-brand/40 text-[9px] font-semibold tracking-widest uppercase ml-0.5 self-end mb-0.5">B2B</span>
@@ -349,7 +349,7 @@
                             <p class="font-semibold text-slate-800 text-xs truncate">{{ auth()->user()->name }}</p>
                             <p class="text-slate-400 text-[10px] truncate mt-0.5">{{ auth()->user()->email }}</p>
                         </div>
-                        <a href="{{ route('retailer.dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 transition text-sm">
+                        <a href="{{ route('retailer.home') }}" class="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 transition text-sm">
                             <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                             Dashboard
                         </a>

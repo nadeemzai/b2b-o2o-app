@@ -11,6 +11,8 @@ use App\Livewire\Retailer\Cart\CartPage;
 use App\Livewire\Retailer\Orders\OrderHistory;
 use App\Livewire\Public\ProductCatalogue;
 use App\Livewire\Public\ProductDetail as PublicProductDetail;
+use App\Livewire\Public\Homepage as PublicHome;
+use App\Livewire\Retailer\Homepage as RetailerHome;
 
 
 // ── Locale & currency switching (works for guests and authenticated users) ──
@@ -30,10 +32,11 @@ Route::post('/switch-currency/{currency}', function (string $currency) {
 })->name('switch.currency');
 
 // ── Root: public catalogue ─────────────────────────────────────
-Route::get('/', ProductCatalogue::class)->name('public.catalogue');
+Route::get('/', PublicHome::class)->name('public.home');
 
-// ── Public catalogue (same component, explicit path) ──────────
-Route::get('/catalogue', ProductCatalogue::class)->name('public.catalogue.browse');
+// ── Public catalogue (full browse) ───────────────────────────
+Route::get('/catalogue', ProductCatalogue::class)->name('public.catalogue');
+
 
 // ── Public product detail (no login required) ─────────────────
 Route::get('/product/{product}', PublicProductDetail::class)->name('public.product');
@@ -52,6 +55,7 @@ Route::prefix('retailer')->name('retailer.')->middleware(['auth', 'retailer'])->
 
 // ── Retailer fully approved routes ────────────────────────────
 Route::prefix('retailer')->name('retailer.')->middleware(['auth', 'retailer', 'retailer.approved'])->group(function () {
+    Route::get('/',          RetailerHome::class)->name('home');
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
     Route::get('/catalogue', ProductList::class)->name('catalogue');
     Route::get('/catalogue/{product}', RetailerProductDetail::class)->name('catalogue.product');

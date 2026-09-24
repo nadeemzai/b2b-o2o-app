@@ -63,7 +63,7 @@
     {{-- ══ BREADCRUMB ════════════════════════════════════════════════════ --}}
     <div class="bg-slate-800 px-4 sm:px-6 lg:px-8 py-2.5">
         <nav class="flex items-center gap-2 text-xs text-slate-400 max-w-7xl mx-auto">
-            <a href="{{ route('public.catalogue') }}" class="hover:text-white transition">Home</a>
+            <a href="{{ route('public.home') }}" class="hover:text-white transition">Home</a>
             <svg class="w-3 h-3 text-slate-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
             @if($product->category)
             <a href="{{ route('public.catalogue') }}?category={{ $product->category_id }}" class="hover:text-white transition">{{ $catName }}</a>

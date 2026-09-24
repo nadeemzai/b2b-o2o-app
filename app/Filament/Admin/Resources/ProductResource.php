@@ -41,6 +41,7 @@ class ProductResource extends Resource
                 TextInput::make('unit')->maxLength(20)->default('pcs'),
                 TextInput::make('pieces_per_carton')->numeric()->minValue(1)->default(1),
                 Toggle::make('is_active')->default(true),
+                Toggle::make('is_deal')->label('Featured Deal')->helperText('Show on homepage deals section')->default(false),
             ])->columns(2),
 
             Section::make('Description')->schema([
@@ -189,6 +190,7 @@ class ProductResource extends Resource
                     ->placeholder('—')
                     ->sortable(),
                 IconColumn::make('is_active')->boolean()->label('Active'),
+                IconColumn::make('is_deal')->boolean()->label('Deal'),
                 TextColumn::make('created_at')->dateTime()->sortable()->toggleable(),
             ])
             ->filters([
@@ -196,6 +198,7 @@ class ProductResource extends Resource
                     ->options(fn () => \App\Models\Category::orderBy('name')->pluck('name', 'id')->toArray())
                     ->label('Category'),
                 Tables\Filters\TernaryFilter::make('is_active')->label('Active'),
+                Tables\Filters\TernaryFilter::make('is_deal')->label('Deal'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
