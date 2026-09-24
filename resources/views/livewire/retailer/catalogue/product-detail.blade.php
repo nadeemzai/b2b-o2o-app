@@ -1,20 +1,5 @@
 {{-- ── Retailer Product Detail — 1688-style with live Add to Cart ─────────── --}}
 
-<style>
-.rpdp-price-box   { background: linear-gradient(135deg,#fff8f5 0%,#fff3ef 100%); border:1px solid #ffe0d4; }
-.rpdp-tab-btn     { border-bottom: 3px solid transparent; transition: all .15s; cursor: pointer; white-space: nowrap; }
-.rpdp-tab-btn.active { border-color: #ff5b00; color: #ff5b00; font-weight: 700; }
-.rpdp-attr-row td { padding: .55rem 1rem; font-size:.875rem; }
-.rpdp-attr-row:nth-child(even) td { background:#fafafa; }
-.rpdp-variant-card { border:1.5px solid #e5e7eb; border-radius:12px; transition:all .15s; background:#fff; }
-.rpdp-variant-card.selected { border-color:#ff5b00; background:#fff4f0; }
-.rpdp-right-sticky { position:sticky; top:72px; max-height:calc(100vh - 80px); overflow-y:auto; }
-.rpdp-thumb { border:2px solid transparent; border-radius:8px; overflow:hidden; cursor:pointer; transition:all .15s; }
-.rpdp-thumb.active { border-color:#ff5b00; }
-.rpdp-thumb:hover  { border-color:#ffb899; }
-@media (min-width:1024px) { .rpdp-gallery-wrap { display:flex; flex-direction:row; gap:10px; } }
-@media (max-width:1023px) { .rpdp-thumb-strip { display:none; } }
-</style>
 
 @php
 $locale    = app()->getLocale();
@@ -32,6 +17,22 @@ $maxQty    = $stockTracked ? $available : 9999;
 @endphp
 
 <div class="-mx-4 sm:-mx-6 lg:-mx-8 -mt-6">
+    <style>
+.rpdp-price-box   { background: linear-gradient(135deg,#fff8f5 0%,#fff3ef 100%); border:1px solid #ffe0d4; }
+.rpdp-tab-btn     { border-bottom: 3px solid transparent; transition: all .15s; cursor: pointer; white-space: nowrap; }
+.rpdp-tab-btn.active { border-color: #ff5b00; color: #ff5b00; font-weight: 700; }
+.rpdp-attr-row td { padding: .55rem 1rem; font-size:.875rem; }
+.rpdp-attr-row:nth-child(even) td { background:#fafafa; }
+.rpdp-variant-card { border:1.5px solid #e5e7eb; border-radius:12px; transition:all .15s; background:#fff; }
+.rpdp-variant-card.selected { border-color:#ff5b00; background:#fff4f0; }
+.rpdp-right-sticky { position:sticky; top:72px; max-height:calc(100vh - 80px); overflow-y:auto; }
+.rpdp-thumb { border:2px solid transparent; border-radius:8px; overflow:hidden; cursor:pointer; transition:all .15s; }
+.rpdp-thumb.active { border-color:#ff5b00; }
+.rpdp-thumb:hover  { border-color:#ffb899; }
+@media (min-width:1024px) { .rpdp-gallery-wrap { display:flex; flex-direction:row; gap:10px; } }
+@media (max-width:1023px) { .rpdp-thumb-strip { display:none; } }
+    </style>
+
 
     {{-- ══ BREADCRUMB BAR ═══════════════════════════════════════════════ --}}
     <div class="bg-brand px-4 sm:px-6 lg:px-8 py-3">
