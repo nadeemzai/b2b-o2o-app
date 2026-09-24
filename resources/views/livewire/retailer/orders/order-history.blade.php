@@ -206,15 +206,53 @@
                         </div>
                         @else
                         {{-- Prompt to upload --}}
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm font-semibold text-gray-700">{{ __('ui.payment_required') }}</p>
-                                <p class="text-xs text-gray-400 mt-0.5">{{ __('ui.payment_via_bank') }}</p>
+                        <div class="space-y-3">
+                            {{-- Bank transfer details card --}}
+                            @php
+                                $bankName    = config('payment.bank_name');
+                                $acctTitle   = config('payment.account_title');
+                                $acctNumber  = config('payment.account_number');
+                                $iban        = config('payment.iban');
+                                $branchCode  = config('payment.branch_code');
+                                $branchName  = config('payment.branch_name');
+                            @endphp
+                            <div class="rounded-lg bg-blue-50 border border-blue-200 px-4 py-3">
+                                <p class="text-xs font-bold text-blue-800 uppercase tracking-wide mb-2">{{ __('ui.payment_bank_details') }}</p>
+                                <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                                    @if($bankName)
+                                    <dt class="text-blue-600 font-medium">{{ __('ui.payment_bank_name') }}</dt>
+                                    <dd class="text-blue-900 font-semibold">{{ $bankName }}</dd>
+                                    @endif
+                                    @if($acctTitle)
+                                    <dt class="text-blue-600 font-medium">{{ __('ui.payment_account_title') }}</dt>
+                                    <dd class="text-blue-900 font-semibold">{{ $acctTitle }}</dd>
+                                    @endif
+                                    @if($acctNumber)
+                                    <dt class="text-blue-600 font-medium">{{ __('ui.payment_account_number') }}</dt>
+                                    <dd class="text-blue-900 font-semibold font-mono">{{ $acctNumber }}</dd>
+                                    @endif
+                                    @if($iban)
+                                    <dt class="text-blue-600 font-medium">{{ __('ui.payment_iban') }}</dt>
+                                    <dd class="text-blue-900 font-semibold font-mono">{{ $iban }}</dd>
+                                    @endif
+                                    @if($branchCode)
+                                    <dt class="text-blue-600 font-medium">{{ __('ui.payment_branch_code') }}</dt>
+                                    <dd class="text-blue-900 font-semibold">{{ $branchCode }}</dd>
+                                    @endif
+                                    @if($branchName)
+                                    <dt class="text-blue-600 font-medium">{{ __('ui.payment_branch_name') }}</dt>
+                                    <dd class="text-blue-900 font-semibold">{{ $branchName }}</dd>
+                                    @endif
+                                </dl>
                             </div>
-                            <button wire:click="openUpload({{ $order->id }})"
-                                    class="bg-brand text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-brand-dark transition">
-                                {{ __('ui.upload_payment_proof_btn') }}
-                            </button>
+                            {{-- Upload CTA --}}
+                            <div class="flex items-center justify-between">
+                                <p class="text-xs text-gray-500">{{ __('ui.payment_via_bank') }}</p>
+                                <button wire:click="openUpload({{ $order->id }})"
+                                        class="bg-brand text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-brand-dark transition">
+                                    {{ __('ui.upload_payment_proof_btn') }}
+                                </button>
+                            </div>
                         </div>
                         @endif
                     </div>

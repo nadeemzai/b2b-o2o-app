@@ -222,4 +222,13 @@ return [
     'qty' => '数量',
     'line_total' => '小计',
 
+    // Payment bank transfer details
+    'payment_bank_details'   => '银行转账信息',
+    'payment_bank_name'      => '银行',
+    'payment_account_title'  => '账户名称',
+    'payment_account_number' => '账户号码',
+    'payment_iban'           => 'IBAN',
+    'payment_branch_code'    => '支行代码',
+    'payment_branch_name'    => '支行',
+
 ];

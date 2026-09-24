@@ -222,4 +222,13 @@ return [
     'qty' => 'Qty',
     'line_total' => 'Line Total',
 
+    // Payment bank transfer details
+    'payment_bank_details'   => 'Bank Transfer Details',
+    'payment_bank_name'      => 'Bank',
+    'payment_account_title'  => 'Account Title',
+    'payment_account_number' => 'Account No.',
+    'payment_iban'           => 'IBAN',
+    'payment_branch_code'    => 'Branch Code',
+    'payment_branch_name'    => 'Branch',
+
 ];
