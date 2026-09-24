@@ -8,6 +8,8 @@ use App\Filament\Admin\Resources\RetailerResource;
 use App\Filament\Admin\Resources\TownshipStoreResource;
 use App\Filament\Admin\Resources\UserResource;
 use App\Filament\Admin\Pages\CommissionDashboard;
+use App\Filament\Admin\Pages\HomepageSettings;
+use App\Filament\Admin\Resources\ProductResource;
 use App\Filament\Admin\Widgets\OrdersByStatusChart;
 use App\Filament\Admin\Widgets\OrderStatsOverview;
 use App\Filament\Admin\Widgets\RecentOrdersTable;
@@ -41,14 +43,17 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->brandName('B2B O2O — Admin')
             ->navigationGroups([
-                    NavigationGroup::make('Content'),
+                NavigationGroup::make('Content'),
+                NavigationGroup::make('Catalogue'),
                 NavigationGroup::make('KYC & Retailers'),
                 NavigationGroup::make('Operations'),
+                NavigationGroup::make('Settings'),
                 NavigationGroup::make('System')
                     ->collapsed(),
             ])
             ->resources([
                 BannerResource::class,
+                ProductResource::class,
                 RetailerResource::class,
                 TownshipStoreResource::class,
                 OrderResource::class,
@@ -57,6 +62,7 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 Pages\Dashboard::class,
                 CommissionDashboard::class,
+                HomepageSettings::class,
             ])
             ->widgets([
                 OrderStatsOverview::class,
