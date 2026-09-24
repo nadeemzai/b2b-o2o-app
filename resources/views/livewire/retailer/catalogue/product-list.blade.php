@@ -1,50 +1,6 @@
 {{-- ── 1688-style B2B Catalogue ──────────────────────────────────────────── --}}
 <div class="-mx-4 sm:-mx-6 lg:-mx-8 -mt-6">
 
-
-
-    {{-- ══ FILTER BAR ═════════════════════════════════════════════════════ --}}
-    <div class="bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-2.5">
-        <div class="flex flex-wrap items-center gap-3 max-w-screen-xl mx-auto">
-
-            {{-- Inline keyword filter --}}
-            <div class="flex items-center border border-slate-300 rounded overflow-hidden h-8 flex-1 min-w-[180px] max-w-xs">
-                <input type="text"
-                       wire:model.live.debounce.350ms="search"
-                       placeholder="{{ __('ui.search_placeholder') }}"
-                       class="flex-1 h-full px-3 text-sm text-slate-700 placeholder-slate-400 focus:outline-none" />
-                <span class="px-2.5 text-slate-400">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                </span>
-            </div>
-
-            {{-- Category filter --}}
-            <select wire:model.live="categoryId"
-                    class="h-8 border border-slate-300 rounded text-sm text-slate-700 pl-3 pr-7 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand min-w-[150px]">
-                <option value="">{{ __('ui.filter_category') }}</option>
-                @foreach($categories as $cat)
-                    <option value="{{ $cat->id }}">{{ app()->getLocale() === 'zh_CN' && $cat->name_zh ? $cat->name_zh : $cat->name }}</option>
-                @endforeach
-            </select>
-
-            {{-- Sort --}}
-            <select wire:model.live="sortBy"
-                    class="h-8 border border-slate-300 rounded text-sm text-slate-700 pl-3 pr-7 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand min-w-[140px]">
-                <option value="name_asc">{{ __('ui.sort_name_az') }}</option>
-                <option value="name_desc">{{ __('ui.sort_name_desc') }}</option>
-                <option value="price_asc">{{ __('ui.sort_price_asc') }}</option>
-                <option value="price_desc">{{ __('ui.sort_price_desc') }}</option>
-            </select>
-
-            {{-- Result count --}}
-            <span class="ml-auto text-xs text-slate-400 whitespace-nowrap hidden sm:inline">
-                {{ $products->total() }} {{ __('ui.products_found') }}
-            </span>
-        </div>
-    </div>
-
     {{-- ══ ADDED TO CART FLASH ═════════════════════════════════════════════ --}}
     @if(session('cart_added'))
     <div class="mx-4 sm:mx-6 lg:mx-8 mt-3"
