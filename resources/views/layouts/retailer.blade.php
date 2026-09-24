@@ -30,189 +30,11 @@
         [x-cloak] { display: none !important; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        .writing-vertical { writing-mode: vertical-rl; text-orientation: mixed; }
     </style>
 
     @livewireStyles
 </head>
 <body class="h-full flex flex-col">
-
-{{-- ══════════════════════════════════════════════════════════════════════════ --}}
-{{-- GLOBAL LEFT SIDEBAR — Quick-nav drawer                                     --}}
-{{-- ══════════════════════════════════════════════════════════════════════════ --}}
-@auth
-<div x-data="{ navOpen: false }" class="relative">
-
-    {{-- Collapsed tab (always visible on left edge) --}}
-    <div @click="navOpen = true"
-         x-show="!navOpen"
-         class="fixed left-0 top-1/2 -translate-y-1/2 z-50 cursor-pointer select-none hidden md:flex">
-        <div class="bg-brand hover:bg-brand-dark text-white py-10 px-2.5 rounded-r-xl shadow-xl flex flex-col items-center gap-3 transition-colors">
-            <svg class="w-4 h-4 text-orange-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-            </svg>
-            <span class="writing-vertical text-[11px] font-bold tracking-[3px] text-orange-100 uppercase">OZ Menu</span>
-        </div>
-    </div>
-
-    {{-- Backdrop --}}
-    <div x-show="navOpen" @click="navOpen = false" x-cloak
-         class="fixed inset-0 bg-black/40 z-40"
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"></div>
-
-    {{-- Sidebar panel --}}
-    <div x-show="navOpen" x-cloak
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="-translate-x-full opacity-0"
-         x-transition:enter-end="translate-x-0 opacity-100"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="translate-x-0 opacity-100"
-         x-transition:leave-end="-translate-x-full opacity-0"
-         class="fixed left-0 top-0 h-full w-72 bg-white z-50 shadow-2xl flex flex-col">
-
-        {{-- Header --}}
-        <div class="bg-brand px-5 py-4 flex items-center justify-between shrink-0">
-            <div class="flex items-center gap-3">
-                <div class="bg-white/20 rounded-lg p-1.5">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                    </svg>
-                </div>
-                <div>
-                    <span class="text-white font-black text-lg leading-none">OZ Wholesale</span>
-                    <p class="text-orange-200 text-[10px] font-medium tracking-wide uppercase mt-0.5">B2B Portal</p>
-                </div>
-            </div>
-            <button @click="navOpen = false" class="text-white/60 hover:text-white transition p-1">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
-        </div>
-
-        {{-- Nav items --}}
-        <nav class="flex-1 overflow-y-auto py-3">
-
-            {{-- Home --}}
-            <a href="{{ route('retailer.dashboard') }}" @click="navOpen = false"
-               class="flex items-center gap-4 px-5 py-4 group transition
-                      {{ request()->routeIs('retailer.dashboard') ? 'bg-orange-50 border-l-4 border-brand' : 'border-l-4 border-transparent hover:bg-orange-50 hover:border-brand/40' }}">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0
-                            {{ request()->routeIs('retailer.dashboard') ? 'bg-brand text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-brand' }} transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                    </svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold {{ request()->routeIs('retailer.dashboard') ? 'text-brand' : 'text-slate-800 group-hover:text-brand' }} transition">Home</p>
-                    <p class="text-[11px] text-slate-400">Dashboard overview</p>
-                </div>
-                <svg class="w-4 h-4 text-slate-300 group-hover:text-brand/60 transition shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-            </a>
-
-            {{-- Orders --}}
-            <a href="{{ route('retailer.orders') }}" @click="navOpen = false"
-               class="flex items-center gap-4 px-5 py-4 group transition
-                      {{ request()->routeIs('retailer.orders*') ? 'bg-orange-50 border-l-4 border-brand' : 'border-l-4 border-transparent hover:bg-orange-50 hover:border-brand/40' }}">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0
-                            {{ request()->routeIs('retailer.orders*') ? 'bg-brand text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-brand' }} transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                    </svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold {{ request()->routeIs('retailer.orders*') ? 'text-brand' : 'text-slate-800 group-hover:text-brand' }} transition">Orders</p>
-                    <p class="text-[11px] text-slate-400">My order history</p>
-                </div>
-                <svg class="w-4 h-4 text-slate-300 group-hover:text-brand/60 transition shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-            </a>
-
-            {{-- Wishlist --}}
-            <a href="#" @click="navOpen = false"
-               class="flex items-center gap-4 px-5 py-4 group transition border-l-4 border-transparent hover:bg-orange-50 hover:border-brand/40">
-                <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-brand flex items-center justify-center shrink-0 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                    </svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-slate-800 group-hover:text-brand transition">Wishlist</p>
-                    <p class="text-[11px] text-slate-400">Saved products</p>
-                </div>
-                <span class="text-[9px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded font-medium shrink-0">Soon</span>
-            </a>
-
-            {{-- Products --}}
-            <a href="{{ route('retailer.catalogue') }}" @click="navOpen = false"
-               class="flex items-center gap-4 px-5 py-4 group transition
-                      {{ request()->routeIs('retailer.catalogue*') ? 'bg-orange-50 border-l-4 border-brand' : 'border-l-4 border-transparent hover:bg-orange-50 hover:border-brand/40' }}">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0
-                            {{ request()->routeIs('retailer.catalogue*') ? 'bg-brand text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-brand' }} transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
-                    </svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold {{ request()->routeIs('retailer.catalogue*') ? 'text-brand' : 'text-slate-800 group-hover:text-brand' }} transition">Products</p>
-                    <p class="text-[11px] text-slate-400">Browse catalogue</p>
-                </div>
-                <svg class="w-4 h-4 text-slate-300 group-hover:text-brand/60 transition shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-            </a>
-
-            {{-- Me / Profile --}}
-            <a href="#" @click="navOpen = false"
-               class="flex items-center gap-4 px-5 py-4 group transition border-l-4 border-transparent hover:bg-orange-50 hover:border-brand/40">
-                <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-brand flex items-center justify-center shrink-0 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-slate-800 group-hover:text-brand transition">Me</p>
-                    <p class="text-[11px] text-slate-400 truncate">{{ auth()->user()->name }}</p>
-                </div>
-                <span class="text-[9px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded font-medium shrink-0">Soon</span>
-            </a>
-
-        </nav>
-
-        {{-- Footer: user info + sign out --}}
-        <div class="shrink-0 border-t border-slate-100">
-            <div class="px-5 py-3 bg-slate-50 flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center shrink-0">
-                    <svg class="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                    </svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-xs font-semibold text-slate-700 truncate">{{ auth()->user()->name }}</p>
-                    <p class="text-[10px] text-slate-400 truncate">{{ auth()->user()->email }}</p>
-                </div>
-                <form method="POST" action="{{ route('retailer.logout') }}">
-                    @csrf
-                    <button type="submit" title="Sign Out"
-                            class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                        </svg>
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-@endauth
 
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
 {{-- TOP UTILITY BAR                                                            --}}
@@ -246,24 +68,118 @@
 </div>
 
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
-{{-- MAIN HEADER — Logo + Search + Icons (1688 style)                          --}}
+{{-- MAIN HEADER — Logo + Search + Icons + Category bar with mega-dropdown     --}}
 {{-- ══════════════════════════════════════════════════════════════════════════ --}}
-<header class="bg-white shadow-sm sticky top-0 z-30">
-    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center gap-4 lg:gap-6 h-[60px]">
+<header x-data="{ mobileNav: false }" class="bg-white shadow-sm sticky top-0 z-30">
 
-            {{-- ── Logo ─────────────────────────────────────────────────── --}}
+    {{-- ── Mobile nav backdrop ─────────────────────────────────────────── --}}
+    <div x-show="mobileNav" @click="mobileNav = false" x-cloak
+         class="fixed inset-0 bg-black/40 z-40 md:hidden"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"></div>
+
+    {{-- ── Mobile nav slide-out panel ─────────────────────────────────── --}}
+    <div x-show="mobileNav" x-cloak
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="-translate-x-full"
+         x-transition:enter-end="translate-x-0"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="translate-x-0"
+         x-transition:leave-end="-translate-x-full"
+         class="fixed left-0 top-0 h-full w-72 bg-white z-50 shadow-2xl flex flex-col md:hidden">
+
+        <div class="bg-brand px-5 py-4 flex items-center justify-between shrink-0">
+            <span class="text-white font-black text-lg leading-none">OZ Wholesale</span>
+            <button @click="mobileNav = false" class="text-white/70 hover:text-white transition p-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2">
+            <a href="{{ route('retailer.dashboard') }}" @click="mobileNav = false"
+               class="flex items-center gap-3 px-5 py-3.5 text-sm border-l-4 transition
+                      {{ request()->routeIs('retailer.dashboard') ? 'bg-orange-50 text-brand font-semibold border-brand' : 'text-slate-700 border-transparent hover:bg-orange-50 hover:text-brand hover:border-brand/40' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                Dashboard
+            </a>
+            <a href="{{ route('retailer.catalogue') }}" @click="mobileNav = false"
+               class="flex items-center gap-3 px-5 py-3.5 text-sm border-l-4 transition
+                      {{ request()->routeIs('retailer.catalogue*') ? 'bg-orange-50 text-brand font-semibold border-brand' : 'text-slate-700 border-transparent hover:bg-orange-50 hover:text-brand hover:border-brand/40' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+                </svg>
+                Products
+            </a>
+            <a href="{{ route('retailer.orders') }}" @click="mobileNav = false"
+               class="flex items-center gap-3 px-5 py-3.5 text-sm border-l-4 transition
+                      {{ request()->routeIs('retailer.orders*') ? 'bg-orange-50 text-brand font-semibold border-brand' : 'text-slate-700 border-transparent hover:bg-orange-50 hover:text-brand hover:border-brand/40' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                My Orders
+            </a>
+
+            <div class="px-5 pt-4 pb-1.5">
+                <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Categories</p>
+            </div>
+            @php $mobileCats = \App\Models\Category::where('is_active', true)->orderBy('name')->get(); @endphp
+            @foreach($mobileCats as $mcat)
+            <a href="{{ route('retailer.catalogue') }}?category={{ $mcat->id }}" @click="mobileNav = false"
+               class="flex items-center gap-3 px-5 py-2.5 text-sm text-slate-700 border-l-4 border-transparent hover:bg-orange-50 hover:text-brand hover:border-brand/40 transition">
+                {{ $mcat->name }}
+            </a>
+            @endforeach
+        </nav>
+
+        <div class="shrink-0 border-t border-slate-100 px-5 py-3 bg-slate-50 flex items-center gap-3">
+            <div class="flex-1 min-w-0">
+                <p class="text-xs font-semibold text-slate-700 truncate">{{ auth()->user()->name }}</p>
+                <p class="text-[10px] text-slate-400 truncate">{{ auth()->user()->email }}</p>
+            </div>
+            <form method="POST" action="{{ route('retailer.logout') }}">
+                @csrf
+                <button type="submit" title="Sign Out"
+                        class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {{-- ── Header row: hamburger + logo + search + icons ──────────────── --}}
+    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center gap-3 lg:gap-6 h-[60px]">
+
+            {{-- Mobile hamburger --}}
+            <button @click="mobileNav = true"
+                    class="md:hidden shrink-0 p-2 -ml-1 text-slate-500 hover:text-brand rounded hover:bg-orange-50 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+
+            {{-- Logo --}}
             <a href="{{ route('retailer.dashboard') }}" class="shrink-0 flex items-baseline gap-1">
                 <span class="text-brand font-black text-2xl tracking-tight leading-none">OZ</span>
                 <span class="text-slate-700 font-bold text-[13px] leading-none">Wholesale</span>
                 <span class="text-brand/40 text-[9px] font-semibold tracking-widest uppercase ml-0.5 self-end mb-0.5">B2B</span>
             </a>
 
-            {{-- ── Search bar (1688 style) ───────────────────────────────── --}}
+            {{-- Search bar (1688 style) --}}
             <form action="{{ route('retailer.catalogue') }}" method="GET" class="flex-1 flex min-w-0">
                 <div class="flex w-full rounded-sm overflow-hidden border-2 border-brand">
-                    {{-- Category select --}}
-                    <div class="relative shrink-0 border-r border-slate-200">
+                    {{-- Category select (hidden on mobile to save space) --}}
+                    <div class="relative shrink-0 border-r border-slate-200 hidden sm:block">
                         <select name="category"
                                 class="h-[42px] appearance-none bg-slate-50 text-slate-600 text-xs pl-3 pr-7 focus:outline-none border-0 cursor-pointer font-medium min-w-[110px] max-w-[140px]">
                             <option value="">All Categories</option>
@@ -278,13 +194,11 @@
                             </svg>
                         </div>
                     </div>
-
                     {{-- Text input --}}
                     <input type="text"
                            name="search"
                            placeholder="Search products, brands, suppliers..."
                            class="flex-1 h-[42px] px-4 text-sm text-slate-800 placeholder-slate-400 focus:outline-none min-w-0 bg-white" />
-
                     {{-- Search button --}}
                     <button type="submit"
                             class="h-[42px] px-5 lg:px-7 bg-brand hover:bg-brand-dark text-white font-semibold text-sm transition shrink-0 flex items-center gap-2">
@@ -296,12 +210,11 @@
                 </div>
             </form>
 
-            {{-- ── Right-side action icons ──────────────────────────────── --}}
+            {{-- Right-side action icons --}}
             <div class="flex items-center shrink-0">
 
                 {{-- Price Comparison --}}
-                <a href="#"
-                   title="Price Comparison"
+                <a href="#" title="Price Comparison"
                    class="hidden lg:flex flex-col items-center gap-0.5 px-2.5 py-2 text-slate-500 hover:text-brand rounded hover:bg-orange-50 transition group cursor-pointer">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
@@ -323,8 +236,7 @@
                 @livewire('cart-count')
 
                 {{-- Messages --}}
-                <a href="#"
-                   title="Messages"
+                <a href="#" title="Messages"
                    class="hidden sm:flex flex-col items-center gap-0.5 px-2.5 py-2 text-slate-500 hover:text-brand rounded hover:bg-orange-50 transition group">
                     <div class="relative">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -334,7 +246,7 @@
                     <span class="text-[9px] font-semibold whitespace-nowrap group-hover:text-brand">Messages</span>
                 </a>
 
-                {{-- User account --}}
+                {{-- Account dropdown --}}
                 <div x-data="{ open: false }" class="relative">
                     <button @click="open = !open"
                             class="flex flex-col items-center gap-0.5 px-2.5 py-2 text-slate-500 hover:text-brand rounded hover:bg-orange-50 transition group">
@@ -373,26 +285,86 @@
         </div>
     </div>
 
-    {{-- ── Category navigation bar ──────────────────────────────────────── --}}
-    <div class="border-t border-slate-100 bg-slate-50/80">
+    {{-- ── Category nav bar with "All Categories" mega-dropdown ─────────── --}}
+    <div class="border-t border-slate-100 bg-white">
         <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
-            <nav class="flex items-center h-9 overflow-x-auto scrollbar-hide gap-0">
+            <div class="flex items-stretch h-10 overflow-x-auto scrollbar-hide">
+
+                {{-- All Categories button + mega-dropdown (desktop only) --}}
+                <div x-data="{ open: false }"
+                     @mouseenter="open = true"
+                     @mouseleave="open = false"
+                     class="relative shrink-0 hidden md:flex items-stretch mr-2">
+                    <button class="flex items-center gap-2 px-4 bg-brand hover:bg-brand-dark text-white text-xs font-bold whitespace-nowrap transition h-full focus:outline-none">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                        All Categories
+                        <svg class="w-3 h-3 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+
+                    {{-- Mega-dropdown panel --}}
+                    <div x-show="open" x-cloak
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="opacity-0 -translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-75"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 -translate-y-1"
+                         class="absolute left-0 top-full z-50 bg-white shadow-2xl border border-slate-200 border-t-2 border-t-brand rounded-b-xl"
+                         style="min-width: 540px; transform-origin: top left;">
+                        <div class="px-5 pt-3.5 pb-2 border-b border-slate-100">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Browse by Category</p>
+                        </div>
+                        <div class="p-4 grid grid-cols-3 gap-0.5">
+                            @php $megaCats = \App\Models\Category::where('is_active', true)->orderBy('name')->get(); @endphp
+                            @foreach($megaCats as $mcat)
+                            <a href="{{ route('retailer.catalogue') }}?category={{ $mcat->id }}"
+                               class="flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-orange-50 group transition">
+                                <svg class="w-3.5 h-3.5 shrink-0 text-slate-300 group-hover:text-brand transition" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/>
+                                </svg>
+                                <span class="text-xs text-slate-700 group-hover:text-brand truncate transition">
+                                    {{ app()->getLocale() === 'zh_CN' && $mcat->name_zh ? $mcat->name_zh : $mcat->name }}
+                                </span>
+                            </a>
+                            @endforeach
+                        </div>
+                        <div class="px-5 py-2.5 bg-orange-50 border-t border-slate-100 rounded-b-xl">
+                            <a href="{{ route('retailer.catalogue') }}"
+                               class="text-xs font-semibold text-brand hover:underline">
+                                View all products →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Divider --}}
+                <div class="hidden md:block w-px bg-slate-200 my-2 mr-1 shrink-0"></div>
+
+                {{-- All Products link --}}
                 <a href="{{ route('retailer.catalogue') }}"
-                   class="flex items-center gap-1 px-3 h-full text-xs font-semibold whitespace-nowrap border-b-2 transition
+                   class="flex items-center px-3 h-full text-xs font-semibold whitespace-nowrap border-b-2 transition shrink-0
                           {{ request()->routeIs('retailer.catalogue') && !request('category') ? 'border-brand text-brand' : 'border-transparent text-slate-600 hover:text-brand hover:border-brand/50' }}">
-                    🏪 All Products
+                    All Products
                 </a>
+
+                {{-- Category quick-links --}}
                 @php $navCats = \App\Models\Category::where('is_active', true)->orderBy('name')->take(10)->get(); @endphp
                 @foreach($navCats as $cat)
                 <a href="{{ route('retailer.catalogue') }}?category={{ $cat->id }}"
-                   class="flex items-center px-3 h-full text-xs whitespace-nowrap border-b-2 transition
+                   class="flex items-center px-3 h-full text-xs whitespace-nowrap border-b-2 transition shrink-0
                           {{ request('category') == $cat->id ? 'border-brand text-brand font-semibold' : 'border-transparent text-slate-600 hover:text-brand hover:border-brand/50' }}">
                     {{ app()->getLocale() === 'zh_CN' && $cat->name_zh ? $cat->name_zh : $cat->name }}
                 </a>
                 @endforeach
-            </nav>
+
+            </div>
         </div>
     </div>
+
 </header>
 @endauth
 

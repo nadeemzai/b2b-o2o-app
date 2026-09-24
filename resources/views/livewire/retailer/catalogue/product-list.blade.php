@@ -59,13 +59,36 @@
     @endif
 
     {{-- ══ MAIN CONTENT: SIDEBAR + PRODUCTS ═══════════════════════════════ --}}
-    <div class="flex gap-0 px-4 sm:px-6 lg:px-8 mt-4 pb-10 items-start">
+    {{-- Sidebar collapse state — persisted to localStorage --}}
+    <div x-data="{
+        sidebarOpen: (() => { try { return JSON.parse(localStorage.getItem('oz_cat_sidebar') ?? 'true') } catch(e) { return true } })()
+    }" class="flex gap-0 px-4 sm:px-6 lg:px-8 mt-4 pb-10 items-start">
+
+        {{-- Collapsed strip (visible on md+ when sidebar is closed) --}}
+        <div x-show="!sidebarOpen" x-cloak
+             class="shrink-0 mr-3 sticky top-20 self-start hidden md:flex flex-col items-center pt-1">
+            <button @click="sidebarOpen = true; try { localStorage.setItem('oz_cat_sidebar', 'true') } catch(e) {}"
+                    title="Show categories"
+                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-slate-200 shadow-sm text-slate-400 hover:text-brand hover:border-brand/50 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </button>
+        </div>
 
         {{-- ── LEFT SIDEBAR ────────────────────────────────────────────── --}}
-        <aside class="w-52 shrink-0 mr-5 sticky top-20 self-start hidden md:block">
+        <aside x-show="sidebarOpen"
+               class="w-52 shrink-0 mr-5 sticky top-20 self-start hidden md:block">
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-                <div class="bg-brand px-4 py-3">
+                <div class="bg-brand px-4 py-3 flex items-center justify-between">
                     <h2 class="text-white font-semibold text-sm tracking-wide uppercase">{{ __('ui.categories') }}</h2>
+                    <button @click="sidebarOpen = false; try { localStorage.setItem('oz_cat_sidebar', 'false') } catch(e) {}"
+                            title="Collapse categories"
+                            class="text-white/60 hover:text-white transition p-0.5 rounded shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
                 </div>
 
                 <nav class="divide-y divide-slate-50">
