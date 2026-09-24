@@ -1,50 +1,65 @@
 <x-filament-panels::page>
     <div class="max-w-lg space-y-6">
 
-        <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-5">
-            <h2 class="text-base font-semibold text-slate-800">Homepage Section Visibility</h2>
-            <p class="text-sm text-slate-500 -mt-3">
-                Toggle which sections appear on the public and retailer home pages.
-                When only one section is active it spans the full width.
-                When both are off, no product sections are shown.
-            </p>
+        <div class="fi-section rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
+            <div class="fi-section-content p-6 space-y-5">
 
-            <div class="space-y-4 pt-1">
+                <div>
+                    <p class="text-base font-semibold text-gray-950 dark:text-white">Homepage Section Visibility</p>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Toggle which sections appear on the public and retailer home pages.
+                        When only one section is active it spans the full width.
+                        When both are off, no product sections are shown.
+                    </p>
+                </div>
 
-                {{-- Deals --}}
-                <label class="flex items-center justify-between p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition">
-                    <div>
-                        <p class="font-medium text-slate-800 text-sm">Sourcing Top Deals</p>
-                        <p class="text-xs text-slate-500 mt-0.5">Shows up to 4 products marked as "Featured Deal" in the product list.</p>
-                    </div>
-                    <input type="checkbox" wire:model="dealsActive"
-                           class="w-5 h-5 text-orange-500 rounded border-slate-300 focus:ring-orange-400">
-                </label>
+                <div class="space-y-3 pt-1">
 
-                {{-- New Arrivals --}}
-                <label class="flex items-center justify-between p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition">
-                    <div>
-                        <p class="font-medium text-slate-800 text-sm">New Arrivals</p>
-                        <p class="text-xs text-slate-500 mt-0.5">Automatically shows the 4 most recently added active products.</p>
-                    </div>
-                    <input type="checkbox" wire:model="newArrivalsActive"
-                           class="w-5 h-5 text-orange-500 rounded border-slate-300 focus:ring-orange-400">
-                </label>
-            </div>
+                    {{-- Deals toggle --}}
+                    <label class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                        <div>
+                            <p class="text-sm font-medium text-gray-950 dark:text-white">Sourcing Top Deals</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Shows up to 4 products marked as "Featured Deal".</p>
+                        </div>
+                        <button
+                            wire:click="$toggle('dealsActive')"
+                            type="button"
+                            role="switch"
+                            aria-checked="{{ $dealsActive ? 'true' : 'false' }}"
+                            class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-warning-500 focus:ring-offset-2
+                                   {{ $dealsActive ? 'bg-warning-500' : 'bg-gray-200 dark:bg-gray-700' }}">
+                            <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out
+                                         {{ $dealsActive ? 'translate-x-5' : 'translate-x-0' }}"></span>
+                        </button>
+                    </label>
 
-            <div class="flex items-center gap-3 pt-2">
-                <button wire:click="save"
-                        class="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg transition shadow-sm">
-                    Save Settings
-                </button>
-                <div wire:loading class="text-sm text-slate-400">Saving…</div>
+                    {{-- New Arrivals toggle --}}
+                    <label class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                        <div>
+                            <p class="text-sm font-medium text-gray-950 dark:text-white">New Arrivals</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Automatically shows the 4 most recently added active products.</p>
+                        </div>
+                        <button
+                            wire:click="$toggle('newArrivalsActive')"
+                            type="button"
+                            role="switch"
+                            aria-checked="{{ $newArrivalsActive ? 'true' : 'false' }}"
+                            class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-warning-500 focus:ring-offset-2
+                                   {{ $newArrivalsActive ? 'bg-warning-500' : 'bg-gray-200 dark:bg-gray-700' }}">
+                            <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out
+                                         {{ $newArrivalsActive ? 'translate-x-5' : 'translate-x-0' }}"></span>
+                        </button>
+                    </label>
+
+                </div>
             </div>
         </div>
 
-        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
-            <strong>Tip:</strong> To manage which products appear in the Deals section, open the
+        <div class="fi-section rounded-xl bg-amber-50 dark:bg-amber-950/20 ring-1 ring-amber-200 dark:ring-amber-800 p-4 text-sm text-amber-800 dark:text-amber-200">
+            <strong>Tip:</strong> To control which products appear in Deals, go to the
             <a href="{{ route('filament.admin.resources.products.index') }}" class="underline font-medium">Products list</a>
-            and toggle the "Featured Deal" switch on individual products.
+            and toggle the <strong>Featured Deal</strong> switch on each product.
         </div>
+
     </div>
 </x-filament-panels::page>

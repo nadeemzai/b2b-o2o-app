@@ -3,9 +3,7 @@
 namespace App\Filament\Admin\Pages;
 
 use App\Models\HomepageSection;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Form;
+use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 
@@ -23,9 +21,23 @@ class HomepageSettings extends Page
 
     public function mount(): void
     {
-        $sections = HomepageSection::whereIn('key', ['deals', 'new_arrivals'])->get()->keyBy('key');
-        $this->dealsActive       = (bool) $sections->get('deals')?->is_active ?? true;
-        $this->newArrivalsActive = (bool) $sections->get('new_arrivals')?->is_active ?? true;
+        $sections = HomepageSection::whereIn('key', ['deals', 'new_arrivals'])
+            ->get()
+            ->keyBy('key');
+
+        $this->dealsActive       = (bool) ($sections->get('deals')?->is_active ?? true);
+        $this->newArrivalsActive = (bool) ($sections->get('new_arrivals')?->is_active ?? true);
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('save')
+                ->label('Save Settings')
+                ->icon('heroicon-o-check')
+                ->color('warning')
+                ->action('save'),
+        ];
     }
 
     public function save(): void
