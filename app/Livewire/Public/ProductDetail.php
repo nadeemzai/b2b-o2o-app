@@ -13,19 +13,18 @@ class ProductDetail extends Component
 
     public function mount(Product $product): void
     {
-        // Only show active products publicly
         abort_unless($product->is_active, 404);
 
         $this->product = $product->load([
             'category',
             'images',
+            'variantTypes.activeOptions',
             'storePrices' => fn ($q) => $q->where('is_active', true)->orderBy('price_pkr'),
         ]);
     }
 
     public function render()
     {
-        // Related products: same category, exclude current
         $related = Product::query()
             ->where('is_active', true)
             ->where('category_id', $this->product->category_id)
