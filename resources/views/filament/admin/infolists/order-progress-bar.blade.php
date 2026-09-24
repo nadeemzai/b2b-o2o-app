@@ -7,7 +7,7 @@
         'fulfilling'       => 'Fulfilling',
         'delivered'        => 'Delivered',
     ];
-    $currentStatus = $record->status ?? 'pending';
+    $currentStatus = $record?->status ?? 'pending';
     $isCancelled   = $currentStatus === 'cancelled';
     $currentIndex  = $isCancelled ? -1 : (array_search($currentStatus, $steps, true) ?? 0);
     if ($currentIndex === false) { $currentIndex = 0; }

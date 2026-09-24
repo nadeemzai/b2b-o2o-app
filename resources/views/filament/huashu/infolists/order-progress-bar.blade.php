@@ -5,7 +5,7 @@
         'fulfilling'  => 'Fulfilling',
         'delivered'   => 'Delivered',
     ];
-    $currentStatus = $record->status ?? 'transferred';
+    $currentStatus = $record?->status ?? 'transferred';
     $currentIndex  = array_search($currentStatus, $steps, true);
     if ($currentIndex === false) { $currentIndex = 0; }
 @endphp

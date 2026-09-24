@@ -68,7 +68,8 @@ class OrderResource extends Resource
         return $infolist->schema([
 
             InfolistView::make('filament.admin.infolists.order-progress-bar')
-                ->columnSpanFull(),
+                ->columnSpanFull()
+                ->viewData(fn ($record) => ['record' => $record]),
 
             Section::make('Order Summary')
                 ->columns(3)
