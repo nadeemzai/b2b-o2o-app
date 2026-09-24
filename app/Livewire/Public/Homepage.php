@@ -22,7 +22,7 @@ class Homepage extends Component
                 ->withPrice()
                 ->with(['category'])
                 ->where('is_deal', true)
-                ->orderBy('display_order', 'asc')
+                ->latest('products.created_at')
                 ->limit(4)
                 ->get();
         }
