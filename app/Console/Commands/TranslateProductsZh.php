@@ -10,19 +10,15 @@ class TranslateProductsZh extends Command
 {
     protected $signature = 'products:translate-zh
                             {--force : Re-translate products that already have name_zh}
-                            {--chunk=20 : How many products to send per API call}
                             {--dry-run : Print translations without saving}';
 
-    protected $description = 'Auto-translate product name_en → name_zh (Chinese) using Claude AI';
+    protected $description = 'Auto-translate product name_en → name_zh using free Google Translate';
+
+    // Free Google Translate endpoint (no API key needed)
+    private const GT_URL = 'https://translate.googleapis.com/translate_a/single';
 
     public function handle(): int
     {
-        $apiKey = config('services.anthropic.key');
-        if (! $apiKey) {
-            $this->error('ANTHROPIC_API_KEY not set in .env');
-            return 1;
-        }
-
         $query = Product::query()->whereNull('deleted_at');
         if (! $this->option('force')) {
             $query->whereNull('name_zh');
@@ -36,76 +32,36 @@ class TranslateProductsZh extends Command
             return 0;
         }
 
-        $this->info("Translating {$total} products in chunks of {$this->option('chunk')}...");
+        $this->info("Translating {$total} products via Google Translate (free, no key needed)...");
         $bar = $this->output->createProgressBar($total);
         $bar->start();
 
-        $chunkSize = (int) $this->option('chunk');
-        $updated   = 0;
+        $updated = 0;
+        $failed  = 0;
 
-        foreach ($products->chunk($chunkSize) as $chunk) {
-            // Build a numbered list for the prompt
-            $list = $chunk->values()->map(fn ($p, $i) => ($i + 1) . '. ' . $p->name_en)->implode("\n");
+        foreach ($products as $product) {
+            $translated = $this->translate($product->name_en);
 
-            $prompt = <<<PROMPT
-You are a product catalog translator for a wholesale B2B marketplace.
-Translate each of the following English product names into Simplified Chinese (简体中文).
-Rules:
-- Keep the same numbering.
-- Output ONLY the numbered list of Chinese translations, nothing else.
-- Use natural, commercially appropriate Chinese product names.
-- Do not add extra explanation.
-
-{$list}
-PROMPT;
-
-            $response = Http::withHeaders([
-                'x-api-key'         => $apiKey,
-                'anthropic-version' => '2023-06-01',
-                'content-type'      => 'application/json',
-            ])->post('https://api.anthropic.com/v1/messages', [
-                'model'      => 'claude-haiku-4-5',
-                'max_tokens' => 1024,
-                'messages'   => [['role' => 'user', 'content' => $prompt]],
-            ]);
-
-            if (! $response->successful()) {
+            if ($translated === null) {
                 $this->newLine();
-                $this->error('API error: ' . $response->body());
-                return 1;
-            }
-
-            $text  = $response->json('content.0.text', '');
-            $lines = collect(explode("\n", trim($text)))
-                ->filter(fn ($l) => preg_match('/^\d+\.\s+/', $l))
-                ->values();
-
-            foreach ($chunk->values() as $i => $product) {
-                $translated = preg_replace('/^\d+\.\s+/', '', $lines->get($i, ''));
-                $translated = trim($translated);
-
-                if ($translated === '') {
-                    $this->newLine();
-                    $this->warn("  No translation returned for: {$product->name_en}");
-                    $bar->advance();
-                    continue;
-                }
-
-                if ($this->option('dry-run')) {
-                    $this->newLine();
-                    $this->line("  [{$product->id}] {$product->name_en} → {$translated}");
-                } else {
-                    Product::where('id', $product->id)->update(['name_zh' => $translated]);
-                    $updated++;
-                }
-
+                $this->warn("  Failed: {$product->name_en}");
+                $failed++;
                 $bar->advance();
+                continue;
             }
 
-            // Small pause to avoid rate-limiting
-            if (! $this->option('dry-run')) {
-                usleep(200000); // 200ms
+            if ($this->option('dry-run')) {
+                $this->newLine();
+                $this->line("  [{$product->id}] {$product->name_en} → {$translated}");
+            } else {
+                Product::where('id', $product->id)->update(['name_zh' => $translated]);
+                $updated++;
             }
+
+            $bar->advance();
+
+            // Polite delay to avoid rate-limiting
+            usleep(300000); // 300ms between requests
         }
 
         $bar->finish();
@@ -114,9 +70,46 @@ PROMPT;
         if ($this->option('dry-run')) {
             $this->info('Dry run complete — nothing was saved.');
         } else {
-            $this->info("Done! {$updated} / {$total} products updated with Chinese names.");
+            $this->info("Done! {$updated} translated, {$failed} failed.");
+            if ($failed > 0) {
+                $this->warn("Re-run with --force to retry failed ones.");
+            }
         }
 
         return 0;
+    }
+
+    private function translate(string $text): ?string
+    {
+        try {
+            $response = Http::timeout(10)->get(self::GT_URL, [
+                'client' => 'gtx',
+                'sl'     => 'en',
+                'tl'     => 'zh-CN',
+                'dt'     => 't',
+                'q'      => $text,
+            ]);
+
+            if (! $response->successful()) {
+                return null;
+            }
+
+            $data = $response->json();
+
+            // Response structure: [[[translated, original, ...],...], ...]
+            if (! isset($data[0])) {
+                return null;
+            }
+
+            $translated = collect($data[0])
+                ->pluck(0)
+                ->filter()
+                ->implode('');
+
+            return trim($translated) ?: null;
+
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 }
