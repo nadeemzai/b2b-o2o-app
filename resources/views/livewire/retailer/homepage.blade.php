@@ -104,36 +104,14 @@
 
             {{-- ── NEW ARRIVALS STRIP ──────────────────────────────────── --}}
             @if($sections['new_arrivals'] && $newArrivals->isNotEmpty())
-            <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-                <div class="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
-                    <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center justify-center w-6 h-6 rounded bg-emerald-50">
-                            <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                            </svg>
-                        </span>
-                        <span class="text-sm font-bold text-slate-800">{{ __('ui.new_arrivals') }}</span>
-                        <span class="text-xs text-slate-400 font-normal">{{ $newArrivals->count() }} {{ __('ui.products') }}</span>
-                    </div>
-                    <a href="{{ route('retailer.catalogue') }}" class="text-xs text-brand hover:underline font-medium">{{ __('ui.view_all') }} →</a>
-                </div>
-                <div class="flex gap-2 overflow-x-auto px-4 py-3 scrollbar-hide">
-                    @foreach($newArrivals as $product)
-                    @php $retailPrice = $retailerPrices[$product->id] ?? null; @endphp
-                    <a href="{{ route('retailer.catalogue.product', $product) }}"
-                       class="w-[110px] shrink-0 group">
-                        <div class="w-[110px] h-[110px] rounded-lg overflow-hidden bg-slate-50 relative">
-                            @if($product->primaryImage())
-                                <img src="{{ $product->primaryImage()->display_url }}"
-                                     alt="{{ $product->name_en }}"
-                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"/>
-                            @else
-                                <div class="w-full h-full flex items-center justify-center">
-                                    <svg class="w-7 h-7 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
-                                    </svg>
-                                </div>
-                            @endif
+            <x-new-arrivals-carousel
+                :products="$newArrivals"
+                view-all-route="retailer.catalogue"
+                product-route="retailer.catalogue.product"
+                :price-map="$retailerPrices"
+                :heading="__('ui.new_arrivals')"
+            />
+            @endif
                             <span class="absolute top-1 left-1 bg-emerald-500 text-white text-[8px] font-bold px-1 py-0.5 rounded uppercase">New</span>
                         </div>
                         <p class="text-[11px] text-slate-700 font-medium line-clamp-2 leading-snug mt-1.5">
