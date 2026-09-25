@@ -231,4 +231,11 @@ return [
     'payment_branch_code'    => 'Branch Code',
     'payment_branch_name'    => 'Branch',
 
+    // Retailer Homepage sections
+    'cart'               => 'Cart',
+    'new_arrivals'       => 'New Arrivals',
+    'sourcing_top_deals' => 'Top Deals',
+    'view_all_deals'     => 'View all deals →',
+
+
 ];

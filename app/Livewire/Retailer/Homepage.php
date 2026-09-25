@@ -20,7 +20,7 @@ class Homepage extends Component
         if ($sections['deals']) {
             $deals = Product::active()
                 ->withPrice()
-                ->with(['category'])
+                ->with(['category', 'images'])
                 ->where('is_deal', true)
                 ->latest('products.created_at')
                 ->limit(4)
@@ -30,7 +30,7 @@ class Homepage extends Component
         if ($sections['new_arrivals']) {
             $newArrivals = Product::active()
                 ->withPrice()
-                ->with(['category'])
+                ->with(['category', 'images'])
                 ->latest('products.created_at')
                 ->limit(4)
                 ->get();

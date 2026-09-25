@@ -96,8 +96,8 @@
                         <a href="{{ route('retailer.catalogue.product', $product) }}"
                            class="bg-white p-3 flex flex-col gap-2 hover:bg-orange-50/50 transition group">
                             <div class="aspect-square rounded-lg overflow-hidden bg-slate-50 relative">
-                                @if($product->image_path)
-                                    <img src="{{ asset('storage/' . $product->image_path) }}"
+                                @if($product->primaryImage())
+                                    <img src="{{ $product->primaryImage()->display_url }}"
                                          alt="{{ $product->name_en }}"
                                          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"/>
                                 @else
@@ -158,8 +158,8 @@
                         <a href="{{ route('retailer.catalogue.product', $product) }}"
                            class="bg-white p-3 flex flex-col gap-2 hover:bg-orange-50/50 transition group">
                             <div class="aspect-square rounded-lg overflow-hidden bg-slate-50 relative">
-                                @if($product->image_path)
-                                    <img src="{{ asset('storage/' . $product->image_path) }}"
+                                @if($product->primaryImage())
+                                    <img src="{{ $product->primaryImage()->display_url }}"
                                          alt="{{ $product->name_en }}"
                                          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"/>
                                 @else

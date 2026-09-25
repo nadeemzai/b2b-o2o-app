@@ -231,4 +231,11 @@ return [
     'payment_branch_code'    => '支行代码',
     'payment_branch_name'    => '支行',
 
+    // Retailer Homepage sections
+    'cart'               => '购物车',
+    'new_arrivals'       => '新品上架',
+    'sourcing_top_deals' => '精选特惠',
+    'view_all_deals'     => '查看全部特惠 →',
+
+
 ];
