@@ -42,7 +42,9 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Blue,
             ])
-            ->brandName('B2B O2O — Admin')
+            ->brandName('OZ Wholesale B2B')
+            ->brandLogo(fn() => view('filament.brand-logo'))
+            ->brandLogoHeight('2rem')
             ->navigationGroups([
                 NavigationGroup::make('Content'),
                 NavigationGroup::make('Catalogue'),
