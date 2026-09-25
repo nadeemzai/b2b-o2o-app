@@ -175,13 +175,30 @@
 
                 {{-- Image --}}
                 <div class="aspect-square relative overflow-hidden bg-slate-50">
-                    @if($product->image_path)
-                        <img src="{{ asset('storage/' . $product->image_path) }}"
+                    @php
+                        $primaryImg = $product->primaryImage();
+                        $displaySrc = $primaryImg
+                            ? $primaryImg->display_url
+                            : ($product->image_path ? asset('storage/' . $product->image_path) : null);
+                    @endphp
+                    @if($displaySrc)
+                        <img src="{{ $displaySrc }}"
                              alt="{{ $product->name_en }}"
                              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                             loading="lazy"/>
+                             loading="lazy"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+                        {{-- Fallback placeholder (hidden unless image errors) --}}
+                        <div class="w-full h-full flex-col items-center justify-center gap-2 hidden"
+                             style="background: linear-gradient(135deg, #fff5f0 0%, #fff 100%);">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:#ff5b00;">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+                                </svg>
+                            </div>
+                            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">OZ B2B</span>
+                        </div>
                     @else
-                        {{-- Branded placeholder --}}
+                        {{-- No image available: branded placeholder --}}
                         <div class="w-full h-full flex flex-col items-center justify-center gap-2"
                              style="background: linear-gradient(135deg, #fff5f0 0%, #fff 100%);">
                             <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:#ff5b00;">
