@@ -34,7 +34,9 @@ class HuashuPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Sky,
             ])
-            ->brandName('Huashu International')
+            ->brandName('OZ Wholesale - 2 - Huashu International')
+            ->brandLogo(fn() => view('filament.brand-logo-huashu'))
+            ->brandLogoHeight('2rem')
             ->navigationGroups([
                 NavigationGroup::make('Orders'),
                 NavigationGroup::make('Catalogue'),
