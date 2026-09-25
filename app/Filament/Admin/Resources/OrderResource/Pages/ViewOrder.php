@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\OrderResource\Pages;
 
 use App\Filament\Admin\Resources\OrderResource;
+use App\Filament\Admin\Resources\OrderAuditResource;
 use App\Services\OrderService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
@@ -71,6 +72,16 @@ class ViewOrder extends ViewRecord
                     $this->record->refresh();
                     $this->refreshFormData(['status']);
                 }),
+            // ── View Audit Trail ────────────────────────────────────────
+            Action::make('audit_trail')
+                ->label('Audit Trail')
+                ->icon('heroicon-o-clipboard-document-list')
+                ->color('gray')
+                ->url(fn (): string =>
+                    OrderAuditResource::getUrl('index', [
+                        'tableSearch' => $this->record->id,
+                    ])
+                ),
         ];
     }
 }

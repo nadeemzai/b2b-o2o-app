@@ -176,35 +176,11 @@ class OrderResource extends Resource
                         ->columns(5),
                 ]),
 
-            Section::make('Status History')
+            Section::make('Audit Trail')
+                ->icon('heroicon-o-clipboard-document-list')
                 ->schema([
-                    RepeatableEntry::make('statusHistory')
-                        ->label('')
-                        ->schema([
-                            TextEntry::make('from_status')
-                                ->label('From')
-                                ->formatStateUsing(fn (?string $state): string => $state
-                                    ? self::statusLabel($state)
-                                    : '—')
-                                ->placeholder('—'),
-                            TextEntry::make('to_status')
-                                ->label('To')
-                                ->badge()
-                                ->color(fn (?string $state): string => $state ? self::statusColor($state) : 'gray')
-                                ->formatStateUsing(fn (?string $state): string => $state
-                                    ? self::statusLabel($state)
-                                    : '—'),
-                            TextEntry::make('changedBy.name')
-                                ->label('Changed By')
-                                ->placeholder('—'),
-                            TextEntry::make('note')
-                                ->label('Note')
-                                ->placeholder('—'),
-                            TextEntry::make('created_at')
-                                ->label('At')
-                                ->dateTime(),
-                        ])
-                        ->columns(5),
+                    InfolistView::make('filament.admin.infolists.order-audit-timeline')
+                        ->viewData(fn ($record) => ['record' => $record->loadMissing('statusHistory.changedBy')]),
                 ]),
         ]);
     }
