@@ -178,12 +178,18 @@
                     @if($product->image_path)
                         <img src="{{ asset('storage/' . $product->image_path) }}"
                              alt="{{ $product->name_en }}"
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                             loading="lazy"/>
                     @else
-                        <div class="w-full h-full flex items-center justify-center">
-                            <svg class="w-12 h-12 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
-                            </svg>
+                        {{-- Branded placeholder --}}
+                        <div class="w-full h-full flex flex-col items-center justify-center gap-2"
+                             style="background: linear-gradient(135deg, #fff5f0 0%, #fff 100%);">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:#ff5b00;">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+                                </svg>
+                            </div>
+                            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">OZ B2B</span>
                         </div>
                     @endif
 

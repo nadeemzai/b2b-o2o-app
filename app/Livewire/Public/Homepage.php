@@ -23,6 +23,8 @@ class Homepage extends Component
         $query = Product::active()
             ->withPrice()
             ->with(['category'])
+            // Products with images first, then newest
+            ->orderByRaw('CASE WHEN image_path IS NOT NULL AND image_path <> \'\' THEN 0 ELSE 1 END')
             ->latest('products.created_at');
 
         if ($this->search !== '') {
