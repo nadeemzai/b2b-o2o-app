@@ -25,7 +25,7 @@ class Homepage extends Component
                 ->with(['category', 'images'])
                 ->where('is_deal', true)
                 ->latest('products.created_at')
-                ->limit(16)
+                ->limit(10)
                 ->get();
         }
 
@@ -34,7 +34,7 @@ class Homepage extends Component
                 ->withPrice()
                 ->with(['category', 'images'])
                 ->latest('products.created_at')
-                ->limit(16)
+                ->limit(10)
                 ->get();
         }
 

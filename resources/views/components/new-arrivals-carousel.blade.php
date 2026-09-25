@@ -31,7 +31,6 @@
                 </svg>
             </span>
             <span class="text-sm font-bold text-slate-800">{{ $heading }}</span>
-            <span class="text-xs text-slate-400 font-normal">{{ $products->count() }} {{ __('ui.products') }}</span>
         </div>
         <a href="{{ route($viewAllRoute) }}" class="text-xs text-brand hover:underline font-medium">
             {{ __('ui.view_all') }} &rarr;

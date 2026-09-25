@@ -34,7 +34,7 @@ class ProductCatalogue extends Component
                 ->withPrice()
                 ->with(['category', 'images'])
                 ->latest('products.created_at')
-                ->limit(16)
+                ->limit(10)
                 ->get();
         }
 
