@@ -27,7 +27,7 @@ class ProductCatalogue extends Component
     {
         $query = Product::active()
             ->withPrice()
-            ->with(['category'])
+            ->with(['category', 'images'])
             ->when($this->categoryId, fn($q) => $q->where('category_id', $this->categoryId))
             ->when($this->search, fn($q) => $q->where(function ($q) {
                 $q->where('name_en', 'like', "%{$this->search}%")

@@ -107,8 +107,8 @@
 
                         <a href="{{ route('public.product', $product) }}"
                            class="aspect-square bg-gradient-to-br from-slate-50 to-slate-100 relative overflow-hidden block">
-                            @if($product->image_path)
-                                <img src="{{ asset('storage/' . $product->image_path) }}"
+                            @if($product->primaryImage())
+                                <img src="{{ $product->primaryImage()->display_url }}"
                                      alt="{{ $product->name_en }}"
                                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" />
                             @else
