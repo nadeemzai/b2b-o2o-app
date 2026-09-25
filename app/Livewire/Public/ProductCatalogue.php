@@ -3,6 +3,7 @@
 namespace App\Livewire\Public;
 
 use App\Models\Category;
+use App\Models\HomepageSection;
 use App\Models\Product;
 use App\Services\PricingService;
 use Livewire\Component;
@@ -25,6 +26,18 @@ class ProductCatalogue extends Component
 
     public function render(PricingService $pricing)
     {
+        $sections = HomepageSection::activeSections();
+
+        $newArrivals = collect();
+        if ($sections['new_arrivals']) {
+            $newArrivals = Product::active()
+                ->withPrice()
+                ->with(['category', 'images'])
+                ->latest('products.created_at')
+                ->limit(16)
+                ->get();
+        }
+
         $query = Product::active()
             ->withPrice()
             ->with(['category', 'images'])
@@ -51,6 +64,8 @@ class ProductCatalogue extends Component
         $totalProducts = $products->total();
 
         return view('livewire.public.product-catalogue', [
+            'sections'    => $sections,
+            'newArrivals' => $newArrivals,
             'products'        => $products,
             'categories'      => $categories,
             'totalProducts'   => $totalProducts,

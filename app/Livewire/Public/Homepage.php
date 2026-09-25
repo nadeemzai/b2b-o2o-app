@@ -3,6 +3,7 @@
 namespace App\Livewire\Public;
 
 use App\Models\Category;
+use App\Models\HomepageSection;
 use App\Models\Product;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -20,6 +21,18 @@ class Homepage extends Component
 
     public function render()
     {
+        $sections = HomepageSection::activeSections();
+
+        $newArrivals = collect();
+        if ($sections['new_arrivals']) {
+            $newArrivals = Product::active()
+                ->withPrice()
+                ->with(['category', 'images'])
+                ->latest('products.created_at')
+                ->limit(16)
+                ->get();
+        }
+
         $query = Product::active()
             ->withPrice()
             ->with(['category', 'images'])
@@ -39,8 +52,10 @@ class Homepage extends Component
         $categories = Category::orderBy('name')->get(['id', 'name', 'name_zh', 'slug']);
 
         return view('livewire.public.homepage', [
-            'products'   => $products,
-            'categories' => $categories,
+            'products'    => $products,
+            'categories'  => $categories,
+            'sections'    => $sections,
+            'newArrivals' => $newArrivals,
         ])->layout('layouts.public', ['title' => 'OZ B2B Wholesale Marketplace']);
     }
 }

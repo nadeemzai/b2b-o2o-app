@@ -7,13 +7,15 @@ use App\Models\HomepageSection;
 use App\Models\Product;
 use App\Services\PricingService;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class Homepage extends Component
 {
+    use WithPagination;
+
     public function render(PricingService $pricing)
     {
-        $sections = HomepageSection::activeSections();
-
+        $sections    = HomepageSection::activeSections();
         $deals       = collect();
         $newArrivals = collect();
 
@@ -23,7 +25,7 @@ class Homepage extends Component
                 ->with(['category', 'images'])
                 ->where('is_deal', true)
                 ->latest('products.created_at')
-                ->limit(4)
+                ->limit(16)
                 ->get();
         }
 
@@ -32,20 +34,26 @@ class Homepage extends Component
                 ->withPrice()
                 ->with(['category', 'images'])
                 ->latest('products.created_at')
-                ->limit(4)
+                ->limit(16)
                 ->get();
         }
 
+        // Full products grid below the strips
+        $allProducts = Product::active()
+            ->withPrice()
+            ->with(['category', 'images'])
+            ->latest('products.created_at')
+            ->paginate(24);
+
         $categories = Category::orderBy('name')->get(['id', 'name', 'name_zh', 'slug']);
 
-        // Batch commission rates so each product card can show retailer net price
-        $allProducts     = $deals->merge($newArrivals);
-        $categoryIds     = $allProducts->pluck('category_id')->unique()->filter()->values()->all();
+        // Batch commission rates — no N+1
+        $pooled      = $deals->merge($newArrivals)->merge($allProducts->getCollection())->unique('id');
+        $categoryIds = $pooled->pluck('category_id')->unique()->filter()->values()->all();
         $commissionRates = $pricing->ratesForCategories($categoryIds);
 
-        // Pre-compute retailer price per product so Blade stays logic-free
         $retailerPrices = [];
-        foreach ($allProducts as $product) {
+        foreach ($pooled as $product) {
             $retailerPrices[$product->id] = $pricing->retailerPrice($product);
         }
 
@@ -53,6 +61,7 @@ class Homepage extends Component
             'categories'      => $categories,
             'deals'           => $deals,
             'newArrivals'     => $newArrivals,
+            'allProducts'     => $allProducts,
             'sections'        => $sections,
             'commissionRates' => $commissionRates,
             'retailerPrices'  => $retailerPrices,

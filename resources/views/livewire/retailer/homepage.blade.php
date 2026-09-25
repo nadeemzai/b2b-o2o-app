@@ -1,11 +1,11 @@
-{{-- ── Retailer Home — 1688-style: categories sidebar + featured sections ─── --}}
+{{-- ── Retailer Home — 1688-style: categories sidebar + compact strips + all products ─── --}}
 <div class="-mx-4 sm:-mx-6 lg:-mx-8 -mt-6">
 
-    {{-- ══ MAIN LAYOUT: CATEGORY SIDEBAR + FEATURED SECTIONS ══════════════ --}}
+    {{-- ══ MAIN LAYOUT: CATEGORY SIDEBAR + CONTENT ════════════════════════ --}}
     <div class="flex gap-0 px-4 sm:px-6 lg:px-8 mt-4 pb-10 items-start">
 
         {{-- ── LEFT: CATEGORY SIDEBAR ─────────────────────────────────── --}}
-        <aside class="w-52 shrink-0 mr-5 hidden md:block">
+        <aside class="w-52 shrink-0 mr-5 hidden md:block sticky top-20 self-start">
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
                 <div class="bg-brand px-4 py-3 flex items-center gap-2">
                     <svg class="w-4 h-4 text-white/70" fill="currentColor" viewBox="0 0 20 20">
@@ -30,7 +30,7 @@
                 </nav>
             </div>
 
-            {{-- Quick links for authenticated retailer --}}
+            {{-- Quick links --}}
             <div class="mt-4 space-y-2">
                 <a href="{{ route('retailer.cart') }}"
                    class="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 hover:text-brand hover:border-brand transition shadow-sm">
@@ -49,156 +49,185 @@
             </div>
         </aside>
 
-        {{-- ── RIGHT: FEATURED SECTIONS ────────────────────────────────── --}}
-        <div class="flex-1 min-w-0">
+        {{-- ── RIGHT: CONTENT AREA ─────────────────────────────────────── --}}
+        <div class="flex-1 min-w-0 space-y-4">
 
-            @if(!$sections['deals'] && !$sections['new_arrivals'])
-            {{-- Both off — show browse-catalogue CTA --}}
-            <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-12 text-center">
-                <svg class="w-16 h-16 text-slate-200 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
-                </svg>
-                <p class="text-slate-700 font-semibold text-lg mb-1">Explore Our Wholesale Catalogue</p>
-                <p class="text-slate-400 text-sm mb-6">Browse thousands of products at your approved wholesale rates.</p>
-                <a href="{{ route('retailer.catalogue') }}"
-                   class="inline-flex items-center gap-2 bg-brand text-white text-sm font-semibold px-6 py-2.5 rounded-lg hover:bg-brand-dark transition shadow-sm">
-                    Browse Full Catalogue →
-                </a>
+            {{-- ── DEALS STRIP ──────────────────────────────────────────── --}}
+            @if($sections['deals'] && $deals->isNotEmpty())
+            <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+                {{-- Strip header --}}
+                <div class="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center justify-center w-6 h-6 rounded bg-brand/10">
+                            <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </span>
+                        <span class="text-sm font-bold text-slate-800">{{ __('ui.sourcing_top_deals') }}</span>
+                        <span class="text-xs text-slate-400 font-normal">{{ $deals->count() }} {{ __('ui.products') }}</span>
+                    </div>
+                    <a href="{{ route('retailer.catalogue') }}" class="text-xs text-brand hover:underline font-medium">{{ __('ui.view_all_deals') }}</a>
+                </div>
+                {{-- Horizontal scroll row --}}
+                <div class="flex gap-2 overflow-x-auto px-4 py-3 scrollbar-hide">
+                    @foreach($deals as $product)
+                    @php $retailPrice = $retailerPrices[$product->id] ?? null; @endphp
+                    <a href="{{ route('retailer.catalogue.product', $product) }}"
+                       class="w-[110px] shrink-0 group">
+                        <div class="w-[110px] h-[110px] rounded-lg overflow-hidden bg-slate-50 relative">
+                            @if($product->primaryImage())
+                                <img src="{{ $product->primaryImage()->display_url }}"
+                                     alt="{{ $product->name_en }}"
+                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"/>
+                            @else
+                                <div class="w-full h-full flex items-center justify-center">
+                                    <svg class="w-7 h-7 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+                                    </svg>
+                                </div>
+                            @endif
+                            <span class="absolute top-1 left-1 bg-brand text-white text-[8px] font-bold px-1 py-0.5 rounded uppercase">Deal</span>
+                        </div>
+                        <p class="text-[11px] text-slate-700 font-medium line-clamp-2 leading-snug mt-1.5">
+                            {{ app()->getLocale() === 'zh_CN' && $product->name_zh ? $product->name_zh : $product->name_en }}
+                        </p>
+                        @if($retailPrice)
+                        <p class="text-[12px] font-bold text-brand mt-0.5 tabular-nums">{{ \App\Services\CurrencyService::format($retailPrice) }}</p>
+                        @else
+                        <p class="text-[10px] text-slate-400 italic mt-0.5">{{ __('ui.contact_for_price') }}</p>
+                        @endif
+                    </a>
+                    @endforeach
+                </div>
             </div>
-            @else
-
-            {{-- ── GRID: 1 col (one section) or 2 cols (both sections) ── --}}
-            <div class="{{ $sections['deals'] && $sections['new_arrivals'] ? 'grid grid-cols-1 lg:grid-cols-2 gap-4' : '' }}">
-
-                {{-- ── SOURCING TOP DEALS ──────────────────────────── --}}
-                @if($sections['deals'])
-                <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-
-                    {{-- Section header --}}
-                    <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
-                        <div class="flex items-center gap-2.5">
-                            <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-brand/10">
-                                <svg class="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                </svg>
-                            </span>
-                            <span class="text-sm font-bold text-slate-800 tracking-tight">{{ __('ui.sourcing_top_deals') }}</span>
-                        </div>
-                        <a href="{{ route('retailer.catalogue') }}" class="text-xs text-brand hover:underline font-medium">{{ __('ui.view_all') }} →</a>
-                    </div>
-
-                    @if($deals->isEmpty())
-                    <div class="p-10 text-center text-slate-400 text-sm">No deals available yet.</div>
-                    @else
-                    <div class="grid grid-cols-2 gap-px bg-slate-100">
-                        @foreach($deals as $product)
-                        @php $retailPrice = $retailerPrices[$product->id] ?? null; @endphp
-                        <a href="{{ route('retailer.catalogue.product', $product) }}"
-                           class="bg-white p-3 flex flex-col gap-2 hover:bg-orange-50/50 transition group">
-                            <div class="aspect-square rounded-lg overflow-hidden bg-slate-50 relative">
-                                @if($product->primaryImage())
-                                    <img src="{{ $product->primaryImage()->display_url }}"
-                                         alt="{{ $product->name_en }}"
-                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"/>
-                                @else
-                                    <div class="w-full h-full flex items-center justify-center">
-                                        <svg class="w-8 h-8 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
-                                        </svg>
-                                    </div>
-                                @endif
-                                <span class="absolute top-1.5 left-1.5 bg-brand text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">Deal</span>
-                            </div>
-                            <div>
-                                <p class="text-xs text-slate-700 font-medium line-clamp-2 leading-snug">
-                                    {{ app()->getLocale() === 'zh_CN' && $product->name_zh ? $product->name_zh : $product->name_en }}
-                                </p>
-                                @if($retailPrice)
-                                <p class="text-base font-bold text-brand mt-1 tabular-nums">{{ \App\Services\CurrencyService::format($retailPrice) }}</p>
-                                @else
-                                <p class="text-xs text-slate-400 italic mt-1">{{ __('ui.contact_for_price') }}</p>
-                                @endif
-                            </div>
-                        </a>
-                        @endforeach
-                    </div>
-                    @endif
-
-                    <div class="px-4 py-3 border-t border-slate-50 bg-slate-50/50">
-                        <a href="{{ route('retailer.catalogue') }}"
-                           class="flex items-center justify-center gap-2 py-2 bg-brand text-white text-xs font-semibold rounded-lg hover:bg-brand-dark transition shadow-sm w-full">
-                            {{ __('ui.view_all_deals') }}
-                        </a>
-                    </div>
-                </div>
-                @endif
-
-                {{-- ── NEW ARRIVALS ─────────────────────────────────── --}}
-                @if($sections['new_arrivals'])
-                <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-
-                    <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
-                        <div class="flex items-center gap-2.5">
-                            <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-50">
-                                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                                </svg>
-                            </span>
-                            <span class="text-sm font-bold text-slate-800 tracking-tight">{{ __('ui.new_arrivals') }}</span>
-                        </div>
-                        <a href="{{ route('retailer.catalogue') }}" class="text-xs text-brand hover:underline font-medium">{{ __('ui.view_all') }} →</a>
-                    </div>
-
-                    @if($newArrivals->isEmpty())
-                    <div class="p-10 text-center text-slate-400 text-sm">No products yet.</div>
-                    @else
-                    <div class="grid grid-cols-2 gap-px bg-slate-100">
-                        @foreach($newArrivals as $product)
-                        @php $retailPrice = $retailerPrices[$product->id] ?? null; @endphp
-                        <a href="{{ route('retailer.catalogue.product', $product) }}"
-                           class="bg-white p-3 flex flex-col gap-2 hover:bg-orange-50/50 transition group">
-                            <div class="aspect-square rounded-lg overflow-hidden bg-slate-50 relative">
-                                @if($product->primaryImage())
-                                    <img src="{{ $product->primaryImage()->display_url }}"
-                                         alt="{{ $product->name_en }}"
-                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"/>
-                                @else
-                                    <div class="w-full h-full flex items-center justify-center">
-                                        <svg class="w-8 h-8 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
-                                        </svg>
-                                    </div>
-                                @endif
-                                <span class="absolute top-1.5 left-1.5 bg-emerald-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">New</span>
-                            </div>
-                            <div>
-                                <p class="text-xs text-slate-700 font-medium line-clamp-2 leading-snug">
-                                    {{ app()->getLocale() === 'zh_CN' && $product->name_zh ? $product->name_zh : $product->name_en }}
-                                </p>
-                                @if($retailPrice)
-                                <p class="text-base font-bold text-brand mt-1 tabular-nums">{{ \App\Services\CurrencyService::format($retailPrice) }}</p>
-                                @else
-                                <p class="text-xs text-slate-400 italic mt-1">{{ __('ui.contact_for_price') }}</p>
-                                @endif
-                            </div>
-                        </a>
-                        @endforeach
-                    </div>
-                    @endif
-
-                    <div class="px-4 py-3 border-t border-slate-50 bg-slate-50/50">
-                        <a href="{{ route('retailer.catalogue') }}"
-                           class="flex items-center justify-center gap-2 py-2 border border-brand text-brand text-xs font-semibold rounded-lg hover:bg-orange-50 transition w-full">
-                            Browse All Products →
-                        </a>
-                    </div>
-                </div>
-                @endif
-
-            </div>{{-- end sections grid --}}
             @endif
 
-        </div>{{-- end right area --}}
+            {{-- ── NEW ARRIVALS STRIP ──────────────────────────────────── --}}
+            @if($sections['new_arrivals'] && $newArrivals->isNotEmpty())
+            <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center justify-center w-6 h-6 rounded bg-emerald-50">
+                            <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                            </svg>
+                        </span>
+                        <span class="text-sm font-bold text-slate-800">{{ __('ui.new_arrivals') }}</span>
+                        <span class="text-xs text-slate-400 font-normal">{{ $newArrivals->count() }} {{ __('ui.products') }}</span>
+                    </div>
+                    <a href="{{ route('retailer.catalogue') }}" class="text-xs text-brand hover:underline font-medium">{{ __('ui.view_all') }} →</a>
+                </div>
+                <div class="flex gap-2 overflow-x-auto px-4 py-3 scrollbar-hide">
+                    @foreach($newArrivals as $product)
+                    @php $retailPrice = $retailerPrices[$product->id] ?? null; @endphp
+                    <a href="{{ route('retailer.catalogue.product', $product) }}"
+                       class="w-[110px] shrink-0 group">
+                        <div class="w-[110px] h-[110px] rounded-lg overflow-hidden bg-slate-50 relative">
+                            @if($product->primaryImage())
+                                <img src="{{ $product->primaryImage()->display_url }}"
+                                     alt="{{ $product->name_en }}"
+                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"/>
+                            @else
+                                <div class="w-full h-full flex items-center justify-center">
+                                    <svg class="w-7 h-7 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+                                    </svg>
+                                </div>
+                            @endif
+                            <span class="absolute top-1 left-1 bg-emerald-500 text-white text-[8px] font-bold px-1 py-0.5 rounded uppercase">New</span>
+                        </div>
+                        <p class="text-[11px] text-slate-700 font-medium line-clamp-2 leading-snug mt-1.5">
+                            {{ app()->getLocale() === 'zh_CN' && $product->name_zh ? $product->name_zh : $product->name_en }}
+                        </p>
+                        @if($retailPrice)
+                        <p class="text-[12px] font-bold text-brand mt-0.5 tabular-nums">{{ \App\Services\CurrencyService::format($retailPrice) }}</p>
+                        @else
+                        <p class="text-[10px] text-slate-400 italic mt-0.5">{{ __('ui.contact_for_price') }}</p>
+                        @endif
+                    </a>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            {{-- ── ALL PRODUCTS GRID ─────────────────────────────────── --}}
+            <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                        </svg>
+                        <span class="text-sm font-bold text-slate-800">{{ __('ui.all_products') }}</span>
+                        <span class="text-xs text-slate-400 font-normal">{{ number_format($allProducts->total()) }} {{ __('ui.products') }}</span>
+                    </div>
+                    <a href="{{ route('retailer.catalogue') }}" class="text-xs text-brand hover:underline font-medium">{{ __('ui.view_all') }} →</a>
+                </div>
+
+                @if($allProducts->isEmpty())
+                <div class="py-16 text-center text-slate-400 text-sm">
+                    <svg class="w-12 h-12 mx-auto mb-3 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+                    </svg>
+                    No products yet.
+                </div>
+                @else
+                <div class="p-4">
+                    <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));">
+                        @foreach($allProducts as $product)
+                        @php $retailPrice = $retailerPrices[$product->id] ?? null; @endphp
+                        <a href="{{ route('retailer.catalogue.product', $product) }}"
+                           class="group bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col">
+                            <div class="aspect-square relative overflow-hidden bg-slate-50">
+                                @if($product->primaryImage())
+                                    <img src="{{ $product->primaryImage()->display_url }}"
+                                         alt="{{ $product->name_en }}"
+                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                         loading="lazy"/>
+                                @else
+                                    <div class="w-full h-full flex flex-col items-center justify-center gap-1"
+                                         style="background: linear-gradient(135deg, #fff5f0 0%, #fff 100%);">
+                                        <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-brand">
+                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                @endif
+                                @if($product->is_deal ?? false)
+                                <span class="absolute top-1.5 left-1.5 bg-brand text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase">Deal</span>
+                                @endif
+                                @if($product->category)
+                                <span class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent px-2 py-1.5">
+                                    <span class="text-white text-[9px] truncate block">{{ $product->category->name }}</span>
+                                </span>
+                                @endif
+                            </div>
+                            <div class="p-2.5 flex flex-col flex-1">
+                                <p class="text-xs font-medium text-slate-700 line-clamp-2 leading-snug flex-1">
+                                    {{ app()->getLocale() === 'zh_CN' && $product->name_zh ? $product->name_zh : $product->name_en }}
+                                </p>
+                                <div class="mt-1.5 pt-1.5 border-t border-slate-50">
+                                    @if($retailPrice)
+                                    <p class="text-sm font-extrabold text-brand tabular-nums">{{ \App\Services\CurrencyService::format($retailPrice) }}</p>
+                                    @else
+                                    <p class="text-xs text-slate-400 italic">{{ __('ui.contact_for_price') }}</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </a>
+                        @endforeach
+                    </div>
+
+                    @if($allProducts->hasPages())
+                    <div class="mt-6 flex justify-center">
+                        {{ $allProducts->links() }}
+                    </div>
+                    @endif
+                </div>
+                @endif
+            </div>
+
+        </div>{{-- end right content --}}
     </div>{{-- end main layout --}}
 
 </div>
