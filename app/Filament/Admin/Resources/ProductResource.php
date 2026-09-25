@@ -32,6 +32,7 @@ class ProductResource extends Resource
             Section::make('Product Details')->schema([
                 TextInput::make('name_en')->label('Name (EN)')->required()->maxLength(200),
                 TextInput::make('name_ur')->label('Name (UR)')->maxLength(200),
+                TextInput::make('name_zh')->label('Name (中文)')->maxLength(200),
                 TextInput::make('sku')->label('SKU')->maxLength(100)->unique(ignoreRecord: true),
                 Select::make('category_id')
                     ->relationship('category', 'name')
@@ -47,6 +48,7 @@ class ProductResource extends Resource
             Section::make('Description')->schema([
                 Textarea::make('description_en')->label('Description (EN)')->rows(3),
                 Textarea::make('description_ur')->label('Description (UR)')->rows(3),
+                Textarea::make('description_zh')->label('Description (中文)')->rows(3),
             ])->columns(2),
 
             Section::make('Huashu Pricing & MOQ')

@@ -18,6 +18,8 @@ class Product extends Model
         'sku',
         'name_en',
         'name_ur',
+        'name_zh',
+        'description_zh',
         'description_en',
         'description_ur',
         'category_id',
