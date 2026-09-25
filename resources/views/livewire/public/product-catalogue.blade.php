@@ -84,19 +84,6 @@
                 class="mb-4"
             />
             @endif
-                            <span class="absolute top-1 left-1 text-white font-bold px-1 py-0.5 rounded uppercase" style="font-size:8px;background:#10b981;">New</span>
-                        </div>
-                        <p class="mt-1.5 text-slate-700 font-medium leading-snug" style="font-size:11px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
-                            {{ app()->getLocale() === 'zh_CN' && $product->name_zh ? $product->name_zh : $product->name_en }}
-                        </p>
-                        @if($product->min_price)
-                        <p class="font-bold mt-0.5 tabular-nums" style="font-size:12px;color:#ff5b00;">{{ \App\Services\CurrencyService::format($product->min_price) }}</p>
-                        @endif
-                    </a>
-                    @endforeach
-                </div>
-            </div>
-            @endif
 
             {{-- Loading indicator --}}
             <div wire:loading class="text-center py-4 text-sm text-slate-400 flex items-center justify-center gap-2">

@@ -112,21 +112,6 @@
                 :heading="__('ui.new_arrivals')"
             />
             @endif
-                            <span class="absolute top-1 left-1 bg-emerald-500 text-white text-[8px] font-bold px-1 py-0.5 rounded uppercase">New</span>
-                        </div>
-                        <p class="text-[11px] text-slate-700 font-medium line-clamp-2 leading-snug mt-1.5">
-                            {{ app()->getLocale() === 'zh_CN' && $product->name_zh ? $product->name_zh : $product->name_en }}
-                        </p>
-                        @if($retailPrice)
-                        <p class="text-[12px] font-bold text-brand mt-0.5 tabular-nums">{{ \App\Services\CurrencyService::format($retailPrice) }}</p>
-                        @else
-                        <p class="text-[10px] text-slate-400 italic mt-0.5">{{ __('ui.contact_for_price') }}</p>
-                        @endif
-                    </a>
-                    @endforeach
-                </div>
-            </div>
-            @endif
 
             {{-- ── ALL PRODUCTS GRID ─────────────────────────────────── --}}
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
