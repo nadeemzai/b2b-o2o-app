@@ -10,11 +10,11 @@ class TranslateProductsZh extends Command
 {
     protected $signature = 'products:translate-zh
                             {--force : Re-translate products that already have name_zh}
-                            {--dry-run : Print translations without saving}';
+                            {--dry-run : Print translations without saving}
+                            {--debug : Show errors per product}';
 
     protected $description = 'Auto-translate product name_en → name_zh using free Google Translate';
 
-    // Free Google Translate endpoint (no API key needed)
     private const GT_URL = 'https://translate.googleapis.com/translate_a/single';
 
     public function handle(): int
@@ -32,7 +32,7 @@ class TranslateProductsZh extends Command
             return 0;
         }
 
-        $this->info("Translating {$total} products via Google Translate (free, no key needed)...");
+        $this->info("Translating {$total} products via Google Translate (free)...");
         $bar = $this->output->createProgressBar($total);
         $bar->start();
 
@@ -40,11 +40,13 @@ class TranslateProductsZh extends Command
         $failed  = 0;
 
         foreach ($products as $product) {
-            $translated = $this->translate($product->name_en);
+            [$translated, $error] = $this->translate($product->name_en);
 
             if ($translated === null) {
-                $this->newLine();
-                $this->warn("  Failed: {$product->name_en}");
+                if ($this->option('debug')) {
+                    $this->newLine();
+                    $this->warn("  FAIL [{$product->id}] {$product->name_en}: {$error}");
+                }
                 $failed++;
                 $bar->advance();
                 continue;
@@ -59,9 +61,7 @@ class TranslateProductsZh extends Command
             }
 
             $bar->advance();
-
-            // Polite delay to avoid rate-limiting
-            usleep(300000); // 300ms between requests
+            usleep(300000); // 300ms polite delay
         }
 
         $bar->finish();
@@ -72,33 +72,38 @@ class TranslateProductsZh extends Command
         } else {
             $this->info("Done! {$updated} translated, {$failed} failed.");
             if ($failed > 0) {
-                $this->warn("Re-run with --force to retry failed ones.");
+                $this->warn("Re-run with --force --debug to see errors.");
             }
         }
 
         return 0;
     }
 
-    private function translate(string $text): ?string
+    private function translate(string $text): array
     {
         try {
-            $response = Http::timeout(10)->get(self::GT_URL, [
-                'client' => 'gtx',
-                'sl'     => 'en',
-                'tl'     => 'zh-CN',
-                'dt'     => 't',
-                'q'      => $text,
-            ]);
+            $response = Http::timeout(10)
+                ->withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Referer'    => 'https://translate.google.com/',
+                    'Accept'     => 'application/json, text/plain, */*',
+                ])
+                ->get(self::GT_URL, [
+                    'client' => 'gtx',
+                    'sl'     => 'en',
+                    'tl'     => 'zh-CN',
+                    'dt'     => 't',
+                    'q'      => $text,
+                ]);
 
             if (! $response->successful()) {
-                return null;
+                return [null, "HTTP {$response->status()}"];
             }
 
             $data = $response->json();
 
-            // Response structure: [[[translated, original, ...],...], ...]
             if (! isset($data[0])) {
-                return null;
+                return [null, 'Unexpected response: ' . $response->body()];
             }
 
             $translated = collect($data[0])
@@ -106,10 +111,12 @@ class TranslateProductsZh extends Command
                 ->filter()
                 ->implode('');
 
-            return trim($translated) ?: null;
+            $translated = trim($translated);
+
+            return $translated !== '' ? [$translated, null] : [null, 'Empty result'];
 
         } catch (\Throwable $e) {
-            return null;
+            return [null, $e->getMessage()];
         }
     }
 }
