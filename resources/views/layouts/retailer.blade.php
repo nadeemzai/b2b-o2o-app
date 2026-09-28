@@ -282,9 +282,27 @@
                     {{-- Text input --}}
                     <input type="text"
                            name="search"
+                           id="header-search-input"
+                           value="{{ request('search') }}"
                            placeholder="Search products, brands, suppliers..."
                            class="flex-1 h-[42px] px-4 text-sm text-slate-800 placeholder-slate-400 focus:outline-none min-w-0 bg-white" />
-
+                    {{-- Camera / image search button --}}
+                    <button type="button"
+                            id="image-search-btn"
+                            title="Search by image"
+                            class="h-[42px] px-3 border-l border-slate-200 bg-white hover:bg-orange-50 text-slate-400 hover:text-brand transition shrink-0 flex items-center">
+                        <svg id="img-search-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <svg id="img-search-spinner" class="w-5 h-5 animate-spin hidden text-brand" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                        </svg>
+                    </button>
+                    {{-- Hidden file input --}}
+                    <input type="file" id="image-search-file" accept="image/*" class="hidden" />
                     {{-- Search button --}}
                     <button type="submit"
                             class="h-[42px] px-5 lg:px-7 bg-brand hover:bg-brand-dark text-white font-semibold text-sm transition shrink-0 flex items-center gap-2">
@@ -295,6 +313,14 @@
                     </button>
                 </div>
             </form>
+
+            {{-- Image-search error toast --}}
+            @if(session('image_search_error'))
+            <div id="img-search-error"
+                 class="absolute top-full left-0 right-0 mt-1 mx-2 bg-red-50 border border-red-200 text-red-700 text-xs rounded px-3 py-2 shadow z-50">
+                {{ session('image_search_error') }}
+            </div>
+            @endif
 
             {{-- ── Right-side action icons ──────────────────────────────── --}}
             <div class="flex items-center shrink-0">
@@ -431,6 +457,67 @@
 <footer class="text-center text-slate-400 text-xs py-4 border-t border-slate-200 bg-white mt-4">
     OZ Tech &mdash; B2B Wholesale Portal &copy; {{ date('Y') }}
 </footer>
+
+
+<script>
+(function () {
+    document.addEventListener('DOMContentLoaded', function () {
+        var btn      = document.getElementById('image-search-btn');
+        var fileInput= document.getElementById('image-search-file');
+        var icon     = document.getElementById('img-search-icon');
+        var spinner  = document.getElementById('img-search-spinner');
+        var errorBox = document.getElementById('img-search-error');
+
+        if (!btn || !fileInput) return;
+
+        btn.addEventListener('click', function () { fileInput.click(); });
+
+        fileInput.addEventListener('change', function () {
+            var file = fileInput.files[0];
+            if (!file) return;
+
+            icon.classList.add('hidden');
+            spinner.classList.remove('hidden');
+            btn.disabled = true;
+
+            var formData = new FormData();
+            formData.append('image', file);
+            formData.append('_token', '{{ csrf_token() }}');
+
+            fetch('{{ route("image.search") }}', {
+                method: 'POST',
+                body: formData,
+                redirect: 'follow',
+                credentials: 'same-origin',
+            })
+            .then(function (response) {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    showError('Image search failed. Please try again.');
+                }
+            })
+            .catch(function () { showError('Network error. Please try again.'); })
+            .finally(function () {
+                icon.classList.remove('hidden');
+                spinner.classList.add('hidden');
+                btn.disabled = false;
+                fileInput.value = '';
+            });
+        });
+
+        function showError(msg) {
+            var box = document.createElement('div');
+            box.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c;padding:8px 16px;border-radius:6px;font-size:13px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.12)';
+            box.textContent = msg;
+            document.body.appendChild(box);
+            setTimeout(function () { box.remove(); }, 4000);
+        }
+
+        if (errorBox) { setTimeout(function () { errorBox.style.display = 'none'; }, 5000); }
+    });
+})();
+</script>
 
 </body>
 </html>
