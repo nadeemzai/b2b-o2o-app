@@ -139,6 +139,59 @@
             <div class="mx-5 my-2 border-t border-slate-100"></div>
             <p class="px-5 pb-1 text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Retailer Access</p>
 
+            @auth('retailer')
+            {{-- My Account --}}
+            <a href="{{ route('retailer.home') }}" @click="navOpen = false"
+               class="flex items-center gap-4 px-5 py-4 group transition border-l-4 border-brand bg-orange-50">
+                <div class="w-10 h-10 rounded-xl bg-brand text-white flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-brand">My Account</p>
+                    <p class="text-[11px] text-slate-400">{{ auth('retailer')->user()->business_name ?? 'Retailer Portal' }}</p>
+                </div>
+                <svg class="w-4 h-4 text-brand/60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+
+            {{-- My Orders --}}
+            <a href="{{ route('retailer.orders') }}" @click="navOpen = false"
+               class="flex items-center gap-4 px-5 py-4 group transition border-l-4 border-transparent hover:bg-orange-50 hover:border-brand/40">
+                <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-brand flex items-center justify-center shrink-0 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-slate-800 group-hover:text-brand transition">My Orders</p>
+                    <p class="text-[11px] text-slate-400">Track & manage orders</p>
+                </div>
+                <svg class="w-4 h-4 text-slate-300 group-hover:text-brand/60 transition shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+
+            {{-- Sign Out --}}
+            <form method="POST" action="{{ route('retailer.logout') }}" @click="navOpen = false">
+                @csrf
+                <button type="submit"
+                        class="w-full flex items-center gap-4 px-5 py-4 group transition border-l-4 border-transparent hover:bg-red-50 hover:border-red-300 text-left">
+                    <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 group-hover:bg-red-100 group-hover:text-red-500 flex items-center justify-center shrink-0 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-slate-800 group-hover:text-red-600 transition">Sign Out</p>
+                        <p class="text-[11px] text-slate-400">Leave retailer portal</p>
+                    </div>
+                </button>
+            </form>
+
+            @else
             {{-- Sign In --}}
             <a href="{{ route('retailer.login') }}" @click="navOpen = false"
                class="flex items-center gap-4 px-5 py-4 group transition border-l-4 border-transparent hover:bg-orange-50 hover:border-brand/40">
@@ -172,6 +225,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
             </a>
+            @endauth
 
         </nav>
 
@@ -195,8 +249,16 @@
                 @livewire('language-switcher')
                 @livewire('currency-switcher')
                 <span class="text-slate-600 hidden sm:inline">|</span>
+                @auth('retailer')
+                <a href="{{ route('retailer.home') }}" class="hidden sm:inline hover:text-white transition text-orange-300">My Account</a>
+                <form method="POST" action="{{ route('retailer.logout') }}" class="hidden sm:inline">
+                    @csrf
+                    <button type="submit" class="hover:text-white transition cursor-pointer">Sign Out</button>
+                </form>
+                @else
                 <a href="{{ route('retailer.login') }}" class="hidden sm:inline hover:text-white transition">Sign In</a>
                 <a href="{{ route('retailer.register') }}" class="hidden sm:inline hover:text-white transition text-orange-400">Register</a>
+                @endauth
             </div>
         </div>
     </div>
@@ -257,6 +319,25 @@
             {{-- Right-side action icons --}}
             <div class="flex items-center shrink-0">
 
+                @auth('retailer')
+                {{-- My Account --}}
+                <a href="{{ route('retailer.home') }}"
+                   class="flex flex-col items-center gap-0.5 px-2.5 py-2 text-brand rounded hover:bg-orange-50 transition group">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <span class="text-[9px] font-semibold whitespace-nowrap">My Account</span>
+                </a>
+
+                {{-- My Orders --}}
+                <a href="{{ route('retailer.orders') }}"
+                   class="flex flex-col items-center gap-0.5 px-2.5 py-2 text-slate-500 hover:text-brand rounded hover:bg-orange-50 transition group">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <span class="text-[9px] font-semibold whitespace-nowrap group-hover:text-brand">My Orders</span>
+                </a>
+                @else
                 {{-- Sign In --}}
                 <a href="{{ route('retailer.login') }}"
                    class="flex flex-col items-center gap-0.5 px-2.5 py-2 text-slate-500 hover:text-brand rounded hover:bg-orange-50 transition group">
@@ -274,6 +355,7 @@
                     </svg>
                     <span class="text-[9px] font-semibold whitespace-nowrap group-hover:text-brand">Register</span>
                 </a>
+                @endauth
 
             </div>
         </div>

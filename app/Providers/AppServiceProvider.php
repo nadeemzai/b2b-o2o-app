@@ -20,6 +20,8 @@ use App\Listeners\SendOrderFulfillingNotification;
 use App\Listeners\SendOrderPlacedNotification;
 use App\Listeners\SendOrderTransferredNotification;
 use App\Listeners\SendPaymentVerifiedNotification;
+use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
@@ -40,6 +42,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // ── Guest redirect: authenticated retailers go to their dashboard ─────
+        RedirectIfAuthenticated::redirectUsing(function ($request) {
+            if (Auth::guard('retailer')->check()) {
+                return route('retailer.home');
+            }
+            return route('public.home');
+        });
+
         // ── Policy registrations ───────────────────────────────────────
         //
         // RetailerPolicy  : gates retailer-owned resources (orders, etc.)
