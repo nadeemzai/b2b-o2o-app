@@ -40,6 +40,7 @@ class OrderResource extends Resource
             'payment_verified' => 'info',
             'transferred'      => 'primary',
             'fulfilling'       => 'info',
+            'dispatched'       => 'warning',
             'delivered'        => 'success',
             'cancelled'        => 'danger',
             default            => 'gray',
@@ -53,6 +54,7 @@ class OrderResource extends Resource
             'payment_verified' => 'Payment Verified',
             'transferred'      => 'Transferred to Huashu',
             'fulfilling'       => 'Fulfilling',
+            'dispatched'       => 'Dispatched to OZ Store',
             'delivered'        => 'Delivered',
             'cancelled'        => 'Cancelled',
             default            => ucwords(str_replace('_', ' ', $state)),
@@ -128,7 +130,7 @@ class OrderResource extends Resource
                 ])
                 ->hidden(fn (Order $record): bool =>
                     ! in_array($record->status, [
-                        'payment_verified', 'transferred', 'fulfilling', 'delivered',
+                        'payment_verified', 'transferred', 'fulfilling', 'dispatched', 'delivered',
                     ])
                 ),
 
@@ -240,6 +242,7 @@ class OrderResource extends Resource
                         'payment_verified' => 'Payment Verified',
                         'transferred'      => 'Transferred to Huashu',
                         'fulfilling'       => 'Fulfilling',
+                        'dispatched'       => 'Dispatched to OZ Store',
                         'delivered'        => 'Delivered',
                         'cancelled'        => 'Cancelled',
                     ]),

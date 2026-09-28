@@ -1,9 +1,10 @@
 @php
-    $steps = ['transferred', 'fulfilling', 'delivered'];
+    $steps = ['transferred', 'fulfilling', 'dispatched', 'delivered'];
     $labels = [
         'transferred' => 'Received',
         'fulfilling'  => 'Fulfilling',
-        'delivered'   => 'Delivered',
+        'dispatched'  => 'Dispatched',
+        'delivered'    => 'Delivered',
     ];
     $currentStatus = $record?->status ?? 'transferred';
     $currentIndex  = array_search($currentStatus, $steps, true);

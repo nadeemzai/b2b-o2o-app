@@ -51,6 +51,31 @@ class ViewOrder extends ViewRecord
                     $this->refreshFormData(['status']);
                 }),
 
+            // ── Mark as Delivered (dispatched → delivered) ─────────────
+            Action::make('mark_delivered')
+                ->label('Mark as Delivered')
+                ->icon('heroicon-o-check-circle')
+                ->color('success')
+                ->visible(fn (): bool => $this->record->canMarkDelivered())
+                ->requiresConfirmation()
+                ->modalHeading('Confirm Delivery to Retailer')
+                ->modalDescription('Confirm that the goods have been received by the retailer at the OZ township store. This will complete the order and consume stock reservations.')
+                ->modalSubmitActionLabel('Confirm Delivery')
+                ->action(function (): void {
+                    try {
+                        app(OrderService::class)->deliverOrder(
+                            $this->record,
+                            (float) $this->record->total_pkr,
+                            auth()->id(),
+                        );
+                        Notification::make()->title('Order marked as Delivered')->success()->send();
+                        $this->record->refresh();
+                        $this->refreshFormData(['status']);
+                    } catch (\Throwable $e) {
+                        Notification::make()->title('Error: ' . $e->getMessage())->danger()->send();
+                    }
+                }),
+
             // ── Cancel (pending or payment_verified only) ───────────────
             Action::make('cancel')
                 ->label('Cancel Order')

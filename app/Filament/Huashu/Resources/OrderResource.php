@@ -36,6 +36,7 @@ class OrderResource extends Resource
         return match ($state) {
             'transferred' => 'primary',
             'fulfilling'  => 'info',
+            'dispatched'  => 'warning',
             'delivered'   => 'success',
             default       => 'gray',
         };
@@ -46,6 +47,7 @@ class OrderResource extends Resource
         return match ($state) {
             'transferred' => 'Transferred — Awaiting Fulfillment',
             'fulfilling'  => 'Fulfilling (China → Township)',
+            'dispatched'  => 'Dispatched to OZ Store',
             'delivered'   => 'Delivered',
             default       => ucwords(str_replace('_', ' ', $state)),
         };
@@ -203,6 +205,7 @@ class OrderResource extends Resource
                     ->options([
                         'transferred' => 'Transferred — Awaiting Fulfillment',
                         'fulfilling'  => 'Fulfilling (China → Township)',
+                        'dispatched'  => 'Dispatched to OZ Store',
                         'delivered'   => 'Delivered',
                     ]),
             ])
@@ -251,26 +254,24 @@ class OrderResource extends Resource
                         }
                     }),
 
-                // ── Mark as Delivered ───────────────────────────────────────
-                Action::make('mark_delivered')
-                    ->label('Mark as Delivered')
-                    ->icon('heroicon-o-check-circle')
-                    ->color('success')
-                    ->visible(fn (Order $record): bool => $record->canMarkDelivered())
+                // ── Mark as Dispatched ─────────────────────────────────────
+                Action::make('mark_dispatched')
+                    ->label('Mark as Dispatched')
+                    ->icon('heroicon-o-truck')
+                    ->color('warning')
+                    ->visible(fn (Order $record): bool => $record->canMarkDispatched())
                     ->requiresConfirmation()
-                    ->modalHeading('Mark Order as Delivered')
-                    ->modalDescription('Confirm that the goods have arrived at the Huashu township/warehouse and the retailer has received them.')
-                    ->modalSubmitActionLabel('Confirm Delivery')
+                    ->modalHeading('Mark Order as Dispatched')
+                    ->modalDescription('Confirm that the goods have been shipped from Huashu to the OZ township store.')
+                    ->modalSubmitActionLabel('Confirm Dispatch')
                     ->action(function (Order $record): void {
                         try {
-                            // Payment was already collected/verified by OZ — pass total_pkr as collected.
-                            app(OrderService::class)->deliverOrder(
+                            app(OrderService::class)->markDispatched(
                                 $record,
-                                (float) $record->total_pkr,
                                 auth()->id(),
                             );
                             Notification::make()
-                                ->title('Order marked as Delivered')
+                                ->title('Order marked as Dispatched')
                                 ->success()
                                 ->send();
                         } catch (\Throwable $e) {

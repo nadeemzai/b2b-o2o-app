@@ -46,24 +46,23 @@ class ViewOrder extends ViewRecord
                     }
                 }),
 
-            // ── Mark as Delivered (fulfilling → delivered) ──────────────
-            Action::make('mark_delivered')
-                ->label('Mark as Delivered')
-                ->icon('heroicon-o-check-circle')
-                ->color('success')
-                ->visible(fn (): bool => $this->record->canMarkDelivered())
+            // ── Mark as Dispatched (fulfilling → dispatched) ────────────
+            Action::make('mark_dispatched')
+                ->label('Mark as Dispatched')
+                ->icon('heroicon-o-truck')
+                ->color('warning')
+                ->visible(fn (): bool => $this->record->canMarkDispatched())
                 ->requiresConfirmation()
-                ->modalHeading('Mark Order as Delivered')
-                ->modalDescription('Confirm that the goods have arrived at the Huashu township/warehouse and the retailer has received them.')
-                ->modalSubmitActionLabel('Confirm Delivery')
+                ->modalHeading('Mark Order as Dispatched')
+                ->modalDescription('Confirm that the goods have been shipped from Huashu to the OZ township store. OZ Admin will complete the final delivery confirmation.')
+                ->modalSubmitActionLabel('Confirm Dispatch')
                 ->action(function (): void {
                     try {
-                        app(OrderService::class)->deliverOrder(
+                        app(OrderService::class)->markDispatched(
                             $this->record,
-                            (float) $this->record->total_pkr,
                             auth()->id(),
                         );
-                        Notification::make()->title('Order marked as Delivered')->success()->send();
+                        Notification::make()->title('Order marked as Dispatched')->success()->send();
                         $this->record->refresh();
                         $this->refreshFormData(['status']);
                     } catch (\Throwable $e) {

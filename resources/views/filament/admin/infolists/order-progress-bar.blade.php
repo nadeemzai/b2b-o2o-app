@@ -1,10 +1,11 @@
 @php
-    $steps = ['pending', 'payment_verified', 'transferred', 'fulfilling', 'delivered'];
+    $steps = ['pending', 'payment_verified', 'transferred', 'fulfilling', 'dispatched', 'delivered'];
     $labels = [
         'pending'          => 'Order Placed',
         'payment_verified' => 'Payment Verified',
         'transferred'      => 'Transferred',
         'fulfilling'       => 'Fulfilling',
+        'dispatched'       => 'Dispatched',
         'delivered'        => 'Delivered',
     ];
     $currentStatus = $record?->status ?? 'pending';

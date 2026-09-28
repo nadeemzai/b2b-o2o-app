@@ -52,6 +52,7 @@ class Order extends Model
     public const STATUS_PAYMENT_VERIFIED  = 'payment_verified';
     public const STATUS_TRANSFERRED       = 'transferred';
     public const STATUS_FULFILLING        = 'fulfilling';
+    public const STATUS_DISPATCHED        = 'dispatched';
     public const STATUS_DELIVERED         = 'delivered';
     public const STATUS_CANCELLED         = 'cancelled';
 
@@ -60,6 +61,7 @@ class Order extends Model
         self::STATUS_PAYMENT_VERIFIED,
         self::STATUS_TRANSFERRED,
         self::STATUS_FULFILLING,
+        self::STATUS_DISPATCHED,
         self::STATUS_DELIVERED,
         self::STATUS_CANCELLED,
     ];
@@ -127,9 +129,19 @@ class Order extends Model
         return $this->status === self::STATUS_TRANSFERRED;
     }
 
-    public function canMarkDelivered(): bool
+    public function canMarkDispatched(): bool
     {
         return $this->status === self::STATUS_FULFILLING;
+    }
+
+    public function isDispatched(): bool
+    {
+        return $this->status === self::STATUS_DISPATCHED;
+    }
+
+    public function canMarkDelivered(): bool
+    {
+        return $this->status === self::STATUS_DISPATCHED;
     }
 
     public function isCancellable(): bool
@@ -147,6 +159,7 @@ class Order extends Model
         return in_array($this->status, [
             self::STATUS_TRANSFERRED,
             self::STATUS_FULFILLING,
+            self::STATUS_DISPATCHED,
             self::STATUS_DELIVERED,
         ]);
     }
@@ -181,6 +194,7 @@ class Order extends Model
         return $query->whereIn('status', [
             self::STATUS_TRANSFERRED,
             self::STATUS_FULFILLING,
+            self::STATUS_DISPATCHED,
             self::STATUS_DELIVERED,
         ]);
     }

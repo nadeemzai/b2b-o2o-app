@@ -13,6 +13,7 @@ use App\Models\StockMovement;
 use App\Models\StockReservation;
 use Illuminate\Support\Collection;
 use App\Events\OrderDelivered;
+use App\Events\OrderDispatched;
 use App\Events\OrderFulfilling;
 use App\Events\OrderPlaced;
 use App\Events\OrderTransferred;
@@ -321,6 +322,39 @@ class OrderService
     }
 
     // ──────────────────────────────────────────────
+    // Mark Dispatched (fulfilling → dispatched) — Huashu action
+    // ──────────────────────────────────────────────
+
+    /**
+     * Huashu confirms goods have been shipped to the OZ township store.
+     * Lightweight: no stock consumption yet — that happens on deliverOrder().
+     */
+    public function markDispatched(Order $order, int $userId, ?string $note = null): Order
+    {
+        abort_unless($order->canMarkDispatched(), 422, 'Order must be in fulfilling status to mark as dispatched.');
+
+        $order = DB::transaction(function () use ($order, $userId, $note) {
+            $from = $order->status;
+
+            $order->update(['status' => Order::STATUS_DISPATCHED]);
+
+            OrderStatusHistory::create([
+                'order_id'           => $order->id,
+                'from_status'        => $from,
+                'to_status'          => Order::STATUS_DISPATCHED,
+                'changed_by_user_id' => $userId,
+                'note'               => $note ?? 'Goods dispatched from Huashu to OZ township store.',
+            ]);
+
+            return $order->fresh();
+        });
+
+        Event::dispatch(new OrderDispatched($order));
+
+        return $order;
+    }
+
+        // ──────────────────────────────────────────────
     // Cancel Order (retailer or admin)
     // ──────────────────────────────────────────────
 
