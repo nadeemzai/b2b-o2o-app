@@ -13,7 +13,9 @@ class AuthController extends Controller
     // GET /retailer/login
     public function showLogin(): View|RedirectResponse
     {
-        if (Auth::check() && Auth::user()->role === 'retailer') {
+        $guard = Auth::guard('retailer');
+
+        if ($guard->check() && $guard->user()->hasPortalRole('retailer')) {
             return redirect()->route('retailer.dashboard');
         }
 
@@ -28,31 +30,39 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+        $guard = Auth::guard('retailer');
+
+        if (! $guard->attempt($credentials, $request->boolean('remember'))) {
             return back()->withErrors(['email' => 'These credentials do not match our records.'])->onlyInput('email');
         }
 
-        $user = Auth::user();
+        $user = $guard->user();
 
-        if ($user->role !== 'retailer') {
-            Auth::logout();
+        if (! $user->hasPortalRole('retailer')) {
+            $guard->logout();
             return back()->withErrors(['email' => 'This portal is for retailers only.'])->onlyInput('email');
         }
 
         if (! $user->is_active) {
-            Auth::logout();
+            $guard->logout();
             return back()->withErrors(['email' => 'Your account has been deactivated.'])->onlyInput('email');
         }
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('retailer.dashboard'));
+        $retailer = $user->retailerProfile;
+
+        if ($retailer && $retailer->isApproved()) {
+            return redirect()->intended(route('retailer.dashboard'));
+        }
+
+        return redirect()->route('retailer.pending');
     }
 
     // POST /retailer/logout
     public function logout(Request $request): RedirectResponse
     {
-        Auth::logout();
+        Auth::guard('retailer')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

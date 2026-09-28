@@ -42,19 +42,19 @@ Route::get('/catalogue', ProductCatalogue::class)->name('public.catalogue');
 Route::get('/product/{product}', PublicProductDetail::class)->name('public.product');
 
 // ── Retailer guest routes ──────────────────────────────────────
-Route::prefix('retailer')->name('retailer.')->middleware('guest')->group(function () {
+Route::prefix('retailer')->name('retailer.')->middleware('guest:retailer')->group(function () {
     Route::get('/login',    Login::class)->name('login');
     Route::get('/register', Register::class)->name('register');
 });
 
 // ── Retailer auth-only (any retailer, pending or approved) ─────
-Route::prefix('retailer')->name('retailer.')->middleware(['auth', 'retailer'])->group(function () {
+Route::prefix('retailer')->name('retailer.')->middleware(['auth:retailer', 'retailer'])->group(function () {
     Route::get('/pending', fn () => view('retailer.pending'))->name('pending');
     Route::get('/kyc', \App\Livewire\Kyc\UploadDocuments::class)->name('kyc');
 });
 
 // ── Retailer fully approved routes ────────────────────────────
-Route::prefix('retailer')->name('retailer.')->middleware(['auth', 'retailer', 'retailer.approved'])->group(function () {
+Route::prefix('retailer')->name('retailer.')->middleware(['auth:retailer', 'retailer', 'retailer.approved'])->group(function () {
     Route::get('/',          RetailerHome::class)->name('home');
     Route::get('/dashboard', Dashboard::class)->name('dashboard');
     Route::get('/catalogue', ProductList::class)->name('catalogue');
@@ -65,11 +65,11 @@ Route::prefix('retailer')->name('retailer.')->middleware(['auth', 'retailer', 'r
 
 // ── Logout ────────────────────────────────────────────────────
 Route::post('/retailer/logout', function () {
-    auth()->logout();
+    auth('retailer')->logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
     return redirect()->route('retailer.login');
-})->middleware('auth')->name('retailer.logout');
+})->middleware('auth:retailer')->name('retailer.logout');
 
 // ──────────────────────────────────────────────────────────────────────────
 // Admin: secure KYC document viewer
@@ -77,7 +77,7 @@ Route::post('/retailer/logout', function () {
 Route::get(
     '/admin/retailers/{retailer}/kyc/{field}',
     \App\Http\Controllers\Admin\KycDocumentController::class
-)->middleware(['auth'])->name('admin.kyc.document');
+)->middleware(['auth:admin'])->name('admin.kyc.document');
 
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -86,7 +86,7 @@ Route::get(
 use App\Http\Controllers\Export\OrderExportController;
 
 // Retailer — scoped to authenticated retailer's own orders
-Route::prefix('retailer')->name('retailer.')->middleware(['auth', 'retailer', 'retailer.approved'])->group(function () {
+Route::prefix('retailer')->name('retailer.')->middleware(['auth:retailer', 'retailer', 'retailer.approved'])->group(function () {
     Route::get('/orders/export',             [OrderExportController::class, 'retailerListing'])  ->name('orders.export');
     Route::get('/orders/{order}/pdf',        [OrderExportController::class, 'retailerOrderPdf']) ->name('orders.pdf');
 });

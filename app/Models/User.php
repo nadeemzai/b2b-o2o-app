@@ -35,9 +35,70 @@ class User extends Authenticatable implements FilamentUser
         'is_active'         => 'boolean',
     ];
 
-    // ──────────────────────────────────────────────
+    // ──────────────────────────────────────────────────────────────────────────
+    // Multi-role pivot relationship
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * All roles this user holds (from the user_roles pivot table).
+     */
+    public function portalRoles(): HasMany
+    {
+        return $this->hasMany(UserRole::class);
+    }
+
+    /**
+     * Check whether the user has a specific portal role.
+     * Checks the user_roles pivot; falls back to the legacy users.role column
+     * so existing admin/huashu users work before a back-fill is run.
+     */
+    public function hasPortalRole(string $role): bool
+    {
+        // Fast in-memory check if portalRoles were eager-loaded
+        if ($this->relationLoaded('portalRoles')) {
+            $found = $this->portalRoles->contains('role', $role);
+            if ($found) {
+                return true;
+            }
+        } else {
+            if ($this->portalRoles()->where('role', $role)->exists()) {
+                return true;
+            }
+        }
+
+        // Fallback: legacy single-role column
+        return $this->role === $role;
+    }
+
+    /**
+     * Returns all role strings for this user (pivot + legacy).
+     */
+    public function allPortalRoles(): array
+    {
+        $pivot  = $this->portalRoles()->pluck('role')->toArray();
+        $legacy = $this->role ? [$this->role] : [];
+        return array_values(array_unique(array_merge($pivot, $legacy)));
+    }
+
+    /**
+     * Grant a portal role (idempotent — safe to call multiple times).
+     */
+    public function grantPortalRole(string $role): void
+    {
+        $this->portalRoles()->firstOrCreate(['role' => $role]);
+    }
+
+    /**
+     * Revoke a portal role.
+     */
+    public function revokePortalRole(string $role): void
+    {
+        $this->portalRoles()->where('role', $role)->delete();
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
     // Filament panel access
-    // ──────────────────────────────────────────────
+    // ──────────────────────────────────────────────────────────────────────────
 
     public function canAccessPanel(Panel $panel): bool
     {
@@ -46,35 +107,40 @@ class User extends Authenticatable implements FilamentUser
         }
 
         return match ($panel->getId()) {
-            'admin'  => $this->role === 'admin',
-            'store'  => $this->role === 'store_staff',
-            'huashu' => in_array($this->role, ['huashu', 'oz_admin']),
+            'admin'  => $this->hasPortalRole('admin'),
+            'store'  => $this->hasPortalRole('store_staff'),
+            'huashu' => $this->hasPortalRole('huashu') || $this->hasPortalRole('oz_admin'),
             default  => false,
         };
     }
 
-    // ──────────────────────────────────────────────
-    // Role helpers
-    // ──────────────────────────────────────────────
+    // ──────────────────────────────────────────────────────────────────────────
+    // Role helpers (backward-compatible — still check legacy column AND pivot)
+    // ──────────────────────────────────────────────────────────────────────────
 
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->hasPortalRole('admin');
     }
 
     public function isRetailer(): bool
     {
-        return $this->role === 'retailer';
+        return $this->hasPortalRole('retailer');
+    }
+
+    public function isBuyer(): bool
+    {
+        return $this->hasPortalRole('buyer');
     }
 
     public function isStoreStaff(): bool
     {
-        return $this->role === 'store_staff';
+        return $this->hasPortalRole('store_staff');
     }
 
-    // ──────────────────────────────────────────────
+    // ──────────────────────────────────────────────────────────────────────────
     // Relationships
-    // ──────────────────────────────────────────────
+    // ──────────────────────────────────────────────────────────────────────────
 
     public function retailerProfile(): HasOne
     {
@@ -106,9 +172,9 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(OrderStatusHistory::class, 'changed_by_user_id');
     }
 
-    // ──────────────────────────────────────────────
+    // ──────────────────────────────────────────────────────────────────────────
     // Scopes
-    // ──────────────────────────────────────────────
+    // ──────────────────────────────────────────────────────────────────────────
 
     public function scopeActive($query)
     {

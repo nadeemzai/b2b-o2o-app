@@ -40,7 +40,8 @@ class ProductDetail extends Component
             ->get();
 
         return view('livewire.public.product-detail', [
-            'related' => $related,
+            'related'        => $related,
+            'showStockBadge' => \App\Models\HomepageSection::activeSections()['show_stock_badge'],
         ]);
     }
 }

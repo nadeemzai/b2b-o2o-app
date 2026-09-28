@@ -38,7 +38,7 @@ class ProductDetail extends Component
     {
         abort_unless($product->is_active, 404);
 
-        $storeId = auth()->user()->retailerProfile->store_id;
+        $storeId = auth('retailer')->user()->retailerProfile->store_id;
 
         $this->product = $product->load(['category', 'variantTypes.activeOptions', 'images']);
 
@@ -192,6 +192,7 @@ class ProductDetail extends Component
         return view('livewire.retailer.catalogue.product-detail', [
             'related'         => $related,
             'commissionRates' => $commissionRates,
+            'showStockBadge'  => \App\Models\HomepageSection::activeSections()['show_stock_badge'],
         ]);
     }
 }

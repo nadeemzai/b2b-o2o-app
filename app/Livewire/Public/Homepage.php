@@ -6,17 +6,20 @@ use App\Models\Category;
 use App\Models\HomepageSection;
 use App\Models\Product;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 class Homepage extends Component
 {
-    use WithPagination;
-
     public string $search = '';
+    public int $perPage = 50;
 
     public function updatedSearch(): void
     {
-        $this->resetPage();
+        $this->perPage = 50;
+    }
+
+    public function loadMore(): void
+    {
+        $this->perPage += 50;
     }
 
     public function render()
@@ -36,7 +39,6 @@ class Homepage extends Component
         $query = Product::active()
             ->withPrice()
             ->with(['category', 'images'])
-            // Products with images first, then newest
             ->orderByRaw('CASE WHEN EXISTS(SELECT 1 FROM product_images WHERE product_images.product_id = products.id) OR (image_path IS NOT NULL AND image_path <> \'\') THEN 0 ELSE 1 END')
             ->latest('products.created_at');
 
@@ -48,7 +50,10 @@ class Homepage extends Component
             });
         }
 
-        $products   = $query->paginate(24);
+        $total    = (clone $query)->count();
+        $products = $query->take($this->perPage)->get();
+        $hasMore  = $total > $this->perPage;
+
         $categories = Category::orderBy('name')->get(['id', 'name', 'name_zh', 'slug']);
 
         return view('livewire.public.homepage', [
@@ -56,6 +61,7 @@ class Homepage extends Component
             'categories'  => $categories,
             'sections'    => $sections,
             'newArrivals' => $newArrivals,
+            'hasMore'     => $hasMore,
         ])->layout('layouts.public', ['title' => 'OZ B2B Wholesale Marketplace']);
     }
 }

@@ -91,43 +91,6 @@
         </div>
     </div>
 
-    {{-- ══ SEARCH + CATEGORY BAR ═══════════════════════════════════════════ --}}
-    <div class="bg-white border-b border-slate-100 shadow-sm sticky top-0 z-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap gap-3 items-center justify-between">
-
-            {{-- Search --}}
-            <div class="relative flex-1" style="max-width: 420px; min-width: 200px;">
-                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-                <input type="text"
-                       wire:model.live.debounce.400ms="search"
-                       placeholder="Search products..."
-                       class="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-700 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"/>
-            </div>
-
-            {{-- Category pills --}}
-            <div class="flex gap-2 overflow-x-auto scrollbar-hide pb-0.5">
-                <a href="{{ route('public.catalogue') }}"
-                   class="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold bg-orange-50 text-orange-600 hover:bg-orange-100 border border-orange-200 transition whitespace-nowrap">
-                    All Products
-                </a>
-                @foreach($categories->take(8) as $cat)
-                <a href="{{ route('public.catalogue', ['category' => $cat->id]) }}"
-                   class="shrink-0 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-50 text-slate-600 hover:bg-orange-50 hover:text-orange-600 border border-slate-200 transition whitespace-nowrap">
-                    {{ $cat->name }}
-                </a>
-                @endforeach
-                @if($categories->count() > 8)
-                <a href="{{ route('public.catalogue') }}"
-                   class="shrink-0 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-50 text-slate-400 hover:text-brand border border-slate-200 transition whitespace-nowrap">
-                    +{{ $categories->count() - 8 }} more →
-                </a>
-                @endif
-            </div>
-
-        </div>
-    </div>
 
     {{-- ══ PRODUCTS GRID ═══════════════════════════════════════════════════ --}}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -145,26 +108,6 @@
         @endif
 
         {{-- Section heading --}}
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h2 class="text-xl font-bold text-slate-800">
-                    @if($search)
-                        Results for &ldquo;{{ $search }}&rdquo;
-                    @else
-                        All Products
-                    @endif
-                </h2>
-                <p class="text-sm text-slate-400 mt-0.5">{{ number_format($products->total()) }} products available</p>
-            </div>
-            <a href="{{ route('retailer.login') }}"
-               class="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-white px-5 py-2.5 rounded-xl transition shadow"
-               style="background:#ff5b00;">
-                Login to Order
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-            </a>
-        </div>
 
         @if($products->isEmpty())
         <div class="py-24 text-center">
@@ -179,7 +122,7 @@
         @else
 
         {{-- Product cards --}}
-        <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+        <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));">
             @foreach($products as $product)
             @php $minPrice = $product->min_price; @endphp
             <a href="{{ route('public.product', $product) }}"
@@ -240,17 +183,39 @@
                         {{ app()->getLocale() === 'zh_CN' && $product->name_zh ? $product->name_zh : $product->name_en }}
                     </p>
 
+                    @php
+                        $pubRating    = isset($product->rating) && $product->rating !== null ? (float) $product->rating : null;
+                        $pubRatingInt = $pubRating !== null ? (int) round($pubRating) : 0;
+                        $pubSold      = isset($product->sold_count) && $product->sold_count > 0
+                            ? ($product->sold_count >= 1000 ? round($product->sold_count / 1000, 1).'k' : $product->sold_count)
+                            : null;
+                    @endphp
+                    @if($pubRating !== null || $pubSold !== null)
+                    <div class="flex items-center gap-1.5 mt-1">
+                        @if($pubRating !== null)
+                        <span class="flex items-center gap-0.5">
+                            @for($s = 1; $s <= 5; $s++)
+                            <svg class="w-2.5 h-2.5 {{ $s <= $pubRatingInt ? 'text-amber-400' : 'text-slate-200' }}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            @endfor
+                        </span>
+                        @endif
+                        @if($pubSold !== null)
+                        <span class="text-[9px] text-slate-400">{{ $pubSold }} sold</span>
+                        @endif
+                    </div>
+                    @endif
+
                     <div class="mt-2 pt-2 border-t border-slate-50 flex items-end justify-between gap-1">
                         @if($minPrice)
                         <p class="text-base font-extrabold tabular-nums" style="color:#ff5b00;">
                             {{ \App\Services\CurrencyService::format($minPrice) }}
                         </p>
                         @else
-                        <p class="text-xs text-slate-400 italic">Contact for price</p>
+                        <p class="text-xs text-slate-400 italic">{{ __('ui.contact_for_price') }}</p>
                         @endif
 
                         <span class="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-400 border border-slate-200 px-1.5 py-0.5 rounded">
-                            View
+                            {{ __('ui.view_details') }}
                         </span>
                     </div>
                 </div>
@@ -258,11 +223,27 @@
             @endforeach
         </div>
 
-        {{-- Pagination --}}
-        @if($products->hasPages())
-        <div class="mt-10 flex justify-center">
-            {{ $products->links() }}
+        {{-- ── Infinite scroll sentinel ─────────────────────────────── --}}
+        @if($hasMore)
+        <div class="h-2 mt-6"
+             x-data="{
+                 init() {
+                     let busy = false;
+                     const io = new IntersectionObserver(([entry]) => {
+                         if (entry.isIntersecting && !busy) {
+                             busy = true;
+                             $wire.loadMore().then(() => { busy = false; });
+                         }
+                     }, { rootMargin: '300px' });
+                     io.observe(this.$el);
+                 }
+             }">
         </div>
+        <div wire:loading.flex class="justify-center py-4">
+            <span class="text-sm text-slate-400 animate-pulse">Loading more products…</span>
+        </div>
+        @else
+        <p class="text-center py-10 text-slate-300 text-sm font-medium tracking-wide">— No more products —</p>
         @endif
 
         @endif

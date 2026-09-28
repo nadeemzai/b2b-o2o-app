@@ -148,10 +148,12 @@ $descText  = $isZh && ($product->description_zh ?? null)
                             <span class="bg-slate-100 text-slate-500 text-xs font-medium px-2.5 py-0.5 rounded-full">{{ $catName }}</span>
                             @endif
                             <span class="bg-slate-100 text-slate-400 text-xs font-mono px-2.5 py-0.5 rounded-full">{{ $product->sku }}</span>
+                            @if($showStockBadge)
                             <span class="flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-100">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                 In Stock
                             </span>
+                            @endif
                         </div>
 
                         {{-- ── Price Box ─────────────────────────────── --}}

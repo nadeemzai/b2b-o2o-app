@@ -20,16 +20,30 @@ class Login extends Component
     {
         $this->validate();
 
-        if (! Auth::attempt(['email' => $this->email, 'password' => $this->password])) {
+        // Use the dedicated 'retailer' guard so this session is stored under
+        // a separate session key (login_retailer_xxxx) and never conflicts with
+        // an admin session (login_admin_xxxx) in the same browser.
+        $guard = Auth::guard('retailer');
+
+        if (! $guard->attempt(['email' => $this->email, 'password' => $this->password])) {
             throw ValidationException::withMessages([
                 'email' => 'These credentials do not match our records.',
             ]);
         }
 
-        $user = Auth::user();
+        $user = $guard->user();
 
-        if (! $user->isRetailer()) {
-            Auth::logout();
+        // Account must be active
+        if (! $user->is_active) {
+            $guard->logout();
+            throw ValidationException::withMessages([
+                'email' => 'Your account has been deactivated. Please contact support.',
+            ]);
+        }
+
+        // Must hold the retailer portal role
+        if (! $user->hasPortalRole('retailer')) {
+            $guard->logout();
             throw ValidationException::withMessages([
                 'email' => 'This portal is for retailer accounts only.',
             ]);

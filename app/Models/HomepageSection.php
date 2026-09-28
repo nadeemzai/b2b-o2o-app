@@ -27,16 +27,17 @@ class HomepageSection extends Model
         return (bool) static::where('key', 'new_arrivals')->value('is_active');
     }
 
-    /** Return both section states in one query. ['deals' => bool, 'new_arrivals' => bool] */
+    /** Return all section states in one query. */
     public static function activeSections(): array
     {
-        $rows = static::whereIn('key', ['deals', 'new_arrivals'])
+        $rows = static::whereIn('key', ['deals', 'new_arrivals', 'show_stock_badge'])
             ->orderBy('display_order')
             ->get(['key', 'is_active']);
 
         return [
-            'deals'        => (bool) $rows->firstWhere('key', 'deals')?->is_active,
-            'new_arrivals' => (bool) $rows->firstWhere('key', 'new_arrivals')?->is_active,
+            'deals'            => (bool) $rows->firstWhere('key', 'deals')?->is_active,
+            'new_arrivals'     => (bool) $rows->firstWhere('key', 'new_arrivals')?->is_active,
+            'show_stock_badge' => (bool) $rows->firstWhere('key', 'show_stock_badge')?->is_active,
         ];
     }
 }

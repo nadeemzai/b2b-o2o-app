@@ -118,7 +118,8 @@
                 </div>
                 @else
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+                {{-- ══ PRODUCT GRID — Homepage-style compact cards ══ --}}
+                <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));">
                     @foreach($products as $product)
                     @php
                         $basePrice  = (float) ($product->huashu_base_price_pkr ?? 0);
@@ -126,141 +127,174 @@
                         $price      = $basePrice > 0 ? round($basePrice * (1 + $rate), 2) : 0;
                         $moq        = max(1, (int) ($product->moq ?? 1));
                         $stock      = $product->stockLevels->first();
-                        // No stock_levels row = stock not tracked → treat as available
-                        // A row exists but qty_available = 0 → truly out of stock
                         $inStock    = $stock === null || $stock->qty_available > 0;
-                        $qty        = $stock?->qty_available ?? null; // null = untracked
+                        $qty        = $stock?->qty_available ?? null;
                         $tracked    = $stock !== null;
+                        $primaryImg = $product->primaryImage();
+                        $displaySrc = $primaryImg
+                            ? $primaryImg->display_url
+                            : ($product->image_path ? asset('storage/' . $product->image_path) : null);
+                        // Rating & sold — columns may not exist yet in older deployments
+                        $rating    = isset($product->rating)     ? (float) $product->rating     : null;
+                        $soldCount = isset($product->sold_count) ? (int)   $product->sold_count : null;
+                        $ratingInt = $rating !== null ? (int) round($rating) : 0;
+                        $soldLabel = $soldCount !== null
+                            ? ($soldCount >= 1000 ? round($soldCount / 1000, 1) . 'k' : $soldCount)
+                            : null;
                     @endphp
 
-                    <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden flex flex-col group hover:shadow-md hover:border-orange-100 transition-all duration-150">
+                    <a href="{{ route('retailer.catalogue.product', $product) }}"
+                       class="group bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col">
 
-                        {{-- Product image (clickable → detail page) --}}
-                        <a href="{{ route('retailer.catalogue.product', $product) }}"
-                           class="aspect-square bg-gradient-to-br from-slate-50 to-slate-100 relative overflow-hidden block">
-                            @php
-                                $primaryImg = $product->primaryImage();
-                                $displaySrc = $primaryImg
-                                    ? $primaryImg->display_url
-                                    : ($product->image_path ? asset('storage/' . $product->image_path) : null);
-                            @endphp
+                        {{-- ── Image ────────────────────────────── --}}
+                        <div class="aspect-square relative overflow-hidden bg-slate-50">
                             @if($displaySrc)
                                 <img src="{{ $displaySrc }}"
                                      alt="{{ $product->name_en }}"
                                      loading="lazy"
-                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                                     onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex flex-col items-center justify-center p-4\'><div class=\'w-14 h-14 rounded-2xl bg-orange-50 flex items-center justify-center mb-2\'><svg class=\'w-7 h-7 text-orange-200\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10\'/></svg></div></div>'" />
+                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>
                             @else
-                                {{-- Branded placeholder --}}
-                                <div class="w-full h-full flex flex-col items-center justify-center p-4">
-                                    <div class="w-14 h-14 rounded-2xl bg-brand/10 flex items-center justify-center mb-2">
-                                        <svg class="w-7 h-7 text-brand/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+                                <div class="w-full h-full flex flex-col items-center justify-center"
+                                     style="background: linear-gradient(135deg, #fff5f0 0%, #fff 100%);">
+                                    <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-brand">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
                                         </svg>
                                     </div>
-                                    <p class="text-[10px] text-slate-300 font-mono tracking-wider">{{ $product->sku }}</p>
                                 </div>
                             @endif
 
-                            {{-- Out of stock overlay --}}
+                            {{-- Out-of-stock dim --}}
                             @if(!$inStock)
-                            <div class="absolute inset-0 bg-white/60 flex items-center justify-center">
-                                <span class="bg-slate-700 text-white text-[11px] font-bold px-3 py-1 rounded-full tracking-wide uppercase">{{ __('ui.out_of_stock') }}</span>
+                            <div class="absolute inset-0 bg-white/65 flex items-center justify-center">
+                                <span class="bg-slate-700/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wide uppercase">{{ __('ui.out_of_stock') }}</span>
                             </div>
                             @endif
 
-                            {{-- Category badge --}}
+                            {{-- Category gradient at bottom of image --}}
                             @if($product->category)
-                            <div class="absolute top-2 left-2">
-                                <span class="bg-white/90 backdrop-blur-sm text-slate-500 text-[10px] font-medium px-2 py-0.5 rounded-full border border-slate-100 shadow-sm">
+                            <span class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/55 to-transparent px-2 py-1.5 pointer-events-none">
+                                <span class="text-white text-[9px] truncate block leading-tight">
                                     {{ app()->getLocale() === 'zh_CN' && $product->category->name_zh ? $product->category->name_zh : $product->category->name }}
                                 </span>
+                            </span>
+                            @endif
+                        </div>
+
+                        {{-- ── Info ─────────────────────────────── --}}
+                        <div class="p-2.5 flex flex-col flex-1">
+
+                            {{-- Product name --}}
+                            <p class="text-xs font-medium text-slate-700 line-clamp-2 leading-snug flex-1 mb-1">
+                                {{ app()->getLocale() === 'zh_CN' && $product->name_zh ? $product->name_zh : $product->name_en }}
+                            </p>
+
+                            {{-- Rating stars + sold count --}}
+                            @if($rating !== null || $soldLabel !== null)
+                            <div class="flex items-center gap-1 mb-1.5">
+                                @if($rating !== null)
+                                <span class="flex items-center gap-0.5" aria-label="{{ number_format($rating, 1) }} stars">
+                                    @for($s = 1; $s <= 5; $s++)
+                                    @if($s <= $ratingInt)
+                                    <svg class="w-2.5 h-2.5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                    @else
+                                    <svg class="w-2.5 h-2.5 text-slate-200" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                    @endif
+                                    @endfor
+                                    <span class="text-[9px] text-slate-400 ml-0.5">{{ number_format($rating, 1) }}</span>
+                                </span>
+                                @endif
+                                @if($soldLabel !== null)
+                                <span class="text-[9px] text-slate-400">· {{ $soldLabel }} sold</span>
+                                @endif
                             </div>
                             @endif
-                        </a>
 
-                        {{-- Product info --}}
-                        <div class="p-3 flex flex-col flex-1">
+                            {{-- Price + add-to-cart icon --}}
+                            <div class="mt-auto pt-1.5 border-t border-slate-50 flex items-center justify-between gap-1">
+                                <div class="min-w-0">
+                                    @if($price > 0)
+                                    <p class="text-sm font-extrabold text-brand tabular-nums leading-none">{{ \App\Services\CurrencyService::format($price) }}</p>
+                                    @if($moq > 1)
+                                    <p class="text-[9px] text-orange-400 font-medium mt-0.5">Min {{ $moq }} {{ $product->unit }}</p>
+                                    @endif
+                                    @else
+                                    <p class="text-[10px] text-slate-400 italic">{{ __('ui.contact_for_price') }}</p>
+                                    @endif
+                                </div>
 
-                            {{-- Name (clickable → detail page) --}}
-                            <a href="{{ route('retailer.catalogue.product', $product) }}" class="hover:text-brand transition">
-                                <h3 class="text-sm font-semibold text-slate-800 leading-snug line-clamp-2 mb-1 min-h-[2.5rem]">
-                                    {{ app()->getLocale() === 'zh_CN' && $product->name_zh ? $product->name_zh : $product->name_en }}
-                                </h3>
-                            </a>
-
-                            {{-- Price - large & prominent like 1688 --}}
-                            <div class="mt-1 mb-2">
-                                @if($price > 0)
-                                <p class="text-xl font-bold text-brand tabular-nums leading-none">
-                                    {{ \App\Services\CurrencyService::format($price) }}
-                                </p>
-                                <p class="text-[11px] text-slate-400 mt-0.5">per {{ $product->unit }}
-                                    @if($product->pieces_per_carton) · {{ $product->pieces_per_carton }} pcs/ctn @endif
-                                </p>
-                                @if($moq > 1)
-                                <p class="text-[11px] text-orange-500 mt-0.5 font-medium">Min. {{ $moq }} {{ $product->unit }}</p>
-                                @endif
-                                @else
-                                <p class="text-sm text-slate-400 italic">{{ __('ui.contact_for_price') }}</p>
-                                @endif
-                            </div>
-
-                            {{-- Stock info --}}
-                            <div class="flex items-center gap-1.5 mb-3">
-                                @if($inStock && $tracked)
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
-                                    <span class="text-[11px] text-emerald-600 font-medium">{{ number_format($qty) }} {{ __('ui.in_stock') }}</span>
-                                @elseif($inStock && !$tracked)
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
-                                    <span class="text-[11px] text-emerald-600 font-medium">{{ __('ui.in_stock') }}</span>
-                                @else
-                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span>
-                                    <span class="text-[11px] text-slate-400">{{ __('ui.out_of_stock') }}</span>
-                                @endif
-                            </div>
-
-                            {{-- Add to cart --}}
-                            <div class="mt-auto">
+                                {{-- Round add-to-cart icon button --}}
+                                @if($inStock && $price > 0)
                                 <button
-                                    wire:click="addToCart({{ $product->id }})"
+                                    wire:click.prevent="addToCart({{ $product->id }})"
                                     wire:loading.attr="disabled"
                                     wire:target="addToCart({{ $product->id }})"
-                                    @if(!$inStock || $price == 0) disabled @endif
-                                    class="w-full py-2 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-1.5
-                                           {{ $inStock && $price > 0
-                                               ? 'bg-brand text-white hover:bg-brand-dark active:scale-95 shadow-sm'
-                                               : 'bg-slate-100 text-slate-400 cursor-not-allowed' }}">
-
+                                    class="shrink-0 w-7 h-7 rounded-lg bg-brand text-white flex items-center justify-center hover:bg-orange-600 active:scale-95 transition shadow-sm"
+                                    title="{{ __('ui.add_to_cart') }}"
+                                    @click.stop>
                                     <span wire:loading.remove wire:target="addToCart({{ $product->id }})">
-                                        @if($inStock && $price > 0)
-                                        <svg class="w-3.5 h-3.5 inline -mt-0.5 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                         </svg>
-                                        {{ $moq > 1 ? 'Add ' . $moq . ' ' . $product->unit : __('ui.add_to_cart') }}
-                                        @else
-                                        {{ __('ui.unavailable') }}
-                                        @endif
                                     </span>
-                                    <span wire:loading wire:target="addToCart({{ $product->id }})" class="flex items-center gap-1">
+                                    <span wire:loading wire:target="addToCart({{ $product->id }})">
                                         <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
                                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                                         </svg>
-                                        {{ __('ui.adding') }}
                                     </span>
                                 </button>
+                                @endif
                             </div>
 
+                            {{-- Stock badge (when enabled) --}}
+                            @if($showStockBadge)
+                            <div class="flex items-center gap-1 mt-1.5">
+                                @if($inStock && $tracked)
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                    <span class="text-[9px] text-emerald-600 font-medium">{{ number_format($qty) }} {{ __('ui.in_stock') }}</span>
+                                @elseif($inStock && !$tracked)
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
+                                    <span class="text-[9px] text-emerald-600 font-medium">{{ __('ui.in_stock') }}</span>
+                                @else
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span>
+                                    <span class="text-[9px] text-slate-400">{{ __('ui.out_of_stock') }}</span>
+                                @endif
+                            </div>
+                            @endif
+
                         </div>
-                    </div>
+                    </a>
                     @endforeach
                 </div>
-
-                {{-- Pagination --}}
-                <div class="mt-6">
-                    {{ $products->links() }}
                 </div>
+
+                {{-- ── Infinite scroll sentinel ─────────────────────────────── --}}
+                @if($hasMore)
+                <div class="h-2 mt-6"
+                     x-data="{
+                         init() {
+                             let busy = false;
+                             const io = new IntersectionObserver(([entry]) => {
+                                 if (entry.isIntersecting && !busy) {
+                                     busy = true;
+                                     $wire.loadMore().then(() => { busy = false; });
+                                 }
+                             }, { rootMargin: '300px' });
+                             io.observe(this.$el);
+                         }
+                     }">
+                </div>
+                <div wire:loading.flex class="justify-center py-4">
+                    <span class="text-sm text-slate-400 animate-pulse">Loading more products…</span>
+                </div>
+                @else
+                <p class="text-center py-8 text-slate-300 text-sm font-medium tracking-wide">— No more products —</p>
+                @endif
                 @endif
             </div>
 

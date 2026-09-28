@@ -91,6 +91,27 @@
                         <p class="text-[11px] text-slate-700 font-medium line-clamp-2 leading-snug mt-1.5">
                             {{ app()->getLocale() === 'zh_CN' && $product->name_zh ? $product->name_zh : $product->name_en }}
                         </p>
+                        @php
+                            $dealRating = isset($product->rating) && $product->rating !== null ? (float) $product->rating : null;
+                            $dealRatingInt = $dealRating !== null ? (int) round($dealRating) : 0;
+                            $dealSold = isset($product->sold_count) && $product->sold_count > 0
+                                ? ($product->sold_count >= 1000 ? round($product->sold_count / 1000, 1).'k' : $product->sold_count)
+                                : null;
+                        @endphp
+                        @if($dealRating !== null || $dealSold !== null)
+                        <div class="flex items-center gap-1 mt-0.5">
+                            @if($dealRating !== null)
+                            <span class="flex items-center gap-0.5">
+                                @for($s = 1; $s <= 5; $s++)
+                                <svg class="w-2 h-2 {{ $s <= $dealRatingInt ? 'text-amber-400' : 'text-slate-200' }}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                @endfor
+                            </span>
+                            @endif
+                            @if($dealSold !== null)
+                            <span class="text-[8px] text-slate-400">{{ $dealSold }} sold</span>
+                            @endif
+                        </div>
+                        @endif
                         @if($retailPrice)
                         <p class="text-[12px] font-bold text-brand mt-0.5 tabular-nums">{{ \App\Services\CurrencyService::format($retailPrice) }}</p>
                         @else
@@ -121,7 +142,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                         </svg>
                         <span class="text-sm font-bold text-slate-800">{{ __('ui.all_products') }}</span>
-                        <span class="text-xs text-slate-400 font-normal">{{ number_format($allProducts->total()) }} {{ __('ui.products') }}</span>
+                        <span class="text-xs text-slate-400 font-normal">{{ number_format($totalAllProducts) }} {{ __('ui.products') }}</span>
                     </div>
                     <a href="{{ route('retailer.catalogue') }}" class="text-xs text-brand hover:underline font-medium">{{ __('ui.view_all') }} →</a>
                 </div>
@@ -166,10 +187,31 @@
                                 @endif
                             </div>
                             <div class="p-2.5 flex flex-col flex-1">
-                                <p class="text-xs font-medium text-slate-700 line-clamp-2 leading-snug flex-1">
+                                <p class="text-xs font-medium text-slate-700 line-clamp-2 leading-snug flex-1 mb-1">
                                     {{ app()->getLocale() === 'zh_CN' && $product->name_zh ? $product->name_zh : $product->name_en }}
                                 </p>
-                                <div class="mt-1.5 pt-1.5 border-t border-slate-50">
+                                @php
+                                    $hpRating   = isset($product->rating) && $product->rating !== null ? (float) $product->rating : null;
+                                    $hpRatingInt = $hpRating !== null ? (int) round($hpRating) : 0;
+                                    $hpSold     = isset($product->sold_count) && $product->sold_count > 0
+                                        ? ($product->sold_count >= 1000 ? round($product->sold_count / 1000, 1).'k' : $product->sold_count)
+                                        : null;
+                                @endphp
+                                @if($hpRating !== null || $hpSold !== null)
+                                <div class="flex items-center gap-1.5 mb-1">
+                                    @if($hpRating !== null)
+                                    <span class="flex items-center gap-0.5">
+                                        @for($s = 1; $s <= 5; $s++)
+                                        <svg class="w-2.5 h-2.5 {{ $s <= $hpRatingInt ? 'text-amber-400' : 'text-slate-200' }}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                        @endfor
+                                    </span>
+                                    @endif
+                                    @if($hpSold !== null)
+                                    <span class="text-[9px] text-slate-400">{{ $hpSold }} sold</span>
+                                    @endif
+                                </div>
+                                @endif
+                                <div class="mt-auto pt-1.5 border-t border-slate-50">
                                     @if($retailPrice)
                                     <p class="text-sm font-extrabold text-brand tabular-nums">{{ \App\Services\CurrencyService::format($retailPrice) }}</p>
                                     @else
@@ -181,10 +223,27 @@
                         @endforeach
                     </div>
 
-                    @if($allProducts->hasPages())
-                    <div class="mt-6 flex justify-center">
-                        {{ $allProducts->links() }}
+                    {{-- ── Infinite scroll sentinel ─────────────────────── --}}
+                    @if($hasMore)
+                    <div class="h-2 mt-6"
+                         x-data="{
+                             init() {
+                                 let busy = false;
+                                 const io = new IntersectionObserver(([entry]) => {
+                                     if (entry.isIntersecting && !busy) {
+                                         busy = true;
+                                         $wire.loadMore().then(() => { busy = false; });
+                                     }
+                                 }, { rootMargin: '300px' });
+                                 io.observe(this.$el);
+                             }
+                         }">
                     </div>
+                    <div wire:loading.flex class="justify-center py-4">
+                        <span class="text-sm text-slate-400 animate-pulse">Loading more…</span>
+                    </div>
+                    @else
+                    <p class="text-center py-8 text-slate-300 text-sm font-medium tracking-wide">— No more products —</p>
                     @endif
                 </div>
                 @endif
