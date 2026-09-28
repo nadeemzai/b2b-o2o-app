@@ -45,7 +45,7 @@ class OrderHistory extends Component
 
     public function openDetail(int $orderId): void
     {
-        $retailer = auth()->user()->retailerProfile;
+        $retailer = auth('retailer')->user()->retailerProfile;
         if (Order::where('id', $orderId)->where('retailer_id', $retailer->id)->exists()) {
             $this->detailOrderId = $orderId;
         }
@@ -83,7 +83,7 @@ class OrderHistory extends Component
     {
         $this->validate(['proofFile' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120']);
 
-        $retailer = auth()->user()->retailerProfile;
+        $retailer = auth('retailer')->user()->retailerProfile;
         $order    = Order::where('id', $orderId)
                          ->where('retailer_id', $retailer->id)
                          ->where('status', Order::STATUS_PENDING)
@@ -110,7 +110,7 @@ class OrderHistory extends Component
 
     public function reorder(int $orderId): void
     {
-        $retailer = auth()->user()->retailerProfile;
+        $retailer = auth('retailer')->user()->retailerProfile;
         $order    = Order::with('items.product')
                          ->where('id', $orderId)
                          ->where('retailer_id', $retailer->id)
@@ -160,7 +160,7 @@ class OrderHistory extends Component
 
     public function render()
     {
-        $retailer = auth()->user()->retailerProfile;
+        $retailer = auth('retailer')->user()->retailerProfile;
 
         $query = Order::with(['items.product'])
             ->where('retailer_id', $retailer->id)
@@ -196,6 +196,7 @@ class OrderHistory extends Component
             'payment_verified' => 'Payment Verified',
             'transferred'      => 'Processing',
             'fulfilling'       => 'On Its Way',
+            'dispatched'       => 'En Route to Store',
             'delivered'        => 'Delivered',
             'cancelled'        => 'Cancelled',
             default            => ucwords(str_replace('_', ' ', $status)),
@@ -209,6 +210,7 @@ class OrderHistory extends Component
             'payment_verified' => 'bg-blue-100 text-blue-800',
             'transferred'      => 'bg-indigo-100 text-indigo-800',
             'fulfilling'       => 'bg-amber-100 text-amber-800',
+            'dispatched'       => 'bg-orange-100 text-orange-800',
             'delivered'        => 'bg-green-100 text-green-800',
             'cancelled'        => 'bg-red-100 text-red-800',
             default            => 'bg-gray-100 text-gray-800',
@@ -222,6 +224,7 @@ class OrderHistory extends Component
             'payment_verified' => 'Payment Verified',
             'transferred'      => 'Processing',
             'fulfilling'       => 'On Its Way',
+            'dispatched'       => 'En Route',
             'delivered'        => 'Delivered',
         ];
     }

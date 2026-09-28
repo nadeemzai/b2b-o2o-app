@@ -42,6 +42,7 @@
                 <option value="payment_verified">{{ __('ui.status_payment_verified') }}</option>
                 <option value="transferred">{{ __('ui.status_processing') }}</option>
                 <option value="fulfilling">{{ __('ui.status_on_its_way') }}</option>
+                <option value="dispatched">En Route to Store</option>
                 <option value="delivered">{{ __('ui.status_delivered') }}</option>
                 <option value="cancelled">{{ __('ui.status_cancelled') }}</option>
             </select>
