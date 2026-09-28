@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\Retailer;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppSetting;
+use App\Models\ProductReview;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
@@ -91,6 +93,24 @@ class CatalogueController extends Controller
             'categories',
         ]);
 
-        return response()->json(['data' => new ProductResource($product)]);
+        // Review context for the authenticated retailer
+        $authedUser          = $request->user();
+        $reviewLimit         = AppSetting::getInt('max_reviews_per_product', 3);
+        $retailerReviewCount = (int) ProductReview::where('product_id', $product->id)
+            ->where('user_id', $authedUser->id)
+            ->count();
+
+        $allReviews = $product->reviews()->get();
+
+        return response()->json([
+            'data'    => new ProductResource($product),
+            'reviews' => [
+                'total'          => $allReviews->count(),
+                'avg_rating'     => round($allReviews->avg('rating') ?? 0, 1),
+                'retailer_count' => $retailerReviewCount,
+                'limit'          => $reviewLimit,
+                'can_review'     => $retailerReviewCount < $reviewLimit,
+            ],
+        ]);
     }
 }

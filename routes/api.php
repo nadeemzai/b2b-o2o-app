@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\RegisterController;
 use App\Http\Controllers\Api\Retailer\CatalogueController;
+use App\Http\Controllers\Api\Retailer\ReviewController;
 use App\Http\Controllers\Api\Retailer\KycController;
 use App\Http\Controllers\Api\Retailer\OrderController;
 use App\Http\Controllers\Api\Retailer\RetailerProfileController;
@@ -48,6 +49,10 @@ Route::middleware('auth:sanctum')->group(function () {
         // Catalogue
         Route::get('catalogue',          [CatalogueController::class, 'index']);
         Route::get('catalogue/{product}', [CatalogueController::class, 'show']);
+
+        // Product reviews
+        Route::get('catalogue/{product}/reviews',  [ReviewController::class, 'index']);  // GET  /api/retailer/catalogue/{product}/reviews
+        Route::post('catalogue/{product}/reviews', [ReviewController::class, 'store']);  // POST /api/retailer/catalogue/{product}/reviews
 
         // Orders
         Route::get('orders',                  [OrderController::class, 'index']);
