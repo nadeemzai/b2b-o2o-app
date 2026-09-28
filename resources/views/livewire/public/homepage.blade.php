@@ -36,7 +36,7 @@
 
                     <h1 class="text-white font-extrabold leading-tight mb-3"
                         style="font-size: clamp(2rem, 5vw, 3.5rem);">
-                        China–Australia<br/>
+                        China–Pakistan<br/>
                         <span style="color: #ff5b00;">B2B Wholesale</span> Platform
                     </h1>
 
