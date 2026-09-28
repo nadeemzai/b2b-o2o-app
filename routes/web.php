@@ -68,7 +68,7 @@ Route::post('/retailer/logout', function () {
     auth('retailer')->logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
-    return redirect()->route('retailer.login');
+    return redirect()->route('public.home');
 })->middleware('auth:retailer')->name('retailer.logout');
 
 // ──────────────────────────────────────────────────────────────────────────
