@@ -253,7 +253,7 @@
         <div class="flex items-center gap-4 lg:gap-6 h-[60px]">
 
             {{-- ── Logo ─────────────────────────────────────────────────── --}}
-            <a href="{{ route('retailer.home') }}" class="shrink-0 flex items-baseline gap-1">
+            <a href="{{ route('public.home') }}" class="shrink-0 flex items-baseline gap-1">
                 <span class="text-brand font-black text-2xl tracking-tight leading-none">OZ</span>
                 <span class="text-slate-700 font-bold text-[13px] leading-none">Wholesale</span>
                 <span class="text-brand/40 text-[9px] font-semibold tracking-widest uppercase ml-0.5 self-end mb-0.5">B2B</span>
