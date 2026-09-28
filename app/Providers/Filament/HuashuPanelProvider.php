@@ -40,6 +40,7 @@ class HuashuPanelProvider extends PanelProvider
             ])
             ->brandName('OZ Wholesale - 2 - Huashu International')
             ->brandLogo(fn() => view('filament.brand-logo-huashu'))
+            ->darkMode()
             ->brandLogoHeight('2rem')
             ->navigationGroups([
                 NavigationGroup::make('Orders'),

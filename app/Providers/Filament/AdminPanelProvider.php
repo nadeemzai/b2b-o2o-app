@@ -45,6 +45,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->brandName('OZ Wholesale B2B')
             ->brandLogo(fn() => view('filament.brand-logo'))
+            ->darkMode()
             ->brandLogoHeight('2rem')
             ->navigationGroups([
                 NavigationGroup::make('Content'),
