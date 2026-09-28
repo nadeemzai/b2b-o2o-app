@@ -27,6 +27,7 @@
   .badge-transferred { background: #cce5ff; color: #004085; }
   .badge-fulfilling { background: #d4edda; color: #155724; }
   .badge-delivered { background: #d4edda; color: #155724; }
+  .badge-dispatched { background: #fff3e0; color: #e65100; }
   .footer { padding: 20px 32px; background: #f8f9fa; border-top: 1px solid #eee; text-align: center; font-size: 12px; color: #999; }
   .btn { display: inline-block; background: #1e3a5f; color: #fff !important; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px; margin: 8px 0; }
 </style>

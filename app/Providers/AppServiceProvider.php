@@ -9,11 +9,13 @@ use App\Policies\AdminRetailerPolicy;
 use App\Policies\RetailerPolicy;
 use App\Policies\StoreStaffPolicy;
 use App\Events\OrderDelivered;
+use App\Events\OrderDispatched;
 use App\Events\OrderFulfilling;
 use App\Events\OrderPlaced;
 use App\Events\OrderTransferred;
 use App\Events\PaymentVerified;
 use App\Listeners\SendOrderDeliveredNotification;
+use App\Listeners\SendOrderDispatchedNotification;
 use App\Listeners\SendOrderFulfillingNotification;
 use App\Listeners\SendOrderPlacedNotification;
 use App\Listeners\SendOrderTransferredNotification;
@@ -53,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(OrderTransferred::class, SendOrderTransferredNotification::class);
         Event::listen(OrderFulfilling::class,  SendOrderFulfillingNotification::class);
         Event::listen(OrderDelivered::class,   SendOrderDeliveredNotification::class);
+        Event::listen(OrderDispatched::class, SendOrderDispatchedNotification::class);
 
         // Allows <x-layouts.retailer> to resolve resources/views/layouts/retailer.blade.php,
         // the same file Livewire full-page components use via ->layout('layouts.retailer').

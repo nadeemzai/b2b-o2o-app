@@ -56,6 +56,18 @@ class OrderHistory extends Component
         $this->detailOrderId = null;
     }
 
+    /**
+     * Called by wire:poll every 30 s to refresh order statuses.
+     * Skipped while the detail drawer is open so it doesn't disrupt the user.
+     */
+    public function refreshOrders(): void
+    {
+        if ($this->detailOrderId !== null) {
+            return; // drawer open — don't disrupt
+        }
+        // Livewire re-renders automatically; nothing extra needed here.
+    }
+
     // ──────────────────────────────────────────────
     // Proof upload
     // ──────────────────────────────────────────────

@@ -1,4 +1,4 @@
-<div class="max-w-5xl mx-auto">
+<div class="max-w-5xl mx-auto" wire:poll.30000ms="refreshOrders">
 
     {{-- ── Flash messages ── --}}
     @if (session()->has('proof_uploaded'))
