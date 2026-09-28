@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class OrderResource extends JsonResource
 {
@@ -16,6 +17,17 @@ class OrderResource extends JsonResource
             'payment_method' => $this->payment_method,
             'collected_pkr'  => $this->collected_pkr !== null ? (float) $this->collected_pkr : null,
             'notes'          => $this->notes,
+
+            // Payment proof
+            'payment_proof_path' => $this->payment_proof_path,
+            'payment_proof_url'  => $this->payment_proof_path
+                ? Storage::disk('public')->url($this->payment_proof_path)
+                : null,
+
+            // FX rates captured at order time (for mobile currency display)
+            'fx_usd_rate'    => $this->fx_usd_rate !== null ? (float) $this->fx_usd_rate : null,
+            'fx_cny_rate'    => $this->fx_cny_rate !== null ? (float) $this->fx_cny_rate : null,
+            'fx_captured_at' => $this->fx_captured_at?->toIso8601String(),
 
             // Retailer summary
             'retailer' => $this->when(

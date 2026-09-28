@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\RegisterController;
+use App\Http\Controllers\Api\StoresController;
 use App\Http\Controllers\Api\Retailer\CatalogueController;
 use App\Http\Controllers\Api\Retailer\CategoryController;
 use App\Http\Controllers\Api\Retailer\DashboardController;
@@ -23,6 +24,7 @@ Route::prefix('auth')->group(function () {
     Route::post('login',    [AuthController::class,    'login']);
     Route::post('register', [RegisterController::class, 'register']);
 });
+Route::get('stores', StoresController::class);                             // GET /api/stores — active stores list for registration
 
 // ══════════════════════════════════════════════════════════════
 //  Authenticated routes (Sanctum token required)

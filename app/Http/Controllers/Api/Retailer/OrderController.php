@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\PlaceOrderRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
-use App\Services\CartService;
 use App\Services\OrderService;
 use App\Services\PricingService;
 use Illuminate\Http\JsonResponse;
