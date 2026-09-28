@@ -20,27 +20,48 @@ class Order extends Model
         'payment_method',
         'collected_pkr',
         'notes',
+        'payment_proof_path',
+        'payment_verified_at',
+        'payment_verified_by',
+        'transferred_to_huashu_at',
+        'transferred_by',
+        'oz_commission_pkr',
+        'huashu_ref',
+        'payment_currency',
+        'fx_usd_rate',
+        'fx_cny_rate',
+        'fx_captured_at',
     ];
 
     protected $casts = [
-        'total_pkr'     => 'decimal:2',
-        'collected_pkr' => 'decimal:2',
+        'total_pkr'                => 'decimal:2',
+        'collected_pkr'            => 'decimal:2',
+        'oz_commission_pkr'        => 'decimal:2',
+        'payment_verified_at'      => 'datetime',
+        'transferred_to_huashu_at' => 'datetime',
+        'fx_usd_rate'             => 'decimal:6',
+        'fx_cny_rate'             => 'decimal:6',
+        'fx_captured_at'          => 'datetime',
     ];
 
     // ──────────────────────────────────────────────
     // Status constants
     // ──────────────────────────────────────────────
 
-    public const STATUS_PENDING            = 'pending';
-    public const STATUS_PREPARING          = 'preparing';
-    public const STATUS_READY_FOR_DELIVERY = 'ready_for_delivery';
-    public const STATUS_DELIVERED          = 'delivered';
-    public const STATUS_CANCELLED          = 'cancelled';
+    public const STATUS_PENDING           = 'pending';
+    public const STATUS_PAYMENT_VERIFIED  = 'payment_verified';
+    public const STATUS_TRANSFERRED       = 'transferred';
+    public const STATUS_FULFILLING        = 'fulfilling';
+    public const STATUS_DISPATCHED        = 'dispatched';
+    public const STATUS_DELIVERED         = 'delivered';
+    public const STATUS_CANCELLED         = 'cancelled';
 
     public const STATUSES = [
         self::STATUS_PENDING,
-        self::STATUS_PREPARING,
-        self::STATUS_READY_FOR_DELIVERY,
+        self::STATUS_PAYMENT_VERIFIED,
+        self::STATUS_TRANSFERRED,
+        self::STATUS_FULFILLING,
+        self::STATUS_DISPATCHED,
         self::STATUS_DELIVERED,
         self::STATUS_CANCELLED,
     ];
@@ -79,18 +100,68 @@ class Order extends Model
         return $this->hasOne(OrderStatusHistory::class)->latestOfMany();
     }
 
+    public function paymentVerifiedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'payment_verified_by');
+    }
+
+    public function transferredBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'transferred_by');
+    }
+
     // ──────────────────────────────────────────────
-    // Helpers
+    // State helpers
     // ──────────────────────────────────────────────
+
+    public function canVerifyPayment(): bool
+    {
+        return $this->status === self::STATUS_PENDING;
+    }
+
+    public function canTransferToHuashu(): bool
+    {
+        return $this->status === self::STATUS_PAYMENT_VERIFIED;
+    }
+
+    public function canMarkFulfilling(): bool
+    {
+        return $this->status === self::STATUS_TRANSFERRED;
+    }
+
+    public function canMarkDispatched(): bool
+    {
+        return $this->status === self::STATUS_FULFILLING;
+    }
+
+    public function isDispatched(): bool
+    {
+        return $this->status === self::STATUS_DISPATCHED;
+    }
+
+    public function canMarkDelivered(): bool
+    {
+        return $this->status === self::STATUS_DISPATCHED;
+    }
 
     public function isCancellable(): bool
     {
-        return in_array($this->status, [self::STATUS_PENDING, self::STATUS_PREPARING]);
+        return in_array($this->status, [self::STATUS_PENDING, self::STATUS_PAYMENT_VERIFIED]);
     }
 
     public function isDelivered(): bool
     {
         return $this->status === self::STATUS_DELIVERED;
+    }
+
+    public function isTransferred(): bool
+    {
+        return in_array($this->status, [
+            self::STATUS_TRANSFERRED,
+            self::STATUS_FULFILLING,
+            self::STATUS_DISPATCHED,
+            self::STATUS_DELIVERED,
+        ]);
     }
 
     // ──────────────────────────────────────────────
@@ -116,4 +187,54 @@ class Order extends Model
     {
         return $query->whereNotIn('status', [self::STATUS_DELIVERED, self::STATUS_CANCELLED]);
     }
+
+    /** Orders visible to Huashu (transferred + beyond). */
+    public function scopeForHuashu($query)
+    {
+        return $query->whereIn('status', [
+            self::STATUS_TRANSFERRED,
+            self::STATUS_FULFILLING,
+            self::STATUS_DISPATCHED,
+            self::STATUS_DELIVERED,
+        ]);
+    }
+
+    // ──────────────────────────────────────────────
+    // FX / Currency helpers
+    // ──────────────────────────────────────────────
+
+    /**
+     * PKR→{currency} rate stored at order creation, with live fallback.
+     */
+    public function fxRate(string $currency): float
+    {
+        if ($currency === 'PKR') {
+            return 1.0;
+        }
+
+        $stored = match ($currency) {
+            'USD'   => (float) ($this->fx_usd_rate ?? 0),
+            'CNY'   => (float) ($this->fx_cny_rate ?? 0),
+            default => 0.0,
+        };
+
+        if ($stored > 0) {
+            return $stored;
+        }
+
+        $rates = \App\Services\CurrencyService::getRates();
+        return (float) ($rates[$currency] ?? 1.0);
+    }
+
+    /**
+     * total_pkr converted to the requested currency.
+     */
+    public function convertedTotal(string $currency): float
+    {
+        if ($currency === 'PKR') {
+            return round((float) $this->total_pkr, 2);
+        }
+        return round((float) $this->total_pkr * $this->fxRate($currency), 2);
+    }
+
 }

@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\CategoryResource\Pages;
+use App\Filament\Admin\Resources\CategoryResource\RelationManagers\CommissionsRelationManager;
 use App\Models\Category;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
@@ -21,8 +22,15 @@ class CategoryResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Section::make()->schema([
-                TextInput::make('name')->required()->maxLength(150)->columnSpanFull(),
+            Section::make('Category Names')->schema([
+                TextInput::make('name')
+                    ->label('Name (English)')
+                    ->required()
+                    ->maxLength(150),
+                TextInput::make('name_zh')
+                    ->label('Name (Chinese 中文)')
+                    ->maxLength(150)
+                    ->placeholder('e.g. 婴儿产品'),
                 TextInput::make('slug')->maxLength(150)->unique(ignoreRecord: true),
             ])->columns(2),
         ]);
@@ -35,6 +43,11 @@ class CategoryResource extends Resource
                 TextColumn::make('name')->searchable()->sortable(),
                 TextColumn::make('slug')->searchable(),
                 TextColumn::make('products_count')->label('Products')->counts('products'),
+                TextColumn::make('commissions_count')
+                    ->label('Commission Rates')
+                    ->counts('commissions')
+                    ->badge()
+                    ->color(fn (int $state): string => $state > 0 ? 'success' : 'warning'),
                 TextColumn::make('created_at')->dateTime()->sortable()->toggleable(),
             ])
             ->actions([
@@ -46,6 +59,13 @@ class CategoryResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getRelationManagers(): array
+    {
+        return [
+            CommissionsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

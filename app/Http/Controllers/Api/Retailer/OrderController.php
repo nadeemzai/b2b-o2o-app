@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Retailer;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\PlaceOrderRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Services\OrderService;
@@ -24,8 +25,10 @@ class OrderController extends Controller
      * Paginated order history for the authenticated retailer.
      *
      * Query params:
-     *   - status (string, optional)
+     *   - status   (string, optional)
      *   - per_page (int, default 15)
+     *
+     * Middleware: auth:sanctum, role:retailer
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -56,22 +59,21 @@ class OrderController extends Controller
      *   "notes": "optional delivery note"
      * }
      *
-     * Policy: retailer must be KYC-approved.
+     * Policy: retailer must be KYC-approved to place orders.
+     *
+     * Middleware: auth:sanctum, role:retailer
      */
-    public function store(Request $request): JsonResponse
+    public function store(PlaceOrderRequest $request): JsonResponse
     {
         $this->authorize('placeOrder', Order::class);
 
-        $validated = $request->validate([
-            'items'              => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
-            'items.*.qty'        => ['required', 'integer', 'min:1', 'max:1000'],
-            'notes'              => ['nullable', 'string', 'max:500'],
-        ]);
+        $validated = $request->validated();
+        $retailer  = $request->user()->retailerProfile;
 
-        $retailer = $request->user()->retailerProfile;
+        // PlaceOrderRequest::mergedItems() de-duplicates by product_id (summing qty)
+        $items = $request->mergedItems();
 
-        $order = $this->orderService->placeOrder($retailer, $validated['items']);
+        $order = $this->orderService->placeOrder($retailer, $items);
 
         if (isset($validated['notes'])) {
             $order->update(['notes' => $validated['notes']]);
@@ -84,6 +86,11 @@ class OrderController extends Controller
     // GET /api/retailer/orders/{order}
     // ──────────────────────────────────────────────
 
+    /**
+     * Return a single order with full detail.
+     *
+     * Middleware: auth:sanctum, role:retailer
+     */
     public function show(Request $request, Order $order): JsonResponse
     {
         $this->authorize('viewOrder', $order);
@@ -97,6 +104,11 @@ class OrderController extends Controller
     // POST /api/retailer/orders/{order}/cancel
     // ──────────────────────────────────────────────
 
+    /**
+     * Cancel an order (only allowed while still pending).
+     *
+     * Middleware: auth:sanctum, role:retailer
+     */
     public function cancel(Request $request, Order $order): JsonResponse
     {
         $this->authorize('cancelOrder', $order);

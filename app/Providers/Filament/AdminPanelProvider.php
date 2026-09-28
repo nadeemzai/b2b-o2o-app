@@ -2,12 +2,18 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Admin\Resources\CategoryResource;
+use App\Filament\Admin\Resources\BannerResource;
+use App\Filament\Admin\Resources\OrderAuditResource;
 use App\Filament\Admin\Resources\OrderResource;
-use App\Filament\Admin\Resources\ProductResource;
 use App\Filament\Admin\Resources\RetailerResource;
 use App\Filament\Admin\Resources\TownshipStoreResource;
 use App\Filament\Admin\Resources\UserResource;
+use App\Filament\Admin\Pages\CommissionDashboard;
+use App\Filament\Admin\Pages\HomepageSettings;
+use App\Filament\Admin\Resources\ProductResource;
+use App\Filament\Admin\Widgets\OrdersByStatusChart;
+use App\Filament\Admin\Widgets\OrderStatsOverview;
+use App\Filament\Admin\Widgets\RecentOrdersTable;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -31,28 +37,41 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->id('admin')
             ->path('admin')
+            ->authGuard('admin')
             ->login()
             ->colors([
                 'primary' => Color::Blue,
             ])
-            ->brandName('B2B O2O — Admin')
+            ->brandName('OZ Wholesale B2B')
+            ->brandLogo(fn() => view('filament.brand-logo'))
+            ->brandLogoHeight('2rem')
             ->navigationGroups([
-                NavigationGroup::make('KYC & Retailers'),
+                NavigationGroup::make('Content'),
                 NavigationGroup::make('Catalogue'),
+                NavigationGroup::make('KYC & Retailers'),
                 NavigationGroup::make('Operations'),
+                NavigationGroup::make('Settings'),
                 NavigationGroup::make('System')
                     ->collapsed(),
             ])
             ->resources([
+                BannerResource::class,
+                ProductResource::class,
                 RetailerResource::class,
                 TownshipStoreResource::class,
-                CategoryResource::class,
-                ProductResource::class,
                 OrderResource::class,
+                OrderAuditResource::class,
                 UserResource::class,
             ])
             ->pages([
                 Pages\Dashboard::class,
+                CommissionDashboard::class,
+                HomepageSettings::class,
+            ])
+            ->widgets([
+                OrderStatsOverview::class,
+                OrdersByStatusChart::class,
+                RecentOrdersTable::class,
             ])
             ->middleware([
                 EncryptCookies::class,

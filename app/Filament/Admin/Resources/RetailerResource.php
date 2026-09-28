@@ -4,18 +4,19 @@ namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\RetailerResource\Pages;
 use App\Models\Retailer;
-use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Notifications\Notification;
+use App\Models\TownshipStore;
+use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
 
 class RetailerResource extends Resource
 {
@@ -25,27 +26,88 @@ class RetailerResource extends Resource
     protected static ?string $navigationLabel = 'Retailers / KYC';
     protected static ?int $navigationSort = 1;
 
-    public static function form(Form $form): Form
+    // ── Infolist (ViewRetailer page) ────────────────────────────────────────
+    public static function infolist(Infolist $infolist): Infolist
     {
-        return $form->schema([
-            Section::make('Business Information')->schema([
-                TextInput::make('business_name')->disabled(),
-                TextInput::make('cnic')->disabled()->label('CNIC'),
-                TextInput::make('phone')->disabled(),
-                TextInput::make('address')->disabled(),
-                TextInput::make('ntn')->disabled()->label('NTN'),
-                TextInput::make('strn')->disabled()->label('STRN'),
-            ])->columns(2),
-            Section::make('KYC Status')->schema([
-                Placeholder::make('kyc_status')
-                    ->content(fn (Retailer $record): string => ucfirst($record->kyc_status)),
-                Placeholder::make('kyc_rejection_reason')
-                    ->content(fn (Retailer $record): string => $record->kyc_rejection_reason ?? '—')
-                    ->label('Rejection Reason'),
-            ]),
+        return $infolist->schema([
+
+            // Business profile
+            Section::make('Business Information')
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('business_name')->label('Business Name'),
+                    TextEntry::make('user.email')->label('Email'),
+                    TextEntry::make('phone')->label('Phone'),
+                    TextEntry::make('cnic')->label('CNIC'),
+                    TextEntry::make('ntn')->label('NTN')->placeholder('—'),
+                    TextEntry::make('strn')->label('STRN')->placeholder('—'),
+                    TextEntry::make('address')->label('Address')->columnSpanFull()->placeholder('—'),
+                    TextEntry::make('store.name')->label('Assigned Store')->placeholder('—'),
+                    TextEntry::make('created_at')->label('Registered')->dateTime(),
+                ]),
+
+            // KYC status
+            Section::make('KYC Status')
+                ->columns(2)
+                ->schema([
+                    TextEntry::make('kyc_status')
+                        ->label('Status')
+                        ->badge()
+                        ->color(fn (string $state): string => match ($state) {
+                            'approved' => 'success',
+                            'rejected' => 'danger',
+                            'pending'  => 'warning',
+                            default    => 'gray',
+                        })
+                        ->formatStateUsing(fn (string $state): string => ucfirst($state)),
+                    TextEntry::make('kyc_rejection_reason')
+                        ->label('Rejection Reason')
+                        ->placeholder('—')
+                        ->visible(fn (Retailer $record): bool => $record->kyc_status === 'rejected'),
+                ]),
+
+            // KYC Document images — served via auth-gated controller
+            Section::make('KYC Documents')
+                ->description('Documents are served securely and are only visible to admins.')
+                ->columns(3)
+                ->schema([
+                    ImageEntry::make('kyc_cnic_front')
+                        ->label('CNIC Front')
+                        ->getStateUsing(fn (Retailer $record): ?string =>
+                            ($record->kyc_documents['cnic_front'] ?? null)
+                                ? route('admin.kyc.document', [$record, 'cnic_front'])
+                                : null
+                        )
+                        ->height(200)
+                        ->extraImgAttributes(['class' => 'rounded object-contain'])
+                        ->placeholder('Not uploaded'),
+
+                    ImageEntry::make('kyc_cnic_back')
+                        ->label('CNIC Back')
+                        ->getStateUsing(fn (Retailer $record): ?string =>
+                            ($record->kyc_documents['cnic_back'] ?? null)
+                                ? route('admin.kyc.document', [$record, 'cnic_back'])
+                                : null
+                        )
+                        ->height(200)
+                        ->extraImgAttributes(['class' => 'rounded object-contain'])
+                        ->placeholder('Not uploaded'),
+
+                    ImageEntry::make('kyc_business_doc')
+                        ->label('Business Document')
+                        ->getStateUsing(fn (Retailer $record): ?string =>
+                            ($record->kyc_documents['business_doc'] ?? null)
+                                ? route('admin.kyc.document', [$record, 'business_doc'])
+                                : null
+                        )
+                        ->height(200)
+                        ->extraImgAttributes(['class' => 'rounded object-contain'])
+                        ->placeholder('Not uploaded'),
+                ]),
         ]);
     }
 
+    // ── Table (ListRetailers page) ──────────────────────────────────────────
     public static function table(Table $table): Table
     {
         return $table
@@ -61,7 +123,8 @@ class RetailerResource extends Resource
                         'rejected' => 'danger',
                         'pending'  => 'warning',
                         default    => 'gray',
-                    }),
+                    })
+                    ->formatStateUsing(fn (string $state): string => ucfirst($state)),
                 TextColumn::make('store.name')->label('Store')->sortable(),
                 TextColumn::make('created_at')->dateTime()->sortable()->toggleable(),
             ])
@@ -73,22 +136,25 @@ class RetailerResource extends Resource
                         'rejected' => 'Rejected',
                     ]),
                 SelectFilter::make('store_id')
-                    ->options(fn () => \App\Models\TownshipStore::orderBy('name')->pluck('name', 'id')->toArray())
+                    ->options(fn () => TownshipStore::orderBy('name')->pluck('name', 'id')->toArray())
                     ->label('Store'),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
+
+                // Quick approve from table row
                 Action::make('approve')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
                     ->modalHeading('Approve KYC')
-                    ->modalDescription('This will approve the retailer and allow them to place orders.')
+                    ->modalDescription('Approve this retailer and allow them to place orders.')
                     ->visible(fn (Retailer $record): bool => $record->kyc_status === 'pending')
                     ->action(function (Retailer $record): void {
                         $record->update(['kyc_status' => 'approved', 'kyc_rejection_reason' => null]);
-                        Notification::make()->title('Retailer approved successfully')->success()->send();
+                        Notification::make()->title('Retailer approved')->success()->send();
                     }),
+
                 Action::make('reject')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
@@ -107,6 +173,7 @@ class RetailerResource extends Resource
                         ]);
                         Notification::make()->title('Retailer rejected')->warning()->send();
                     }),
+
                 Action::make('re_approve')
                     ->label('Re-approve')
                     ->icon('heroicon-o-arrow-path')

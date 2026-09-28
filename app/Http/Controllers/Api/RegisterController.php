@@ -3,15 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\RetailerResource;
 use App\Models\Retailer;
 use App\Models\TownshipStore;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
 
 class RegisterController extends Controller
 {
@@ -41,20 +40,9 @@ class RegisterController extends Controller
      *
      * Response 201: { data: { token, user, retailer } }
      */
-    public function register(Request $request): JsonResponse
+    public function register(RegisterRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name'          => ['required', 'string', 'max:255'],
-            'email'         => ['required', 'email', 'max:254', 'unique:users,email'],
-            'password'      => ['required', 'string', Password::min(8)->mixedCase()->numbers()],
-            'store_id'      => ['required', 'integer', 'exists:township_stores,id'],
-            'business_name' => ['required', 'string', 'max:255'],
-            'cnic'          => ['required', 'string', 'regex:/^\d{5}-\d{7}-\d$/', 'unique:retailers,cnic'],
-            'phone'         => ['required', 'string', 'max:20'],
-            'address'       => ['required', 'string', 'max:500'],
-            'ntn'           => ['nullable', 'string', 'max:20', 'unique:retailers,ntn'],
-            'strn'          => ['nullable', 'string', 'max:20', 'unique:retailers,strn'],
-        ]);
+        $validated = $request->validated();
 
         // Confirm the chosen store is active
         $store = TownshipStore::where('id', $validated['store_id'])

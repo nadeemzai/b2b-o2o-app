@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -33,12 +34,13 @@ class ProductFactory extends Factory
         $name = $product['name'];
 
         return [
-            'sku'         => strtoupper(Str::slug($name, '-')) . '-' . $this->faker->numerify('###'),
-            'name'        => $name,
-            'description' => null,
-            'unit'        => $product['unit'],
-            'image_path'  => null,
-            'is_active'   => true,
+            'sku'            => strtoupper(Str::slug($name, '-')) . '-' . $this->faker->numerify('###'),
+            'name_en'        => $name,
+            'description_en' => null,
+            'category_id'    => Category::factory(),
+            'unit'           => $product['unit'],
+            'image_path'     => null,
+            'is_active'      => true,
         ];
     }
 

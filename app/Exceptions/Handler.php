@@ -2,7 +2,9 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
@@ -15,22 +17,14 @@ use Throwable;
  * Envelope shape:
  * {
  *   "message": "Human-readable summary",
- *   "errors":  { ... }   // present on validation failures
+ *   "errors":  { ... }   // present on validation failures (422)
  *   "details": { ... }   // present on domain exceptions (e.g. InsufficientStockException)
  * }
- *
- * Register in bootstrap/app.php (Laravel 11):
- *   ->withExceptions(function (Exceptions $exceptions) {
- *       // Laravel 11 uses the renderUsing / renderable hooks instead of overriding Handler
- *       $exceptions->renderable(fn (Throwable $e, $req) => (new Handler(app()))->render($req, $e));
- *   })
- *
- * OR — if still using the traditional App\Exceptions\Handler — just extend this class.
  */
 class Handler extends ExceptionHandler
 {
     /**
-     * A list of exception types whose stack traces should not be reported.
+     * Exception types whose stack traces are never reported to Bugsnag / Sentry.
      */
     protected $dontReport = [
         InsufficientStockException::class,
@@ -42,12 +36,12 @@ class Handler extends ExceptionHandler
 
     public function render($request, Throwable $e): JsonResponse|\Symfony\Component\HttpFoundation\Response
     {
-        // Only intercept API routes (or requests expecting JSON)
+        // Only intercept API routes or requests expecting JSON
         if (! $request->expectsJson() && ! $request->is('api/*')) {
             return parent::render($request, $e);
         }
 
-        // ── Validation errors ──────────────────────────────────────────
+        // ── Validation errors (422) ────────────────────────────────────
         if ($e instanceof ValidationException) {
             return response()->json([
                 'message' => 'Validation failed.',
@@ -55,14 +49,29 @@ class Handler extends ExceptionHandler
             ], 422);
         }
 
-        // ── Unauthenticated ────────────────────────────────────────────
+        // ── Unauthenticated (401) ──────────────────────────────────────
         if ($e instanceof AuthenticationException) {
             return response()->json([
                 'message' => 'Unauthenticated. Please log in.',
             ], 401);
         }
 
-        // ── Domain: Insufficient stock ─────────────────────────────────
+        // ── Authorisation (403) ────────────────────────────────────────
+        if ($e instanceof AuthorizationException) {
+            return response()->json([
+                'message' => $e->getMessage() ?: 'You do not have permission to perform this action.',
+            ], 403);
+        }
+
+        // ── Model not found (404) ──────────────────────────────────────
+        if ($e instanceof ModelNotFoundException) {
+            $model   = last(explode('\\', $e->getModel()));
+            return response()->json([
+                'message' => "{$model} not found.",
+            ], 404);
+        }
+
+        // ── Domain: Insufficient stock (422) ───────────────────────────
         if ($e instanceof InsufficientStockException) {
             return response()->json([
                 'message' => $e->getMessage(),
@@ -77,7 +86,7 @@ class Handler extends ExceptionHandler
             ], $e->getStatusCode());
         }
 
-        // ── Generic server errors ──────────────────────────────────────
+        // ── Generic server errors (500) ────────────────────────────────
         $statusCode = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500;
 
         if (config('app.debug')) {

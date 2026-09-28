@@ -5,7 +5,6 @@ namespace App\Filament\Store\Resources;
 use App\Filament\Store\Resources\StockLevelResource\Pages;
 use App\Models\StockLevel;
 use App\Models\StockMovement;
-use App\Models\StoreStaff;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -17,6 +16,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Filament\Store\StoreStaffContext;
 
 class StockLevelResource extends Resource
 {
@@ -24,12 +24,25 @@ class StockLevelResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-archive-box';
     protected static ?string $navigationGroup = 'Inventory';
     protected static ?string $navigationLabel = 'Stock Levels';
+    /** Hide this resource in the sidebar for riders entirely. */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return ! StoreStaffContext::isRider();
+    }
+
+    /** Block direct URL access for riders. */
+    public static function canAccess(): bool
+    {
+        return ! StoreStaffContext::isRider();
+    }
+
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        $staff = StoreStaff::where('user_id', Auth::id())->where('is_active', true)->first();
+        $storeId = StoreStaffContext::storeId();
+
         return parent::getEloquentQuery()
-            ->when($staff, fn ($q) => $q->where('store_id', $staff->store_id))
+            ->when($storeId, fn ($q) => $q->where('store_id', $storeId))
             ->with(['product.category']);
     }
 
@@ -108,8 +121,8 @@ class StockLevelResource extends Resource
                             StockMovement::create([
                                 'store_id'            => $fresh->store_id,
                                 'product_id'          => $fresh->product_id,
-                                'type'                => $delta > 0 ? 'adjustment_in' : 'adjustment_out',
-                                'qty'                 => abs($delta),
+                                'type'                => 'adjustment',
+                                'qty'                 => $delta,
                                 'note'                => $data['reason'],
                                 'created_by_user_id'  => Auth::id(),
                             ]);

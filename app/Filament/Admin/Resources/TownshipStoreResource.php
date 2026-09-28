@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use App\Filament\Admin\Resources\TownshipStoreResource\RelationManagers\StaffRelationManager;
 use Filament\Tables\Table;
 
 class TownshipStoreResource extends Resource
@@ -56,8 +57,8 @@ class TownshipStoreResource extends Resource
                     ->counts('retailers'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
                 Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -66,11 +67,19 @@ class TownshipStoreResource extends Resource
             ]);
     }
 
+    public static function getRelations(): array
+    {
+        return [
+            StaffRelationManager::class,
+        ];
+    }
+
     public static function getPages(): array
     {
         return [
             'index'  => Pages\ListTownshipStores::route('/'),
             'create' => Pages\CreateTownshipStore::route('/create'),
+            'view'   => Pages\ViewTownshipStore::route('/{record}'),
             'edit'   => Pages\EditTownshipStore::route('/{record}/edit'),
         ];
     }

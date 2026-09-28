@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api\Retailer;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UploadKycRequest;
 use App\Http\Resources\RetailerResource;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class KycController extends Controller
@@ -15,28 +15,21 @@ class KycController extends Controller
     // ──────────────────────────────────────────────
 
     /**
-     * Upload KYC documents for a pending retailer.
+     * Upload KYC documents for a retailer.
      *
      * Accepted files (multipart/form-data):
-     *   - cnic_front   (image/pdf, max 5 MB)
-     *   - cnic_back    (image/pdf, max 5 MB)
-     *   - business_doc (image/pdf, max 5 MB, optional — NTN/STRN certificate)
+     *   - cnic_front   (image/pdf, max 5 MB, required on first submission)
+     *   - cnic_back    (image/pdf, max 5 MB, required on first submission)
+     *   - business_doc (image/pdf, max 5 MB, optional)
      *
      * Files are stored under:  storage/app/private/kyc/{retailer_id}/
      *
-     * The retailer's kyc_status stays 'pending' until an admin approves.
-     * If already 'approved' or 'rejected' (re-submission), status resets to 'pending'.
+     * kyc_status is reset to 'pending' on every upload (re-submission supported).
      *
      * Middleware: auth:sanctum, role:retailer
      */
-    public function upload(Request $request): JsonResponse
+    public function upload(UploadKycRequest $request): JsonResponse
     {
-        $request->validate([
-            'cnic_front'   => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
-            'cnic_back'    => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
-            'business_doc' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
-        ]);
-
         /** @var \App\Models\User $user */
         $user     = $request->user();
         $retailer = $user->retailerProfile;
@@ -49,9 +42,7 @@ class KycController extends Controller
         foreach (['cnic_front', 'cnic_back', 'business_doc'] as $field) {
             if ($request->hasFile($field)) {
                 // Delete old file if it exists
-                $oldKey = "kyc_docs.{$field}";
-                if ($retailer->getAttributeValue('kyc_documents') &&
-                    isset($retailer->kyc_documents[$field])) {
+                if ($retailer->kyc_documents && isset($retailer->kyc_documents[$field])) {
                     Storage::disk('private')->delete($retailer->kyc_documents[$field]);
                 }
 
@@ -64,8 +55,8 @@ class KycController extends Controller
         $merged   = array_merge($existing, $paths);
 
         $retailer->update([
-            'kyc_documents' => $merged,
-            'kyc_status'    => 'pending',           // reset to pending on re-upload
+            'kyc_documents'        => $merged,
+            'kyc_status'           => 'pending',
             'kyc_rejection_reason' => null,
         ]);
 
