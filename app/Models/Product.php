@@ -140,4 +140,14 @@ class Product extends Model
             $q->where('store_id', $storeId)->where('is_active', true);
         });
     }
+
+    public function reviews(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\ProductReview::class)->latest();
+    }
+
+    public function averageRating(): float
+    {
+        return round($this->reviews()->avg('rating') ?? 0, 1);
+    }
 }
