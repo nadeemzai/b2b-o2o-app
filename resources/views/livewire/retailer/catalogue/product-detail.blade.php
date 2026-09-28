@@ -656,9 +656,18 @@ $soldLabel = $soldCount > 0
                         <svg class="w-5 h-5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                         <p class="text-sm font-semibold text-emerald-700">Thank you! Your review has been submitted.</p>
                     </div>
-                    @elseif($alreadyReviewed)
-                    <div class="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-500 text-center">
-                        You have already submitted a review for this product.
+                    @elseif($retailerReviewCount >= $reviewLimit)
+                    <div class="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+                        <svg class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            <p class="text-sm font-semibold text-amber-800">Review limit reached</p>
+                            <p class="text-xs text-amber-700 mt-0.5">
+                                You have submitted {{ $retailerReviewCount }} {{ Str::plural('review', $retailerReviewCount) }} for this product
+                                (maximum allowed: {{ $reviewLimit }}).
+                            </p>
+                        </div>
                     </div>
                     @else
                     <div class="mt-8 border-t border-slate-100 pt-7">

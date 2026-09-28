@@ -1,0 +1,36 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('app_settings', function (Blueprint $table) {
+            $table->id();
+            $table->string('key')->unique();
+            $table->string('value')->nullable();
+            $table->string('label_en')->nullable();
+            $table->timestamps();
+        });
+
+        // Seed default values
+        DB::table('app_settings')->insert([
+            [
+                'key'      => 'max_reviews_per_product',
+                'value'    => '3',
+                'label_en' => 'Max reviews a retailer can submit per product',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('app_settings');
+    }
+};

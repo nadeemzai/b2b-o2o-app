@@ -11,6 +11,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Rule;
 use Illuminate\Support\Facades\Log;
 use App\Models\ProductReview;
+use App\Models\AppSetting;
 
 #[Layout('layouts.retailer')]
 class ProductDetail extends Component
@@ -47,8 +48,11 @@ class ProductDetail extends Component
     #[Rule('required|string|min:10|max:1000')]
     public string $reviewBody = '';
 
-    public bool $reviewSubmitted = false;
-    public bool $alreadyReviewed = false;
+    public bool $reviewSubmitted     = false;
+    /** How many reviews THIS retailer has left for this product. */
+    public int  $retailerReviewCount = 0;
+    /** Admin-configured max reviews per product (from app_settings). */
+    public int  $reviewLimit         = 3;
 
     public function mount(Product $product, PricingService $pricing): void
     {
@@ -85,25 +89,21 @@ class ProductDetail extends Component
         $this->stockTracked = $stock !== null;
         $this->available    = $stock ? max(0, $stock->qty_on_hand - $stock->qty_reserved) : 0;
 
-        // Check if this retailer already left a review
+        // Load admin-configured review limit and count this retailer's existing reviews
+        $this->reviewLimit = AppSetting::getInt('max_reviews_per_product', 3);
+
         $userId = auth('retailer')->id();
-        Log::info('[ProductDetail] mount check', [
-            'product_id'    => $product->id,
-            'retailer_id'   => $userId,
-            'guard_check'   => auth('retailer')->check(),
-        ]);
         try {
-            $this->alreadyReviewed = $userId
-                ? ProductReview::where('product_id', $product->id)
-                               ->where('user_id', $userId)
-                               ->exists()
-                : false;
+            $this->retailerReviewCount = $userId
+                ? (int) ProductReview::where('product_id', $product->id)
+                                     ->where('user_id', $userId)
+                                     ->count()
+                : 0;
         } catch (\Throwable $e) {
             // product_reviews table may not be migrated yet — fail gracefully
-            Log::warning('[ProductDetail] alreadyReviewed query failed: ' . $e->getMessage());
-            $this->alreadyReviewed = false;
+            Log::warning('[ProductDetail] retailerReviewCount query failed: ' . $e->getMessage());
+            $this->retailerReviewCount = 0;
         }
-        Log::info('[ProductDetail] alreadyReviewed = ' . ($this->alreadyReviewed ? 'true' : 'false'));
     }
 
     // ──────────────────────────────────────────────
@@ -215,7 +215,8 @@ class ProductDetail extends Component
 
     public function submitReview(): void
     {
-        if ($this->alreadyReviewed) {
+        // Block if the retailer has already hit the configured limit
+        if ($this->retailerReviewCount >= $this->reviewLimit) {
             return;
         }
 
@@ -225,21 +226,21 @@ class ProductDetail extends Component
         $profile = $user->retailerProfile;
 
         ProductReview::create([
-            'product_id'       => $this->product->id,
-            'user_id'          => $user->id,
-            'reviewer_name'    => $profile->business_name ?? $user->name,
-            'reviewer_location'=> $profile->store?->city ?? null,
-            'rating'           => $this->reviewRating,
-            'title'            => $this->reviewTitle ?: null,
-            'body'             => $this->reviewBody,
-            'verified_purchase'=> true,
+            'product_id'        => $this->product->id,
+            'user_id'           => $user->id,
+            'reviewer_name'     => $profile->business_name ?? $user->name,
+            'reviewer_location' => $profile->store?->city ?? null,
+            'rating'            => $this->reviewRating,
+            'title'             => $this->reviewTitle ?: null,
+            'body'              => $this->reviewBody,
+            'verified_purchase' => true,
         ]);
 
-        $this->reviewSubmitted  = true;
-        $this->alreadyReviewed  = true;
-        $this->reviewRating     = 0;
-        $this->reviewTitle      = null;
-        $this->reviewBody       = '';
+        $this->retailerReviewCount++;
+        $this->reviewSubmitted = true;
+        $this->reviewRating    = 0;
+        $this->reviewTitle     = null;
+        $this->reviewBody      = '';
     }
 
     public function render(PricingService $pricing)
