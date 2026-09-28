@@ -9,6 +9,7 @@ use App\Services\PricingService;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Rule;
+use Illuminate\Support\Facades\Log;
 use App\Models\ProductReview;
 
 #[Layout('layouts.retailer')]
@@ -86,11 +87,23 @@ class ProductDetail extends Component
 
         // Check if this retailer already left a review
         $userId = auth('retailer')->id();
-        $this->alreadyReviewed = $userId
-            ? ProductReview::where('product_id', $product->id)
-                           ->where('user_id', $userId)
-                           ->exists()
-            : false;
+        Log::info('[ProductDetail] mount check', [
+            'product_id'    => $product->id,
+            'retailer_id'   => $userId,
+            'guard_check'   => auth('retailer')->check(),
+        ]);
+        try {
+            $this->alreadyReviewed = $userId
+                ? ProductReview::where('product_id', $product->id)
+                               ->where('user_id', $userId)
+                               ->exists()
+                : false;
+        } catch (\Throwable $e) {
+            // product_reviews table may not be migrated yet — fail gracefully
+            Log::warning('[ProductDetail] alreadyReviewed query failed: ' . $e->getMessage());
+            $this->alreadyReviewed = false;
+        }
+        Log::info('[ProductDetail] alreadyReviewed = ' . ($this->alreadyReviewed ? 'true' : 'false'));
     }
 
     // ──────────────────────────────────────────────

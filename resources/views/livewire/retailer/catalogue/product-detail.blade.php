@@ -566,7 +566,12 @@ $soldLabel = $soldCount > 0
                 {{-- ── TAB: Reviews ──────────────────────────────── --}}
                 <div x-show="activeTab === 'reviews'" x-cloak class="p-5 lg:p-8">
                     @php
-                        $reviews   = $product->reviews()->get();
+                        try {
+                            $reviews   = $product->reviews()->get();
+                        } catch (\Throwable $e) {
+                            // product_reviews table may not exist yet — show empty state
+                            $reviews = collect();
+                        }
                         $avgRating = $reviews->avg('rating') ?? 0;
                         $total     = $reviews->count();
                         $rounded   = round($avgRating, 1);
