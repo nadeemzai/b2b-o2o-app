@@ -644,6 +644,80 @@ $soldLabel = $soldCount > 0
                         <p class="text-xs text-slate-400">Purchase this product and share your experience.</p>
                     </div>
                     @endif
+
+                    {{-- ── Write a review ──────────────────────────── --}}
+                    @if($reviewSubmitted)
+                    <div class="mt-6 p-5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3">
+                        <svg class="w-5 h-5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <p class="text-sm font-semibold text-emerald-700">Thank you! Your review has been submitted.</p>
+                    </div>
+                    @elseif($alreadyReviewed)
+                    <div class="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-500 text-center">
+                        You have already submitted a review for this product.
+                    </div>
+                    @else
+                    <div class="mt-8 border-t border-slate-100 pt-7">
+                        <h4 class="text-sm font-bold text-slate-800 mb-5">Write a Review</h4>
+
+                        {{-- Star picker --}}
+                        <div class="mb-4">
+                            <p class="text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">Your Rating <span class="text-red-400">*</span></p>
+                            <div class="flex gap-1" x-data="{ hovered: 0 }">
+                                @for($s = 1; $s <= 5; $s++)
+                                <button type="button"
+                                    @mouseover="hovered = {{ $s }}"
+                                    @mouseleave="hovered = 0"
+                                    wire:click="$set('reviewRating', {{ $s }})"
+                                    class="transition-transform hover:scale-110 focus:outline-none"
+                                    title="{{ $s }} star{{ $s > 1 ? 's' : '' }}">
+                                    <svg class="w-8 h-8 transition-colors"
+                                         :class="(hovered >= {{ $s }} || {{ '$reviewRating' }} >= {{ $s }}) ? 'text-amber-400' : 'text-slate-200'"
+                                         fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                </button>
+                                @endfor
+                            </div>
+                            @error('reviewRating') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        </div>
+
+                        {{-- Title --}}
+                        <div class="mb-4">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Review Title <span class="text-slate-400 font-normal normal-case">(optional)</span></label>
+                            <input type="text"
+                                   wire:model="reviewTitle"
+                                   maxlength="120"
+                                   placeholder="e.g. Great quality, fast delivery"
+                                   class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand placeholder-slate-300 transition" />
+                            @error('reviewTitle') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        </div>
+
+                        {{-- Body --}}
+                        <div class="mb-5">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Your Review <span class="text-red-400">*</span></label>
+                            <textarea wire:model="reviewBody"
+                                      rows="4"
+                                      maxlength="1000"
+                                      placeholder="Share your experience with this product — quality, packaging, delivery, suitability for resale..."
+                                      class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand placeholder-slate-300 resize-none transition"></textarea>
+                            @error('reviewBody') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        </div>
+
+                        <button wire:click="submitReview"
+                                wire:loading.attr="disabled"
+                                wire:loading.class="opacity-60 cursor-not-allowed"
+                                class="inline-flex items-center gap-2 bg-brand text-white text-sm font-semibold px-6 py-2.5 rounded-lg hover:bg-brand/90 transition focus:outline-none focus:ring-2 focus:ring-brand/40">
+                            <span wire:loading.remove wire:target="submitReview">Submit Review</span>
+                            <span wire:loading wire:target="submitReview" class="flex items-center gap-2">
+                                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                                </svg>
+                                Submitting…
+                            </span>
+                        </button>
+                    </div>
+                    @endif
                 </div>
 
             </div>{{-- /tabs card --}}

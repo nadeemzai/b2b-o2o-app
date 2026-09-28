@@ -8,6 +8,8 @@ use App\Services\CartService;
 use App\Services\PricingService;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Rule;
+use App\Models\ProductReview;
 
 #[Layout('layouts.retailer')]
 class ProductDetail extends Component
@@ -33,6 +35,19 @@ class ProductDetail extends Component
      * True when the product has at least one variant type with active options.
      */
     public bool $hasVariants = false;
+
+    // ── Review form ──────────────────────────────────────────────────────
+    #[Rule('required|integer|between:1,5')]
+    public int $reviewRating = 0;
+
+    #[Rule('nullable|string|max:120')]
+    public ?string $reviewTitle = null;
+
+    #[Rule('required|string|min:10|max:1000')]
+    public string $reviewBody = '';
+
+    public bool $reviewSubmitted = false;
+    public bool $alreadyReviewed = false;
 
     public function mount(Product $product, PricingService $pricing): void
     {
@@ -68,6 +83,14 @@ class ProductDetail extends Component
 
         $this->stockTracked = $stock !== null;
         $this->available    = $stock ? max(0, $stock->qty_on_hand - $stock->qty_reserved) : 0;
+
+        // Check if this retailer already left a review
+        $userId = auth('retailer')->id();
+        $this->alreadyReviewed = $userId
+            ? ProductReview::where('product_id', $product->id)
+                           ->where('user_id', $userId)
+                           ->exists()
+            : false;
     }
 
     // ──────────────────────────────────────────────
@@ -173,6 +196,37 @@ class ProductDetail extends Component
         $int = (int) $value;
         $max = $this->stockTracked ? max($this->moq, $this->available) : 9999;
         $this->qty = max($this->moq, min($int, $max));
+    }
+
+    // ── Review submission ────────────────────────────────────────────────
+
+    public function submitReview(): void
+    {
+        if ($this->alreadyReviewed) {
+            return;
+        }
+
+        $this->validate();
+
+        $user    = auth('retailer')->user();
+        $profile = $user->retailerProfile;
+
+        ProductReview::create([
+            'product_id'       => $this->product->id,
+            'user_id'          => $user->id,
+            'reviewer_name'    => $profile->business_name ?? $user->name,
+            'reviewer_location'=> $profile->store?->city ?? null,
+            'rating'           => $this->reviewRating,
+            'title'            => $this->reviewTitle ?: null,
+            'body'             => $this->reviewBody,
+            'verified_purchase'=> true,
+        ]);
+
+        $this->reviewSubmitted  = true;
+        $this->alreadyReviewed  = true;
+        $this->reviewRating     = 0;
+        $this->reviewTitle      = null;
+        $this->reviewBody       = '';
     }
 
     public function render(PricingService $pricing)
