@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Web\Retailer\AuthController;
+use App\Http\Controllers\Web\ImageSearchController;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Retailer\Auth\Login;
 use App\Livewire\Retailer\Auth\Register;
@@ -37,6 +38,9 @@ Route::get('/', PublicHome::class)->name('public.home');
 // ── Public catalogue (full browse) ───────────────────────────
 Route::get('/catalogue', ProductCatalogue::class)->name('public.catalogue');
 
+
+// ── Image search (vision API) ──────────────────────────────────
+Route::post('/image-search', [ImageSearchController::class, 'search'])->name('image.search');
 
 // ── Public product detail (no login required) ─────────────────
 Route::get('/product/{product}', PublicProductDetail::class)->name('public.product');
