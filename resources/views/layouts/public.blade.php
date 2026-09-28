@@ -271,8 +271,8 @@
     <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center gap-4 lg:gap-6 h-[60px]">
 
-            {{-- Logo --}}
-            <a href="{{ route('public.home') }}" class="shrink-0 flex items-baseline gap-1">
+            {{-- Logo — goes to retailer portal when logged in, public home otherwise --}}
+            <a href="{{ auth('retailer')->check() ? route('retailer.home') : route('public.home') }}" class="shrink-0 flex items-baseline gap-1">
                 <span class="text-brand font-black text-2xl tracking-tight leading-none">OZ</span>
                 <span class="text-slate-700 font-bold text-[13px] leading-none">Wholesale</span>
                 <span class="text-brand/40 text-[9px] font-semibold tracking-widest uppercase ml-0.5 self-end mb-0.5">B2B</span>
