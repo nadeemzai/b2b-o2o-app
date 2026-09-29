@@ -8,22 +8,25 @@ use App\Services\CartService;
 use App\Services\PricingService;
 use Livewire\Attributes\Url;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 class ProductList extends Component
 {
-    use WithPagination;
-
     #[Url]
     public string $search     = '';
     #[Url(as: 'category')]
     public string $categoryId = '';
     #[Url]
     public string $sortBy     = 'name_asc';
+    public int $perPage       = 50;
 
-    public function updatingSearch(): void     { $this->resetPage(); }
-    public function updatingCategoryId(): void { $this->resetPage(); }
-    public function updatingSortBy(): void     { $this->resetPage(); }
+    public function updatingSearch(): void     { $this->perPage = 50; }
+    public function updatingCategoryId(): void { $this->perPage = 50; }
+    public function updatingSortBy(): void     { $this->perPage = 50; }
+
+    public function loadMore(): void
+    {
+        $this->perPage += 50;
+    }
 
     public function addToCart(int $productId, CartService $cart, PricingService $pricing): void
     {
@@ -51,7 +54,7 @@ class ProductList extends Component
 
     public function render(PricingService $pricing)
     {
-        $storeId = auth()->user()->retailerProfile->store_id;
+        $storeId = auth('retailer')->user()->retailerProfile->store_id;
 
         $query = Product::active()
             ->withPrice()
@@ -73,20 +76,24 @@ class ProductList extends Component
             default      => $query->orderBy('name_en'),
         };
 
-        $products = $query->paginate(20);
+        $total    = (clone $query)->count();
+        $products = $query->take($this->perPage)->get();
+        $hasMore  = $total > $this->perPage;
 
         // Batch-load commission rates for all categories on this page (no N+1)
         $categoryIds     = $products->pluck('category_id')->unique()->filter()->values()->all();
         $commissionRates = $pricing->ratesForCategories($categoryIds);
 
-        $categories    = Category::orderBy('name')->get(['id', 'name', 'name_zh', 'slug']);
-        $totalProducts = $products->total();
+        $categories   = Category::orderBy('name')->get(['id', 'name', 'name_zh', 'slug']);
+        $totalProducts = $total;
 
         return view('livewire.retailer.catalogue.product-list', [
             'products'        => $products,
             'categories'      => $categories,
             'totalProducts'   => $totalProducts,
+            'hasMore'         => $hasMore,
             'commissionRates' => $commissionRates,
+            'showStockBadge'  => \App\Models\HomepageSection::activeSections()['show_stock_badge'],
         ])->layout('layouts.retailer', ['title' => 'Catalogue']);
     }
 }

@@ -107,7 +107,7 @@
                                 {{ $name }}
                             </p>
                             @if($priceStr)
-                                <p class="text-[12px] font-bold text-brand mt-0.5 tabular-nums">{{ $priceStr }}</p>
+                                <x-price :value="$displayPrice" class="text-[12px] font-bold text-brand mt-0.5" />
                             @elseif($priceMap !== null && !isset($priceMap[$product->id]))
                                 <p class="text-[10px] text-slate-400 italic mt-0.5">{{ __('ui.contact_for_price') }}</p>
                             @endif

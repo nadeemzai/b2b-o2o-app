@@ -54,4 +54,17 @@ class UserFactory extends Factory
     {
         return $this->state(['is_active' => false]);
     }
+
+    // Convenience state: creates the user AND inserts the matching pivot row in user_roles.
+    // Usage: User::factory()->withRole('retailer')->create()
+    //        User::factory()->admin()->withRole('admin')->withRole('retailer')->create()  — chain for multi-role
+    public function withRole(string $role): static
+    {
+        return $this->afterCreating(function (User $user) use ($role) {
+            \App\Models\UserRole::firstOrCreate([
+                'user_id' => $user->id,
+                'role'    => $role,
+            ]);
+        });
+    }
 }

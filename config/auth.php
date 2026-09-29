@@ -54,6 +54,22 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Dedicated guard for the retailer/buyer web portal.
+        // Uses a separate session key (login_retailer_xxxxx) so an admin user
+        // can be simultaneously authenticated in the admin panel (guard: admin)
+        // and in the retailer portal (guard: retailer) without session conflict.
+        'retailer' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
+
+        // Buyer portal — currently shares logic with retailer but uses its
+        // own session key so future separation is seamless.
+        'buyer' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
     ],
 
     /*

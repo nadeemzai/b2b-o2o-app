@@ -22,6 +22,10 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
+use App\Filament\Huashu\Widgets\HuashuOrderStatsOverview;
+use App\Filament\Huashu\Widgets\HuashuOrdersByStatusChart;
+use App\Filament\Huashu\Widgets\HuashuRecentOrdersTable;
+
 class HuashuPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
@@ -36,6 +40,7 @@ class HuashuPanelProvider extends PanelProvider
             ])
             ->brandName('OZ Wholesale - 2 - Huashu International')
             ->brandLogo(fn() => view('filament.brand-logo-huashu'))
+            ->darkMode()
             ->brandLogoHeight('2rem')
             ->navigationGroups([
                 NavigationGroup::make('Orders'),
@@ -48,6 +53,11 @@ class HuashuPanelProvider extends PanelProvider
             ])
             ->pages([
                 Pages\Dashboard::class,
+            ])
+            ->widgets([
+                HuashuOrderStatsOverview::class,
+                HuashuOrdersByStatusChart::class,
+                HuashuRecentOrdersTable::class,
             ])
             ->middleware([
                 EncryptCookies::class,

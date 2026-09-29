@@ -151,7 +151,7 @@
                             <div class="mt-1 mb-3">
                                 @if($minPrice)
                                 <p class="text-xl font-bold text-brand tabular-nums leading-none">
-                                    {{ \App\Services\CurrencyService::format($minPrice) }}
+                                    <x-price :value="$minPrice" />
                                 </p>
                                 <p class="text-[11px] text-slate-400 mt-0.5">
                                     {{ __('ui.per_unit') }} {{ $product->unit }}
@@ -180,9 +180,27 @@
                     @endforeach
                 </div>
 
-                <div class="mt-6">
-                    {{ $products->links() }}
+                @if($hasMore)
+                <div class="h-2 mt-6"
+                     x-data="{
+                         init() {
+                             let busy = false;
+                             const io = new IntersectionObserver(([entry]) => {
+                                 if (entry.isIntersecting && !busy) {
+                                     busy = true;
+                                     $wire.loadMore().then(() => { busy = false; });
+                                 }
+                             }, { rootMargin: '300px' });
+                             io.observe(this.$el);
+                         }
+                     }">
                 </div>
+                <div wire:loading.flex class="justify-center py-4">
+                    <span class="text-sm text-slate-400 animate-pulse">Loading more products…</span>
+                </div>
+                @else
+                <p class="text-center py-10 text-slate-300 text-sm font-medium tracking-wide">— No more products —</p>
+                @endif
                 @endif
             </div>
 

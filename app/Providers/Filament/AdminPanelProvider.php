@@ -10,6 +10,7 @@ use App\Filament\Admin\Resources\TownshipStoreResource;
 use App\Filament\Admin\Resources\UserResource;
 use App\Filament\Admin\Pages\CommissionDashboard;
 use App\Filament\Admin\Pages\HomepageSettings;
+use App\Filament\Admin\Pages\ReviewSettings;
 use App\Filament\Admin\Resources\ProductResource;
 use App\Filament\Admin\Widgets\OrdersByStatusChart;
 use App\Filament\Admin\Widgets\OrderStatsOverview;
@@ -44,6 +45,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->brandName('OZ Wholesale B2B')
             ->brandLogo(fn() => view('filament.brand-logo'))
+            ->darkMode()
             ->brandLogoHeight('2rem')
             ->navigationGroups([
                 NavigationGroup::make('Content'),
@@ -67,6 +69,7 @@ class AdminPanelProvider extends PanelProvider
                 Pages\Dashboard::class,
                 CommissionDashboard::class,
                 HomepageSettings::class,
+                ReviewSettings::class,
             ])
             ->widgets([
                 OrderStatsOverview::class,

@@ -8,6 +8,10 @@ use App\Services\CartService;
 use App\Services\PricingService;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Rule;
+use Illuminate\Support\Facades\Log;
+use App\Models\ProductReview;
+use App\Models\AppSetting;
 
 #[Layout('layouts.retailer')]
 class ProductDetail extends Component
@@ -34,11 +38,27 @@ class ProductDetail extends Component
      */
     public bool $hasVariants = false;
 
+    // ── Review form ──────────────────────────────────────────────────────
+    #[Rule('required|integer|between:1,5')]
+    public int $reviewRating = 0;
+
+    #[Rule('nullable|string|max:120')]
+    public ?string $reviewTitle = null;
+
+    #[Rule('required|string|min:10|max:1000')]
+    public string $reviewBody = '';
+
+    public bool $reviewSubmitted     = false;
+    /** How many reviews THIS retailer has left for this product. */
+    public int  $retailerReviewCount = 0;
+    /** Admin-configured max reviews per product (from app_settings). */
+    public int  $reviewLimit         = 3;
+
     public function mount(Product $product, PricingService $pricing): void
     {
         abort_unless($product->is_active, 404);
 
-        $storeId = auth()->user()->retailerProfile->store_id;
+        $storeId = auth('retailer')->user()->retailerProfile->store_id;
 
         $this->product = $product->load(['category', 'variantTypes.activeOptions', 'images']);
 
@@ -68,6 +88,22 @@ class ProductDetail extends Component
 
         $this->stockTracked = $stock !== null;
         $this->available    = $stock ? max(0, $stock->qty_on_hand - $stock->qty_reserved) : 0;
+
+        // Load admin-configured review limit and count this retailer's existing reviews
+        $this->reviewLimit = AppSetting::getInt('max_reviews_per_product', 3);
+
+        $userId = auth('retailer')->id();
+        try {
+            $this->retailerReviewCount = $userId
+                ? (int) ProductReview::where('product_id', $product->id)
+                                     ->where('user_id', $userId)
+                                     ->count()
+                : 0;
+        } catch (\Throwable $e) {
+            // product_reviews table may not be migrated yet — fail gracefully
+            Log::warning('[ProductDetail] retailerReviewCount query failed: ' . $e->getMessage());
+            $this->retailerReviewCount = 0;
+        }
     }
 
     // ──────────────────────────────────────────────
@@ -175,6 +211,38 @@ class ProductDetail extends Component
         $this->qty = max($this->moq, min($int, $max));
     }
 
+    // ── Review submission ────────────────────────────────────────────────
+
+    public function submitReview(): void
+    {
+        // Block if the retailer has already hit the configured limit
+        if ($this->retailerReviewCount >= $this->reviewLimit) {
+            return;
+        }
+
+        $this->validate();
+
+        $user    = auth('retailer')->user();
+        $profile = $user->retailerProfile;
+
+        ProductReview::create([
+            'product_id'        => $this->product->id,
+            'user_id'           => $user->id,
+            'reviewer_name'     => $profile->business_name ?? $user->name,
+            'reviewer_location' => $profile->store?->city ?? null,
+            'rating'            => $this->reviewRating,
+            'title'             => $this->reviewTitle ?: null,
+            'body'              => $this->reviewBody,
+            'verified_purchase' => true,
+        ]);
+
+        $this->retailerReviewCount++;
+        $this->reviewSubmitted = true;
+        $this->reviewRating    = 0;
+        $this->reviewTitle     = null;
+        $this->reviewBody      = '';
+    }
+
     public function render(PricingService $pricing)
     {
         $related = Product::query()
@@ -192,6 +260,7 @@ class ProductDetail extends Component
         return view('livewire.retailer.catalogue.product-detail', [
             'related'         => $related,
             'commissionRates' => $commissionRates,
+            'showStockBadge'  => \App\Models\HomepageSection::activeSections()['show_stock_badge'],
         ]);
     }
 }

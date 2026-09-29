@@ -7,11 +7,15 @@ use App\Models\HomepageSection;
 use App\Models\Product;
 use App\Services\PricingService;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 class Homepage extends Component
 {
-    use WithPagination;
+    public int $perPage = 50;
+
+    public function loadMore(): void
+    {
+        $this->perPage += 50;
+    }
 
     public function render(PricingService $pricing)
     {
@@ -39,16 +43,18 @@ class Homepage extends Component
         }
 
         // Full products grid below the strips
-        $allProducts = Product::active()
+        $allQuery    = Product::active()
             ->withPrice()
             ->with(['category', 'images'])
-            ->latest('products.created_at')
-            ->paginate(24);
+            ->latest('products.created_at');
+        $total       = (clone $allQuery)->count();
+        $allProducts = $allQuery->take($this->perPage)->get();
+        $hasMore     = $total > $this->perPage;
 
         $categories = Category::orderBy('name')->get(['id', 'name', 'name_zh', 'slug']);
 
         // Batch commission rates — no N+1
-        $pooled      = $deals->merge($newArrivals)->merge($allProducts->getCollection())->unique('id');
+        $pooled      = $deals->merge($newArrivals)->merge($allProducts)->unique('id');
         $categoryIds = $pooled->pluck('category_id')->unique()->filter()->values()->all();
         $commissionRates = $pricing->ratesForCategories($categoryIds);
 
@@ -62,6 +68,8 @@ class Homepage extends Component
             'deals'           => $deals,
             'newArrivals'     => $newArrivals,
             'allProducts'     => $allProducts,
+            'hasMore'         => $hasMore,
+            'totalAllProducts' => $total,
             'sections'        => $sections,
             'commissionRates' => $commissionRates,
             'retailerPrices'  => $retailerPrices,

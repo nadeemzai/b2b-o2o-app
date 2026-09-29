@@ -10,7 +10,7 @@ class Dashboard extends Component
 {
     public function render(CartService $cart)
     {
-        $retailer   = auth()->user()->retailerProfile;
+        $retailer   = auth('retailer')->user()->retailerProfile;
         $retailerId = $retailer->id;
 
         $baseQuery = Order::where('retailer_id', $retailerId);

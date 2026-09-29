@@ -148,10 +148,12 @@ $descText  = $isZh && ($product->description_zh ?? null)
                             <span class="bg-slate-100 text-slate-500 text-xs font-medium px-2.5 py-0.5 rounded-full">{{ $catName }}</span>
                             @endif
                             <span class="bg-slate-100 text-slate-400 text-xs font-mono px-2.5 py-0.5 rounded-full">{{ $product->sku }}</span>
+                            @if($showStockBadge)
                             <span class="flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-100">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                 In Stock
                             </span>
+                            @endif
                         </div>
 
                         {{-- ── Price Box ─────────────────────────────── --}}
@@ -159,7 +161,7 @@ $descText  = $isZh && ($product->description_zh ?? null)
                             <p class="text-[11px] text-slate-400 font-semibold uppercase tracking-widest mb-1">Wholesale Price</p>
                             @if($minPrice)
                             <div class="flex items-end gap-3 flex-wrap">
-                                <span class="text-4xl font-black text-brand leading-none tabular-nums">{{ \App\Services\CurrencyService::format($minPrice) }}</span>
+                                <x-price :value="$minPrice" class="text-4xl font-black text-brand" />
                                 <span class="text-sm text-slate-400 pb-1">/ {{ $unit }}</span>
                             </div>
                             @if($moq > 1)
@@ -433,8 +435,74 @@ $descText  = $isZh && ($product->description_zh ?? null)
 
             {{-- ── TAB: Reviews ───────────────────────────────────── --}}
             <div x-show="activeTab === 'reviews'" x-cloak class="p-5 lg:p-8">
+                @php
+                    $reviews   = $product->reviews()->get();
+                    $avgRating = $reviews->avg('rating') ?? 0;
+                    $total     = $reviews->count();
+                    $rounded   = round($avgRating, 1);
+                @endphp
+
+                @if($total > 0)
+                <div class="flex flex-col sm:flex-row gap-8 mb-8">
+                    {{-- Star summary tile --}}
+                    <div class="sm:w-48 text-center shrink-0">
+                        <p class="text-6xl font-black text-slate-900 leading-none mb-1">{{ number_format($rounded, 1) }}</p>
+                        <div class="flex justify-center gap-0.5 mb-1">
+                            @for($s = 1; $s <= 5; $s++)
+                            <svg class="w-5 h-5 {{ $s <= round($rounded) ? 'text-amber-400' : 'text-slate-200' }}" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            </svg>
+                            @endfor
+                        </div>
+                        <p class="text-xs text-slate-500 font-medium">{{ $total }} {{ Str::plural('review', $total) }}</p>
+
+                        {{-- Rating bar breakdown --}}
+                        <div class="mt-4 space-y-1 text-left">
+                            @for($bar = 5; $bar >= 1; $bar--)
+                            @php $barCount = $reviews->where('rating', $bar)->count(); $pct = $total > 0 ? ($barCount / $total * 100) : 0; @endphp
+                            <div class="flex items-center gap-1.5 text-[10px] text-slate-500">
+                                <span class="w-2 text-right">{{ $bar }}</span>
+                                <svg class="w-3 h-3 text-amber-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                <div class="flex-1 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                    <div class="bg-amber-400 h-full rounded-full" style="width: {{ $pct }}%"></div>
+                                </div>
+                                <span class="w-4 text-right">{{ $barCount }}</span>
+                            </div>
+                            @endfor
+                        </div>
+                    </div>
+
+                    {{-- Individual reviews --}}
+                    <div class="flex-1 space-y-5">
+                        @foreach($reviews as $review)
+                        <div class="border border-slate-100 rounded-xl p-4 bg-slate-50/50">
+                            <div class="flex items-start justify-between gap-3 mb-2">
+                                <div>
+                                    <div class="flex items-center gap-1.5 mb-0.5">
+                                        @for($s = 1; $s <= 5; $s++)
+                                        <svg class="w-3.5 h-3.5 {{ $s <= $review->rating ? 'text-amber-400' : 'text-slate-200' }}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                        @endfor
+                                        @if($review->title)
+                                        <span class="text-xs font-semibold text-slate-800 ml-1">{{ $review->title }}</span>
+                                        @endif
+                                    </div>
+                                    <p class="text-[11px] text-slate-400">
+                                        <span class="font-medium text-slate-600">{{ $review->reviewer_name }}</span>
+                                        @if($review->reviewer_location) · {{ $review->reviewer_location }}@endif
+                                        @if($review->verified_purchase)
+                                        <span class="ml-1 text-green-600 font-medium">✓ Verified Purchase</span>
+                                        @endif
+                                    </p>
+                                </div>
+                                <span class="text-[10px] text-slate-400 shrink-0">{{ $review->created_at->diffForHumans() }}</span>
+                            </div>
+                            <p class="text-sm text-slate-600 leading-relaxed">{{ $review->body }}</p>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @else
                 <div class="flex flex-col sm:flex-row gap-8">
-                    {{-- Star summary --}}
                     <div class="sm:w-48 text-center">
                         <p class="text-6xl font-black text-slate-900 leading-none mb-1">—</p>
                         <div class="flex justify-center gap-0.5 mb-1">
@@ -444,13 +512,13 @@ $descText  = $isZh && ($product->description_zh ?? null)
                         </div>
                         <p class="text-xs text-slate-400">No reviews yet</p>
                     </div>
-                    {{-- CTA --}}
                     <div class="flex-1 flex flex-col items-center justify-center text-center py-8 border-2 border-dashed border-slate-200 rounded-xl">
                         <svg class="w-10 h-10 text-brand/30 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
                         <p class="text-sm font-semibold text-slate-700 mb-1">No Reviews Yet</p>
                         <p class="text-xs text-slate-400">Purchase this product and share your experience.</p>
                     </div>
                 </div>
+                @endif
             </div>
 
         </div>{{-- /tab card --}}
@@ -523,7 +591,7 @@ $descText  = $isZh && ($product->description_zh ?? null)
                     <div class="p-3">
                         <h3 class="text-xs font-semibold text-slate-800 leading-snug line-clamp-2 mb-1.5">{{ $relName }}</h3>
                         @if($relPrice)
-                        <p class="text-sm font-bold text-brand tabular-nums">{{ \App\Services\CurrencyService::format($relPrice) }}</p>
+                        <x-price :value="$relPrice" class="text-sm font-bold text-brand" />
                         @else
                         <p class="text-xs text-slate-400 italic">Sign in for price</p>
                         @endif

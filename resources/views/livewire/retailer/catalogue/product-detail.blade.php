@@ -14,6 +14,12 @@ $allImages = $product->images->count()
     : ($product->image_path ? collect([asset('storage/'.$product->image_path)]) : collect());
 $inStock   = ! $stockTracked || $available > 0;
 $maxQty    = $stockTracked ? $available : 9999;
+$rating    = isset($product->rating) && $product->rating !== null ? (float) $product->rating : null;
+$soldCount = isset($product->sold_count) ? (int) $product->sold_count : 0;
+$ratingInt = $rating !== null ? (int) round($rating) : 0;
+$soldLabel = $soldCount > 0
+    ? ($soldCount >= 1000 ? round($soldCount / 1000, 1).'k' : $soldCount)
+    : null;
 @endphp
 
 <div class="-mx-4 sm:-mx-6 lg:-mx-8 -mt-6">
@@ -71,93 +77,117 @@ $maxQty    = $stockTracked ? $available : 9999;
     <div class="px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto"
          x-data="{ activeImg: 0, activeTab: 'attributes' }">
 
-        {{-- ── WHITE PRODUCT CARD ────────────────────────────────────── --}}
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-visible mb-6">
-            <div class="flex flex-col lg:flex-row">
+        {{-- ── 1688-STYLE TWO-COLUMN LAYOUT ─────────────────────────── --}}
+        <div class="flex flex-col xl:flex-row gap-5 items-start">
 
-                {{-- ── LEFT: Image Gallery ─────────────────────────────── --}}
-                <div class="lg:w-[480px] shrink-0 p-4">
-                    <div class="rpdp-gallery-wrap">
+            {{-- ══ LEFT COLUMN: Gallery only ══════════════════════ --}}
+            <div class="w-full xl:w-1/2 min-w-0">
 
-                        {{-- Vertical thumbnail strip (desktop only) --}}
-                        <div class="rpdp-thumb-strip flex flex-col gap-2 shrink-0 w-16">
-                            @forelse($allImages as $i => $src)
-                            <div class="rpdp-thumb w-16 h-16"
-                                 :class="activeImg === {{ $i }} ? 'active' : ''"
-                                 @click="activeImg = {{ $i }}">
-                                <img src="{{ $src }}" class="w-full h-full object-cover" alt="" loading="{{ $i === 0 ? 'eager' : 'lazy' }}" onerror="this.parentElement.style.display='none'" />
-                            </div>
-                            @empty
-                            @endforelse
-                        </div>
+                {{-- ── Gallery Card ─────────────────────────────────── --}}
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-visible">
+                    <div class="p-4">
+                        <div class="rpdp-gallery-wrap">
 
-                        {{-- Main image area --}}
-                        <div class="flex-1 flex flex-col gap-3">
-                            <div class="relative aspect-square bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl overflow-hidden">
-                                @if($allImages->count())
-                                    @foreach($allImages as $i => $src)
-                                    <img src="{{ $src }}"
-                                         x-show="activeImg === {{ $i }}"
-                                         {{ $i === 0 ? '' : 'x-cloak' }}
-                                         alt="{{ $name }}"
-                                         loading="{{ $i === 0 ? 'eager' : 'lazy' }}"
-                                         class="w-full h-full object-contain p-2"
-                                         onerror="this.style.display='none'" />
-                                    @endforeach
-                                    {{-- Image counter --}}
-                                    @if($allImages->count() > 1)
-                                    <div class="absolute bottom-2 right-2 bg-black/40 text-white text-xs px-2 py-0.5 rounded-full backdrop-blur-sm tabular-nums"
-                                         x-text="(activeImg + 1) + '/{{ $allImages->count() }}'"></div>
-                                    @endif
-                                @else
-                                <div class="w-full h-full flex flex-col items-center justify-center">
-                                    <div class="w-20 h-20 rounded-2xl bg-brand/10 flex items-center justify-center mb-3">
-                                        <svg class="w-10 h-10 text-brand/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/></svg>
-                                    </div>
-                                    <p class="text-xs text-slate-400 font-mono tracking-widest">{{ $product->sku }}</p>
-                                </div>
-                                @endif
-
-                                {{-- Out-of-stock overlay --}}
-                                @if($stockTracked && !$inStock)
-                                <div class="absolute inset-0 bg-white/70 flex items-center justify-center">
-                                    <span class="bg-slate-700 text-white text-sm font-bold px-5 py-2 rounded-full uppercase tracking-widest">Out of Stock</span>
-                                </div>
-                                @endif
-                            </div>
-
-                            {{-- Mobile horizontal thumbnails --}}
-                            @if($allImages->count() > 1)
-                            <div class="flex gap-2 overflow-x-auto lg:hidden pb-1">
-                                @foreach($allImages as $i => $src)
-                                <div class="rpdp-thumb shrink-0 w-14 h-14"
+                            {{-- Vertical thumbnail strip (desktop only) --}}
+                            <div class="rpdp-thumb-strip flex flex-col gap-2 shrink-0 w-16">
+                                @forelse($allImages as $i => $src)
+                                <div class="rpdp-thumb w-16 h-16"
                                      :class="activeImg === {{ $i }} ? 'active' : ''"
                                      @click="activeImg = {{ $i }}">
-                                    <img src="{{ $src }}" class="w-full h-full object-cover" alt="" loading="lazy" />
+                                    <img src="{{ $src }}" class="w-full h-full object-cover" alt="" loading="{{ $i === 0 ? 'eager' : 'lazy' }}" onerror="this.parentElement.style.display='none'" />
                                 </div>
-                                @endforeach
+                                @empty
+                                @endforelse
                             </div>
-                            @endif
 
-                            {{-- Share row --}}
-                            <div class="flex items-center gap-2 text-xs text-slate-400">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
-                                Share &nbsp;·&nbsp;
-                                <span class="font-mono tracking-wide text-slate-300">{{ $product->sku }}</span>
+                            {{-- Main image area --}}
+                            <div class="flex-1 flex flex-col gap-3">
+                                <div class="relative aspect-square bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl overflow-hidden">
+                                    @if($allImages->count())
+                                        @foreach($allImages as $i => $src)
+                                        <img src="{{ $src }}"
+                                             x-show="activeImg === {{ $i }}"
+                                             {{ $i === 0 ? '' : 'x-cloak' }}
+                                             alt="{{ $name }}"
+                                             loading="{{ $i === 0 ? 'eager' : 'lazy' }}"
+                                             class="w-full h-full object-contain p-2"
+                                             onerror="this.style.display='none'" />
+                                        @endforeach
+                                        {{-- Image counter --}}
+                                        @if($allImages->count() > 1)
+                                        <div class="absolute bottom-2 right-2 bg-black/40 text-white text-xs px-2 py-0.5 rounded-full backdrop-blur-sm tabular-nums"
+                                             x-text="(activeImg + 1) + '/{{ $allImages->count() }}'"></div>
+                                        @endif
+                                    @else
+                                    <div class="w-full h-full flex flex-col items-center justify-center">
+                                        <div class="w-20 h-20 rounded-2xl bg-brand/10 flex items-center justify-center mb-3">
+                                            <svg class="w-10 h-10 text-brand/30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/></svg>
+                                        </div>
+                                        <p class="text-xs text-slate-400 font-mono tracking-widest">{{ $product->sku }}</p>
+                                    </div>
+                                    @endif
+
+                                    {{-- Out-of-stock overlay --}}
+                                    @if($stockTracked && !$inStock)
+                                    <div class="absolute inset-0 bg-white/70 flex items-center justify-center">
+                                        <span class="bg-slate-700 text-white text-sm font-bold px-5 py-2 rounded-full uppercase tracking-widest">Out of Stock</span>
+                                    </div>
+                                    @endif
+                                </div>
+
+                                {{-- Mobile horizontal thumbnails --}}
+                                @if($allImages->count() > 1)
+                                <div class="flex gap-2 overflow-x-auto lg:hidden pb-1">
+                                    @foreach($allImages as $i => $src)
+                                    <div class="rpdp-thumb shrink-0 w-14 h-14"
+                                         :class="activeImg === {{ $i }} ? 'active' : ''"
+                                         @click="activeImg = {{ $i }}">
+                                        <img src="{{ $src }}" class="w-full h-full object-cover" alt="" loading="lazy" />
+                                    </div>
+                                    @endforeach
+                                </div>
+                                @endif
+
+                                {{-- Share row --}}
+                                <div class="flex items-center gap-2 text-xs text-slate-400">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+                                    Share &nbsp;·&nbsp;
+                                    <span class="font-mono tracking-wide text-slate-300">{{ $product->sku }}</span>
+                                </div>
                             </div>
-                        </div>
 
-                    </div>{{-- /gallery-wrap --}}
-                </div>{{-- /left --}}
+                        </div>{{-- /gallery-wrap --}}
+                    </div>
+                </div>{{-- /gallery card --}}
 
-                {{-- ── RIGHT: Purchase Panel ────────────────────────── --}}
-                <div class="flex-1 border-t lg:border-t-0 lg:border-l border-slate-100 lg:min-h-[520px]">
-                    <div class="rpdp-right-sticky p-5 lg:p-7">
+            </div>{{-- /left column --}}
+
+            {{-- ══ RIGHT COLUMN: Sticky Purchase Panel ════════════════ --}}
+            <div class="w-full xl:w-1/2 shrink-0">
+                <div class="rpdp-right-sticky bg-white rounded-2xl border border-slate-100 shadow-sm">
+                    <div class="p-5 lg:p-6">
 
                         {{-- Name --}}
-                        <h1 class="text-xl lg:text-2xl font-bold text-slate-900 leading-snug mb-1">{{ $name }}</h1>
+                        <h1 class="text-xl font-bold text-slate-900 leading-snug mb-1">{{ $name }}</h1>
                         @if($product->name_ur && $product->name_ur !== $name)
                         <p class="text-sm text-slate-500 mb-2" dir="rtl">{{ $product->name_ur }}</p>
+                        @endif
+
+                        {{-- ── Rating + Sold Count ─────────────────── --}}
+                        @if($rating !== null || $soldLabel !== null)
+                        <div class="flex items-center gap-2 mb-3 mt-2">
+                            @if($rating !== null)
+                            <span class="flex items-center gap-0.5">
+                                @for($s = 1; $s <= 5; $s++)
+                                <svg class="w-4 h-4 {{ $s <= $ratingInt ? 'text-amber-400' : 'text-slate-200' }}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                @endfor
+                                <span class="text-xs text-slate-500 font-semibold ml-1">{{ number_format($rating, 1) }}</span>
+                            </span>
+                            @endif
+                            @if($soldLabel !== null)
+                            <span class="text-xs text-slate-400 {{ $rating !== null ? 'border-l border-slate-200 pl-2' : '' }}">{{ $soldLabel }} sold</span>
+                            @endif
+                        </div>
                         @endif
 
                         {{-- Badges --}}
@@ -166,6 +196,7 @@ $maxQty    = $stockTracked ? $available : 9999;
                             <span class="bg-slate-100 text-slate-500 text-xs font-medium px-2.5 py-0.5 rounded-full">{{ $catName }}</span>
                             @endif
                             <span class="bg-slate-100 text-slate-400 text-xs font-mono px-2.5 py-0.5 rounded-full">{{ $product->sku }}</span>
+                            @if($showStockBadge)
                             @if($inStock)
                             <span class="flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-emerald-100">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -177,6 +208,7 @@ $maxQty    = $stockTracked ? $available : 9999;
                                 Out of Stock
                             </span>
                             @endif
+                            @endif {{-- showStockBadge --}}
                         </div>
 
                         {{-- ── Price Box ─────────────────────────────── --}}
@@ -184,7 +216,7 @@ $maxQty    = $stockTracked ? $available : 9999;
                             <p class="text-[11px] text-slate-400 font-semibold uppercase tracking-widest mb-1">Your Store Price</p>
                             @if($price)
                             <div class="flex items-end gap-3 flex-wrap">
-                                <span class="text-4xl font-black text-brand leading-none tabular-nums">{{ \App\Services\CurrencyService::format($price) }}</span>
+                                <x-price :value="$price" class="text-4xl font-black text-brand" />
                                 <span class="text-sm text-slate-400 pb-1">/ {{ $unit }}</span>
                             </div>
                             @if($moq > 1)
@@ -208,7 +240,7 @@ $maxQty    = $stockTracked ? $available : 9999;
                         </div>
 
                         {{-- ── Supply Info Row ──────────────────────── --}}
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 text-center">
+                        <div class="grid grid-cols-2 gap-2.5 mb-4 text-center">
                             <div class="bg-slate-50 rounded-xl px-3 py-2.5">
                                 <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-0.5">Unit</p>
                                 <p class="text-sm font-bold text-slate-800">{{ $unit }}</p>
@@ -253,7 +285,6 @@ $maxQty    = $stockTracked ? $available : 9999;
                             <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Add to Cart</p>
 
                             @if($hasVariants)
-                            {{-- VARIANT CARDS with Livewire qty steppers --}}
                             <div class="space-y-4 mb-4">
                                 @foreach($product->variantTypes->filter(fn($t) => $t->activeOptions->isNotEmpty()) as $variantType)
                                 <div>
@@ -303,7 +334,6 @@ $maxQty    = $stockTracked ? $available : 9999;
                             <p class="text-xs text-slate-400 mt-2 text-center">Enter 0 to skip a variant option</p>
 
                             @else
-                            {{-- SIMPLE QTY + ADD --}}
                             <div x-data="{ localQty: $wire.entangle('qty') }">
                                 <div class="flex items-stretch gap-3 mb-3">
                                     <div class="flex items-center border-2 border-slate-200 rounded-xl overflow-hidden bg-white">
@@ -347,12 +377,10 @@ $maxQty    = $stockTracked ? $available : 9999;
                                     @endif
                                 </div>
                             </div>
-
                             @endif
                         </div>
 
                         @else
-                        {{-- Price not available or out of stock --}}
                         <div class="bg-slate-100 rounded-2xl p-5 text-center">
                             <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center mx-auto mb-2">
                                 <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -362,205 +390,355 @@ $maxQty    = $stockTracked ? $available : 9999;
                         </div>
                         @endif
 
-                    </div>{{-- /sticky panel --}}
-                </div>{{-- /right --}}
+                    </div>{{-- /panel inner --}}
+                </div>{{-- /sticky panel --}}
+            </div>{{-- /right column --}}
 
-            </div>{{-- /flex row --}}
-        </div>{{-- /white card --}}
+        </div>{{-- /two-column layout --}}
 
-        {{-- ══ TAB BAR ══════════════════════════════════════════════════ --}}
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
+        {{-- ── Full-Width Tabs (below 50/50 columns) ──────────────── --}}
+        <div class="w-full mt-5">
+            {{-- ── Tabs Card ─────────────────────────────────────── --}}
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
 
-            <div class="border-b border-slate-100 overflow-x-auto">
-                <div class="flex px-4 min-w-max">
-                    @foreach([
-                        ['key' => 'attributes', 'label' => 'Attributes & Info'],
-                        ['key' => 'packing',    'label' => 'Packing & Shipping'],
-                        ['key' => 'details',    'label' => 'Product Details'],
-                        ['key' => 'reviews',    'label' => 'Reviews'],
-                    ] as $tab)
-                    <button type="button"
-                            class="rpdp-tab-btn px-5 py-4 text-sm text-slate-500 hover:text-brand"
-                            :class="activeTab === '{{ $tab['key'] }}' ? 'active' : ''"
-                            @click="activeTab = '{{ $tab['key'] }}'">
-                        {{ $tab['label'] }}
-                    </button>
-                    @endforeach
-                </div>
-            </div>
-
-            {{-- ── TAB: Attributes ─────────────────────────────────── --}}
-            <div x-show="activeTab === 'attributes'" class="p-5 lg:p-8">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-                    {{-- Attribute table --}}
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wider">Product Specifications</h3>
-                        <div class="rounded-xl overflow-hidden border border-slate-100">
-                            <table class="w-full text-sm">
-                                <tbody class="divide-y divide-slate-100">
-                                @php $attrs = [
-                                    ['label' => 'SKU / Item No.',    'value' => $product->sku],
-                                    ['label' => 'Category',          'value' => $catName],
-                                    ['label' => 'Unit',              'value' => $unit],
-                                    ['label' => 'Pieces Per Carton', 'value' => $pcsCarton ? number_format($pcsCarton) : null],
-                                    ['label' => 'Min. Order Qty',    'value' => $moq . ' ' . $unit],
-                                    ['label' => 'Origin',            'value' => 'China (Huashu)'],
-                                    ['label' => 'Payment Terms',     'value' => 'PKR — Prepaid via OZ Portal'],
-                                    ['label' => 'Lead Time',         'value' => '3 – 7 Business Days'],
-                                ]; @endphp
-                                @foreach($attrs as $row)
-                                @if($row['value'])
-                                <tr class="rpdp-attr-row">
-                                    <td class="text-slate-400 font-medium w-2/5 bg-slate-50/70">{{ $row['label'] }}</td>
-                                    <td class="text-slate-800 font-semibold">{{ $row['value'] }}</td>
-                                </tr>
-                                @endif
-                                @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                <div class="border-b border-slate-100 overflow-x-auto">
+                    <div class="flex px-4 min-w-max">
+                        @foreach([
+                            ['key' => 'attributes', 'label' => 'Attributes & Info'],
+                            ['key' => 'packing',    'label' => 'Packing & Shipping'],
+                            ['key' => 'details',    'label' => 'Product Details'],
+                            ['key' => 'reviews',    'label' => 'Reviews'],
+                        ] as $tab)
+                        <button type="button"
+                                class="rpdp-tab-btn px-5 py-4 text-sm text-slate-500 hover:text-brand"
+                                :class="activeTab === '{{ $tab['key'] }}' ? 'active' : ''"
+                                @click="activeTab = '{{ $tab['key'] }}'">
+                            {{ $tab['label'] }}
+                        </button>
+                        @endforeach
                     </div>
-
-                    {{-- Description --}}
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wider">Description</h3>
-                        @php
-                            $descText = $isZh && ($product->description_zh ?? null)
-                                ? $product->description_zh
-                                : ($product->description_en ?? null);
-                        @endphp
-                        @if($descText)
-                        <p class="text-sm text-slate-600 leading-relaxed">{{ $descText }}</p>
-                        @else
-                        <p class="text-sm text-slate-400 italic">No description available for this product.</p>
-                        @endif
-                    </div>
-
                 </div>
-            </div>
 
-            {{-- ── TAB: Packing ─────────────────────────────────────── --}}
-            <div x-show="activeTab === 'packing'" x-cloak class="p-5 lg:p-8">
-                <h3 class="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wider">Packing & Variant Details</h3>
+                {{-- ── TAB: Attributes ─────────────────────────── --}}
+                <div x-show="activeTab === 'attributes'" class="p-5 lg:p-8">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-                @if($hasVariants)
-                {{-- Variant matrix table --}}
-                <div class="overflow-x-auto rounded-xl border border-slate-100 mb-6">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="bg-slate-50 border-b border-slate-100">
-                                @foreach($product->variantTypes->filter(fn($t) => $t->activeOptions->isNotEmpty()) as $vt)
-                                <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">{{ $vt->name }}</th>
-                                @endforeach
-                                <th class="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Price Adjustment</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @foreach($product->variantTypes->filter(fn($t) => $t->activeOptions->isNotEmpty()) as $vt)
-                            @foreach($vt->activeOptions as $opt)
-                            <tr class="hover:bg-orange-50/40 transition">
-                                <td class="px-4 py-3 font-semibold text-slate-800">{{ $opt->value }}</td>
-                                @foreach($product->variantTypes->filter(fn($t) => $t->activeOptions->isNotEmpty())->skip(1) as $dummy)
-                                <td class="px-4 py-3 text-slate-400">—</td>
-                                @endforeach
-                                <td class="px-4 py-3 text-right tabular-nums font-semibold {{ $opt->price_adjustment_pkr > 0 ? 'text-rose-600' : ($opt->price_adjustment_pkr < 0 ? 'text-emerald-600' : 'text-slate-400') }}">
-                                    @if($opt->price_adjustment_pkr == 0) No adjustment
-                                    @else {{ $opt->price_adjustment_pkr > 0 ? '+' : '' }}{{ \App\Services\CurrencyService::format((float)$opt->price_adjustment_pkr) }}
+                        {{-- Attribute table --}}
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wider">Product Specifications</h3>
+                            <div class="rounded-xl overflow-hidden border border-slate-100">
+                                <table class="w-full text-sm">
+                                    <tbody class="divide-y divide-slate-100">
+                                    @php $attrs = [
+                                        ['label' => 'SKU / Item No.',    'value' => $product->sku],
+                                        ['label' => 'Category',          'value' => $catName],
+                                        ['label' => 'Unit',              'value' => $unit],
+                                        ['label' => 'Pieces Per Carton', 'value' => $pcsCarton ? number_format($pcsCarton) : null],
+                                        ['label' => 'Min. Order Qty',    'value' => $moq . ' ' . $unit],
+                                        ['label' => 'Origin',            'value' => 'China (Huashu)'],
+                                        ['label' => 'Payment Terms',     'value' => 'PKR — Prepaid via OZ Portal'],
+                                        ['label' => 'Lead Time',         'value' => '3 – 7 Business Days'],
+                                    ]; @endphp
+                                    @foreach($attrs as $row)
+                                    @if($row['value'])
+                                    <tr class="rpdp-attr-row">
+                                        <td class="text-slate-400 font-medium w-2/5 bg-slate-50/70">{{ $row['label'] }}</td>
+                                        <td class="text-slate-800 font-semibold">{{ $row['value'] }}</td>
+                                    </tr>
                                     @endif
-                                </td>
-                            </tr>
-                            @endforeach
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                @endif
+                                    @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
 
-                {{-- Packing info cards --}}
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-slate-50 rounded-xl p-4 flex items-start gap-3">
-                        <div class="w-9 h-9 rounded-lg bg-brand/10 flex items-center justify-center shrink-0">
-                            <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/></svg>
-                        </div>
+                        {{-- Description --}}
                         <div>
-                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-0.5">Carton Size</p>
-                            <p class="text-sm font-semibold text-slate-800">{{ $pcsCarton ? number_format($pcsCarton).' pcs' : 'Contact us' }}</p>
-                            <p class="text-xs text-slate-400">per carton unit</p>
+                            <h3 class="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wider">Description</h3>
+                            @php
+                                $descText = $isZh && ($product->description_zh ?? null)
+                                    ? $product->description_zh
+                                    : ($product->description_en ?? null);
+                            @endphp
+                            @if($descText)
+                            <p class="text-sm text-slate-600 leading-relaxed">{{ $descText }}</p>
+                            @else
+                            <p class="text-sm text-slate-400 italic">No description available for this product.</p>
+                            @endif
                         </div>
-                    </div>
-                    <div class="bg-slate-50 rounded-xl p-4 flex items-start gap-3">
-                        <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-                        </div>
-                        <div>
-                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-0.5">Shipping</p>
-                            <p class="text-sm font-semibold text-slate-800">3–7 Business Days</p>
-                            <p class="text-xs text-slate-400">China → Pakistan</p>
-                        </div>
-                    </div>
-                    <div class="bg-slate-50 rounded-xl p-4 flex items-start gap-3">
-                        <div class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
-                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                        </div>
-                        <div>
-                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-0.5">Quality</p>
-                            <p class="text-sm font-semibold text-slate-800">OZ Verified</p>
-                            <p class="text-xs text-slate-400">Huashu sourced</p>
-                        </div>
+
                     </div>
                 </div>
-            </div>
 
-            {{-- ── TAB: Product Details (images + desc) ─────────────── --}}
-            <div x-show="activeTab === 'details'" x-cloak class="p-5 lg:p-8">
-                <h3 class="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wider">Product Images & Description</h3>
+                {{-- ── TAB: Packing ──────────────────────────────── --}}
+                <div x-show="activeTab === 'packing'" x-cloak class="p-5 lg:p-8">
+                    <h3 class="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wider">Packing & Variant Details</h3>
 
-                @if($allImages->count())
-                <div class="flex flex-col gap-6 mb-6">
-                    @foreach($allImages as $src)
-                    <img src="{{ $src }}" alt="{{ $name }}" loading="lazy"
-                         class="w-full max-w-2xl mx-auto rounded-xl shadow-sm object-contain"
-                         onerror="this.remove()" />
-                    @endforeach
+                    @if($hasVariants)
+                    <div class="overflow-x-auto rounded-xl border border-slate-100 mb-6">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-100">
+                                    @foreach($product->variantTypes->filter(fn($t) => $t->activeOptions->isNotEmpty()) as $vt)
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">{{ $vt->name }}</th>
+                                    @endforeach
+                                    <th class="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Price Adjustment</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @foreach($product->variantTypes->filter(fn($t) => $t->activeOptions->isNotEmpty()) as $vt)
+                                @foreach($vt->activeOptions as $opt)
+                                <tr class="hover:bg-orange-50/40 transition">
+                                    <td class="px-4 py-3 font-semibold text-slate-800">{{ $opt->value }}</td>
+                                    @foreach($product->variantTypes->filter(fn($t) => $t->activeOptions->isNotEmpty())->skip(1) as $dummy)
+                                    <td class="px-4 py-3 text-slate-400">—</td>
+                                    @endforeach
+                                    <td class="px-4 py-3 text-right tabular-nums font-semibold {{ $opt->price_adjustment_pkr > 0 ? 'text-rose-600' : ($opt->price_adjustment_pkr < 0 ? 'text-emerald-600' : 'text-slate-400') }}">
+                                        @if($opt->price_adjustment_pkr == 0) No adjustment
+                                        @else {{ $opt->price_adjustment_pkr > 0 ? '+' : '' }}{{ \App\Services\CurrencyService::format((float)$opt->price_adjustment_pkr) }}
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @endif
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="bg-slate-50 rounded-xl p-4 flex items-start gap-3">
+                            <div class="w-9 h-9 rounded-lg bg-brand/10 flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/></svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-0.5">Carton Size</p>
+                                <p class="text-sm font-semibold text-slate-800">{{ $pcsCarton ? number_format($pcsCarton).' pcs' : 'Contact us' }}</p>
+                                <p class="text-xs text-slate-400">per carton unit</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 rounded-xl p-4 flex items-start gap-3">
+                            <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-0.5">Shipping</p>
+                                <p class="text-sm font-semibold text-slate-800">3–7 Business Days</p>
+                                <p class="text-xs text-slate-400">China → Pakistan</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 rounded-xl p-4 flex items-start gap-3">
+                            <div class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-0.5">Quality</p>
+                                <p class="text-sm font-semibold text-slate-800">OZ Verified</p>
+                                <p class="text-xs text-slate-400">Huashu sourced</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                @endif
 
-                @if($descText ?? null)
-                <div class="prose prose-sm max-w-none text-slate-600">
-                    <p>{{ $descText }}</p>
+                {{-- ── TAB: Product Details ───────────────────────── --}}
+                <div x-show="activeTab === 'details'" x-cloak class="p-5 lg:p-8">
+                    <h3 class="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wider">Product Images & Description</h3>
+
+                    @if($allImages->count())
+                    <div class="flex flex-col gap-6 mb-6">
+                        @foreach($allImages as $src)
+                        <img src="{{ $src }}" alt="{{ $name }}" loading="lazy"
+                             class="w-full max-w-2xl mx-auto rounded-xl shadow-sm object-contain"
+                             onerror="this.remove()" />
+                        @endforeach
+                    </div>
+                    @endif
+
+                    @if($descText ?? null)
+                    <div class="prose prose-sm max-w-none text-slate-600">
+                        <p>{{ $descText }}</p>
+                    </div>
+                    @else
+                    <p class="text-sm text-slate-400 italic text-center py-8">No additional details available for this product.</p>
+                    @endif
                 </div>
-                @else
-                <p class="text-sm text-slate-400 italic text-center py-8">No additional details available for this product.</p>
-                @endif
-            </div>
 
-            {{-- ── TAB: Reviews ─────────────────────────────────────── --}}
-            <div x-show="activeTab === 'reviews'" x-cloak class="p-5 lg:p-8">
-                <div class="flex flex-col sm:flex-row gap-8">
-                    {{-- Star summary --}}
-                    <div class="sm:w-48 text-center">
-                        <p class="text-6xl font-black text-slate-900 leading-none mb-1">—</p>
-                        <div class="flex justify-center gap-0.5 mb-1">
-                            @for($s = 1; $s <= 5; $s++)
-                            <svg class="w-5 h-5 text-slate-200" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                {{-- ── TAB: Reviews ──────────────────────────────── --}}
+                <div x-show="activeTab === 'reviews'" x-cloak class="p-5 lg:p-8">
+                    @php
+                        try {
+                            $reviews   = $product->reviews()->get();
+                        } catch (\Throwable $e) {
+                            // product_reviews table may not exist yet — show empty state
+                            $reviews = collect();
+                        }
+                        $avgRating = $reviews->avg('rating') ?? 0;
+                        $total     = $reviews->count();
+                        $rounded   = round($avgRating, 1);
+                    @endphp
+
+                    @if($total > 0)
+                    {{-- ── Summary tile ───────────────────────────── --}}
+                    <div class="flex flex-col sm:flex-row gap-8 mb-8">
+                        <div class="sm:w-44 text-center shrink-0">
+                            <p class="text-6xl font-black text-slate-900 leading-none mb-1">{{ number_format($rounded, 1) }}</p>
+                            <div class="flex justify-center gap-0.5 mb-1">
+                                @for($s = 1; $s <= 5; $s++)
+                                <svg class="w-5 h-5 {{ $s <= round($rounded) ? 'text-amber-400' : 'text-slate-200' }}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                @endfor
+                            </div>
+                            <p class="text-xs text-slate-400">{{ $total }} {{ Str::plural('review', $total) }}</p>
+                        </div>
+                        {{-- rating bars --}}
+                        <div class="flex-1 flex flex-col justify-center gap-1.5">
+                            @for($star = 5; $star >= 1; $star--)
+                            @php $count = $reviews->where('rating', $star)->count(); $pct = $total ? round($count / $total * 100) : 0; @endphp
+                            <div class="flex items-center gap-2 text-xs text-slate-500">
+                                <span class="w-4 text-right font-semibold">{{ $star }}</span>
+                                <svg class="w-3.5 h-3.5 text-amber-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                <div class="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
+                                    <div class="bg-amber-400 h-2 rounded-full" style="width:{{ $pct }}%"></div>
+                                </div>
+                                <span class="w-8 text-right">{{ $count }}</span>
+                            </div>
                             @endfor
                         </div>
-                        <p class="text-xs text-slate-400">No reviews yet</p>
                     </div>
-                    {{-- CTA --}}
-                    <div class="flex-1 flex flex-col items-center justify-center text-center py-8 border-2 border-dashed border-slate-200 rounded-xl">
+
+                    {{-- ── Individual reviews ─────────────────────── --}}
+                    <div class="divide-y divide-slate-100">
+                        @foreach($reviews as $review)
+                        <div class="py-5 first:pt-0">
+                            <div class="flex items-start gap-3">
+                                <div class="w-9 h-9 rounded-full bg-brand/10 flex items-center justify-center shrink-0 text-brand font-bold text-sm">
+                                    {{ strtoupper(substr($review->reviewer_name, 0, 1)) }}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex flex-wrap items-center gap-2 mb-1">
+                                        <div class="flex gap-0.5">
+                                            @for($s = 1; $s <= 5; $s++)
+                                            <svg class="w-3.5 h-3.5 {{ $s <= $review->rating ? 'text-amber-400' : 'text-slate-200' }}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                            @endfor
+                                        </div>
+                                        @if($review->title)
+                                        <span class="text-sm font-semibold text-slate-800">{{ $review->title }}</span>
+                                        @endif
+                                    </div>
+                                    <p class="text-xs text-slate-500 mb-2">
+                                        <span class="font-medium text-slate-700">{{ $review->reviewer_name }}</span>
+                                        @if($review->reviewer_location)
+                                        · {{ $review->reviewer_location }}
+                                        @endif
+                                        @if($review->verified_purchase)
+                                        · <span class="text-emerald-600 font-medium">✓ Verified Purchase</span>
+                                        @endif
+                                        · <span>{{ $review->created_at->diffForHumans() }}</span>
+                                    </p>
+                                    <p class="text-sm text-slate-600 leading-relaxed">{{ $review->body }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+
+                    @else
+                    {{-- empty state --}}
+                    <div class="flex flex-col items-center justify-center text-center py-12 border-2 border-dashed border-slate-200 rounded-xl">
                         <svg class="w-10 h-10 text-brand/30 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
                         <p class="text-sm font-semibold text-slate-700 mb-1">No Reviews Yet</p>
                         <p class="text-xs text-slate-400">Purchase this product and share your experience.</p>
                     </div>
-                </div>
-            </div>
+                    @endif
 
-        </div>{{-- /tab card --}}
+                    {{-- ── Write a review ──────────────────────────── --}}
+                    @if($reviewSubmitted)
+                    <div class="mt-6 p-5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3">
+                        <svg class="w-5 h-5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <p class="text-sm font-semibold text-emerald-700">Thank you! Your review has been submitted.</p>
+                    </div>
+                    @elseif($retailerReviewCount >= $reviewLimit)
+                    <div class="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+                        <svg class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            <p class="text-sm font-semibold text-amber-800">Review limit reached</p>
+                            <p class="text-xs text-amber-700 mt-0.5">
+                                You have submitted {{ $retailerReviewCount }} {{ Str::plural('review', $retailerReviewCount) }} for this product
+                                (maximum allowed: {{ $reviewLimit }}).
+                            </p>
+                        </div>
+                    </div>
+                    @else
+                    <div class="mt-8 border-t border-slate-100 pt-7">
+                        <h4 class="text-sm font-bold text-slate-800 mb-5">Write a Review</h4>
+
+                        {{-- Star picker --}}
+                        <div class="mb-4">
+                            <p class="text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">Your Rating <span class="text-red-400">*</span></p>
+                            <div class="flex gap-1" x-data="{ hovered: 0, rating: $wire.entangle('reviewRating') }">
+                                @for($s = 1; $s <= 5; $s++)
+                                <button type="button"
+                                    @mouseover="hovered = {{ $s }}"
+                                    @mouseleave="hovered = 0"
+                                    @click="rating = {{ $s }}"
+                                    class="transition-transform hover:scale-110 focus:outline-none"
+                                    title="{{ $s }} star{{ $s > 1 ? 's' : '' }}">
+                                    <svg class="w-8 h-8 transition-colors"
+                                         :class="(hovered >= {{ $s }} || rating >= {{ $s }}) ? 'text-amber-400' : 'text-slate-200'"
+                                         fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                </button>
+                                @endfor
+                            </div>
+                            @error('reviewRating') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        </div>
+
+                        {{-- Title --}}
+                        <div class="mb-4">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Review Title <span class="text-slate-400 font-normal normal-case">(optional)</span></label>
+                            <input type="text"
+                                   wire:model="reviewTitle"
+                                   maxlength="120"
+                                   placeholder="e.g. Great quality, fast delivery"
+                                   class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand placeholder-slate-300 transition" />
+                            @error('reviewTitle') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        </div>
+
+                        {{-- Body --}}
+                        <div class="mb-5">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Your Review <span class="text-red-400">*</span></label>
+                            <textarea wire:model="reviewBody"
+                                      rows="4"
+                                      maxlength="1000"
+                                      placeholder="Share your experience with this product — quality, packaging, delivery, suitability for resale..."
+                                      class="w-full text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand placeholder-slate-300 resize-none transition"></textarea>
+                            @error('reviewBody') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        </div>
+
+                        <button wire:click="submitReview"
+                                wire:loading.attr="disabled"
+                                wire:loading.class="opacity-60 cursor-not-allowed"
+                                class="inline-flex items-center gap-2 bg-brand text-white text-sm font-semibold px-6 py-2.5 rounded-lg hover:bg-brand/90 transition focus:outline-none focus:ring-2 focus:ring-brand/40">
+                            <span wire:loading.remove wire:target="submitReview">Submit Review</span>
+                            <span wire:loading wire:target="submitReview" class="flex items-center gap-2">
+                                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                                </svg>
+                                Submitting…
+                            </span>
+                        </button>
+                    </div>
+                    @endif
+                </div>
+
+            </div>{{-- /tabs card --}}
+        </div>{{-- /full-width tabs --}}
 
         {{-- ══ SUPPLIER CARD ════════════════════════════════════════════ --}}
-        <div class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl overflow-hidden mb-6">
+        <div class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl overflow-hidden mt-5 mb-5">
             <div class="flex items-stretch">
                 <div class="bg-brand w-2 shrink-0"></div>
                 <div class="flex-1 p-5 lg:p-7 flex flex-col sm:flex-row gap-5 items-start sm:items-center">
@@ -600,37 +778,63 @@ $maxQty    = $stockTracked ? $available : 9999;
                 <span class="text-xs text-slate-400 ml-auto">{{ $related->count() }} items</span>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;">
                 @foreach($related as $rel)
                 @php
-                    $relPrice  = $rel->min_price;
+                    $relPrice  = isset($commissionRates) && isset($commissionRates[$rel->id])
+                        ? ($rel->min_price ? $rel->min_price * (1 + $commissionRates[$rel->id] / 100) : null)
+                        : $rel->min_price;
                     $relThumb  = ($rel->images->firstWhere('is_primary', true) ?? $rel->images->first())?->display_url
                         ?? ($rel->image_path ? asset('storage/'.$rel->image_path) : null);
                     $relName   = $isZh && ($rel->name_zh ?? null) ? $rel->name_zh : $rel->name_en;
+                    $relCat    = $rel->category ? ($isZh && ($rel->category->name_zh ?? null) ? $rel->category->name_zh : $rel->category->name) : null;
+                    $relRating = isset($rel->rating) && $rel->rating !== null ? (float) $rel->rating : null;
+                    $relRatingInt = $relRating !== null ? (int) round($relRating) : 0;
+                    $relSold   = isset($rel->sold_count) && $rel->sold_count > 0
+                        ? ($rel->sold_count >= 1000 ? round($rel->sold_count / 1000, 1).'k' : $rel->sold_count)
+                        : null;
                 @endphp
                 <a href="{{ route('retailer.catalogue.product', $rel) }}"
-                   class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden flex flex-col group hover:shadow-md hover:border-orange-100 transition-all duration-150 relative">
-                    <div class="aspect-square bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
+                   class="group bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col">
+                    <div class="aspect-square relative overflow-hidden bg-slate-50">
                         @if($relThumb)
                         <img src="{{ $relThumb }}" alt="{{ $relName }}" loading="lazy"
                              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                             onerror="this.parentElement.innerHTML=''" />
+                             onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\'><svg class=\'w-8 h-8 text-slate-200\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1\' d=\'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10\'/></svg></div>'" />
                         @else
                         <div class="w-full h-full flex items-center justify-center">
-                            <svg class="w-8 h-8 text-brand/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/></svg>
+                            <svg class="w-8 h-8 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/></svg>
                         </div>
                         @endif
-                        <div class="absolute inset-0 bg-brand/0 group-hover:bg-brand/5 transition-colors duration-200 flex items-end justify-center pb-2 opacity-0 group-hover:opacity-100">
-                            <span class="bg-brand text-white text-xs font-bold px-3 py-1 rounded-full shadow">View →</span>
-                        </div>
+                        @if($relCat)
+                        <span class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/55 to-transparent px-2 py-1.5 pointer-events-none">
+                            <span class="text-white text-[9px] truncate block leading-tight">{{ $relCat }}</span>
+                        </span>
+                        @endif
                     </div>
-                    <div class="p-3">
-                        <h3 class="text-xs font-semibold text-slate-800 leading-snug line-clamp-2 mb-1.5">{{ $relName }}</h3>
-                        @if($relPrice)
-                        <p class="text-sm font-bold text-brand tabular-nums">{{ \App\Services\CurrencyService::format($relPrice) }}</p>
-                        @else
-                        <p class="text-xs text-slate-400 italic">Contact for price</p>
+                    <div class="p-2.5 flex flex-col flex-1">
+                        <p class="text-xs font-medium text-slate-700 line-clamp-2 leading-snug flex-1 mb-1">{{ $relName }}</p>
+                        @if($relRating !== null || $relSold !== null)
+                        <div class="flex items-center gap-1.5 mb-1">
+                            @if($relRating !== null)
+                            <span class="flex items-center gap-0.5">
+                                @for($s = 1; $s <= 5; $s++)
+                                <svg class="w-2.5 h-2.5 {{ $s <= $relRatingInt ? 'text-amber-400' : 'text-slate-200' }}" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                @endfor
+                            </span>
+                            @endif
+                            @if($relSold !== null)
+                            <span class="text-[9px] text-slate-400">{{ $relSold }} sold</span>
+                            @endif
+                        </div>
                         @endif
+                        <div class="flex items-center justify-between gap-1 mt-auto">
+                            @if($relPrice)
+                            <x-price :value="$relPrice" class="text-xs font-extrabold text-brand" />
+                            @else
+                            <span class="text-[9px] text-slate-400 italic">Ask for price</span>
+                            @endif
+                        </div>
                     </div>
                 </a>
                 @endforeach

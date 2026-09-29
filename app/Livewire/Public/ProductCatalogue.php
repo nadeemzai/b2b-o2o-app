@@ -8,21 +8,22 @@ use App\Models\Product;
 use App\Services\PricingService;
 use Livewire\Component;
 use Livewire\Attributes\Url;
-use Livewire\WithPagination;
+
 
 class ProductCatalogue extends Component
 {
-    use WithPagination;
 
     #[Url]
     public string $search     = '';
     #[Url(as: 'category')]
     public string $categoryId = '';
     public string $sortBy     = 'name_asc';
+    public int    $perPage   = 50;
 
-    public function updatingSearch(): void     { $this->resetPage(); }
-    public function updatingCategoryId(): void { $this->resetPage(); }
-    public function updatingSortBy(): void     { $this->resetPage(); }
+    public function updatingSearch(): void     { $this->perPage = 50; }
+    public function updatingCategoryId(): void { $this->perPage = 50; }
+    public function updatingSortBy(): void     { $this->perPage = 50; }
+    public function loadMore(): void { $this->perPage += 50; }
 
     public function render(PricingService $pricing)
     {
@@ -54,14 +55,16 @@ class ProductCatalogue extends Component
             default      => $query->orderBy('name_en'),
         };
 
-        $products = $query->paginate(24);
+        $total    = (clone $query)->count();
+        $products = $query->take($this->perPage)->get();
+        $hasMore  = $total > $this->perPage;
 
         // Batch commission rates — no N+1
         $categoryIds     = $products->pluck('category_id')->unique()->filter()->values()->all();
         $commissionRates = $pricing->ratesForCategories($categoryIds);
 
         $categories    = Category::orderBy('name')->get(['id', 'name', 'name_zh', 'slug']);
-        $totalProducts = $products->total();
+        $totalProducts = $total;
 
         return view('livewire.public.product-catalogue', [
             'sections'    => $sections,
@@ -70,6 +73,7 @@ class ProductCatalogue extends Component
             'categories'      => $categories,
             'totalProducts'   => $totalProducts,
             'commissionRates' => $commissionRates,
+            'hasMore'         => $hasMore,
         ])->layout('layouts.public', ['title' => 'Product Catalogue']);
     }
 }

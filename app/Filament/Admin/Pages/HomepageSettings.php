@@ -18,15 +18,17 @@ class HomepageSettings extends Page
 
     public bool $dealsActive       = true;
     public bool $newArrivalsActive = true;
+    public bool $showStockBadge    = false;
 
     public function mount(): void
     {
-        $sections = HomepageSection::whereIn('key', ['deals', 'new_arrivals'])
+        $sections = HomepageSection::whereIn('key', ['deals', 'new_arrivals', 'show_stock_badge'])
             ->get()
             ->keyBy('key');
 
         $this->dealsActive       = (bool) ($sections->get('deals')?->is_active ?? true);
         $this->newArrivalsActive = (bool) ($sections->get('new_arrivals')?->is_active ?? true);
+        $this->showStockBadge    = (bool) ($sections->get('show_stock_badge')?->is_active ?? false);
     }
 
     protected function getHeaderActions(): array
@@ -47,6 +49,9 @@ class HomepageSettings extends Page
 
         HomepageSection::where('key', 'new_arrivals')
             ->update(['is_active' => $this->newArrivalsActive]);
+
+        HomepageSection::where('key', 'show_stock_badge')
+            ->update(['is_active' => $this->showStockBadge]);
 
         Notification::make()
             ->title('Homepage sections updated')

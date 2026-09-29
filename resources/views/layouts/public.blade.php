@@ -139,6 +139,59 @@
             <div class="mx-5 my-2 border-t border-slate-100"></div>
             <p class="px-5 pb-1 text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Retailer Access</p>
 
+            @auth('retailer')
+            {{-- My Account --}}
+            <a href="{{ route('retailer.home') }}" @click="navOpen = false"
+               class="flex items-center gap-4 px-5 py-4 group transition border-l-4 border-brand bg-orange-50">
+                <div class="w-10 h-10 rounded-xl bg-brand text-white flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-brand">My Account</p>
+                    <p class="text-[11px] text-slate-400">{{ auth('retailer')->user()->business_name ?? 'Retailer Portal' }}</p>
+                </div>
+                <svg class="w-4 h-4 text-brand/60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+
+            {{-- My Orders --}}
+            <a href="{{ route('retailer.orders') }}" @click="navOpen = false"
+               class="flex items-center gap-4 px-5 py-4 group transition border-l-4 border-transparent hover:bg-orange-50 hover:border-brand/40">
+                <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-brand flex items-center justify-center shrink-0 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-slate-800 group-hover:text-brand transition">My Orders</p>
+                    <p class="text-[11px] text-slate-400">Track & manage orders</p>
+                </div>
+                <svg class="w-4 h-4 text-slate-300 group-hover:text-brand/60 transition shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+
+            {{-- Sign Out --}}
+            <form method="POST" action="{{ route('retailer.logout') }}" @click="navOpen = false">
+                @csrf
+                <button type="submit"
+                        class="w-full flex items-center gap-4 px-5 py-4 group transition border-l-4 border-transparent hover:bg-red-50 hover:border-red-300 text-left">
+                    <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 group-hover:bg-red-100 group-hover:text-red-500 flex items-center justify-center shrink-0 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-slate-800 group-hover:text-red-600 transition">Sign Out</p>
+                        <p class="text-[11px] text-slate-400">Leave retailer portal</p>
+                    </div>
+                </button>
+            </form>
+
+            @else
             {{-- Sign In --}}
             <a href="{{ route('retailer.login') }}" @click="navOpen = false"
                class="flex items-center gap-4 px-5 py-4 group transition border-l-4 border-transparent hover:bg-orange-50 hover:border-brand/40">
@@ -172,6 +225,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
             </a>
+            @endauth
 
         </nav>
 
@@ -195,8 +249,16 @@
                 @livewire('language-switcher')
                 @livewire('currency-switcher')
                 <span class="text-slate-600 hidden sm:inline">|</span>
+                @auth('retailer')
+                <a href="{{ route('retailer.home') }}" class="hidden sm:inline hover:text-white transition text-orange-300">My Account</a>
+                <form method="POST" action="{{ route('retailer.logout') }}" class="hidden sm:inline">
+                    @csrf
+                    <button type="submit" class="hover:text-white transition cursor-pointer">Sign Out</button>
+                </form>
+                @else
                 <a href="{{ route('retailer.login') }}" class="hidden sm:inline hover:text-white transition">Sign In</a>
                 <a href="{{ route('retailer.register') }}" class="hidden sm:inline hover:text-white transition text-orange-400">Register</a>
+                @endauth
             </div>
         </div>
     </div>
@@ -209,7 +271,7 @@
     <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center gap-4 lg:gap-6 h-[60px]">
 
-            {{-- Logo --}}
+            {{-- Logo — goes to retailer portal when logged in, public home otherwise --}}
             <a href="{{ route('public.home') }}" class="shrink-0 flex items-baseline gap-1">
                 <span class="text-brand font-black text-2xl tracking-tight leading-none">OZ</span>
                 <span class="text-slate-700 font-bold text-[13px] leading-none">Wholesale</span>
@@ -240,9 +302,29 @@
                     {{-- Text input --}}
                     <input type="text"
                            name="search"
+                           id="header-search-input"
                            value="{{ request('search') }}"
                            placeholder="Search products, brands, suppliers..."
                            class="flex-1 h-[42px] px-4 text-sm text-slate-800 placeholder-slate-400 focus:outline-none min-w-0 bg-white" />
+                    {{-- Camera / image search button --}}
+                    <button type="button"
+                            id="image-search-btn"
+                            title="Search by image"
+                            class="h-[42px] px-3 border-l border-slate-200 bg-white hover:bg-orange-50 text-slate-400 hover:text-brand transition shrink-0 flex items-center">
+                        {{-- camera icon --}}
+                        <svg id="img-search-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        {{-- spinner shown while uploading --}}
+                        <svg id="img-search-spinner" class="w-5 h-5 animate-spin hidden text-brand" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                        </svg>
+                    </button>
+                    {{-- Hidden file input for image upload --}}
+                    <input type="file" id="image-search-file" accept="image/*" class="hidden" />
                     {{-- Search button --}}
                     <button type="submit"
                             class="h-[42px] px-5 lg:px-7 bg-brand hover:bg-brand-dark text-white font-semibold text-sm transition shrink-0 flex items-center gap-2">
@@ -254,9 +336,36 @@
                 </div>
             </form>
 
+            {{-- Image-search toast for errors --}}
+            @if(session('image_search_error'))
+            <div id="img-search-error"
+                 class="absolute top-full left-0 right-0 mt-1 mx-2 bg-red-50 border border-red-200 text-red-700 text-xs rounded px-3 py-2 shadow z-50">
+                {{ session('image_search_error') }}
+            </div>
+            @endif
+
             {{-- Right-side action icons --}}
             <div class="flex items-center shrink-0">
 
+                @auth('retailer')
+                {{-- My Account --}}
+                <a href="{{ route('retailer.home') }}"
+                   class="flex flex-col items-center gap-0.5 px-2.5 py-2 text-brand rounded hover:bg-orange-50 transition group">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <span class="text-[9px] font-semibold whitespace-nowrap">My Account</span>
+                </a>
+
+                {{-- My Orders --}}
+                <a href="{{ route('retailer.orders') }}"
+                   class="flex flex-col items-center gap-0.5 px-2.5 py-2 text-slate-500 hover:text-brand rounded hover:bg-orange-50 transition group">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <span class="text-[9px] font-semibold whitespace-nowrap group-hover:text-brand">My Orders</span>
+                </a>
+                @else
                 {{-- Sign In --}}
                 <a href="{{ route('retailer.login') }}"
                    class="flex flex-col items-center gap-0.5 px-2.5 py-2 text-slate-500 hover:text-brand rounded hover:bg-orange-50 transition group">
@@ -274,6 +383,7 @@
                     </svg>
                     <span class="text-[9px] font-semibold whitespace-nowrap group-hover:text-brand">Register</span>
                 </a>
+                @endauth
 
             </div>
         </div>
@@ -335,6 +445,84 @@
 <footer class="text-center text-slate-400 text-xs py-4 border-t border-slate-200 bg-white mt-4">
     OZ Tech &mdash; B2B Wholesale Portal &copy; {{ date('Y') }}
 </footer>
+
+
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+{{-- IMAGE SEARCH JS                                                             --}}
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+<script>
+(function () {
+    document.addEventListener('DOMContentLoaded', function () {
+        var btn      = document.getElementById('image-search-btn');
+        var fileInput= document.getElementById('image-search-file');
+        var icon     = document.getElementById('img-search-icon');
+        var spinner  = document.getElementById('img-search-spinner');
+        var errorBox = document.getElementById('img-search-error');
+
+        if (!btn || !fileInput) return;
+
+        // Click camera icon → open file picker
+        btn.addEventListener('click', function () {
+            fileInput.click();
+        });
+
+        // File selected → submit to /image-search
+        fileInput.addEventListener('change', function () {
+            var file = fileInput.files[0];
+            if (!file) return;
+
+            // Show spinner
+            icon.classList.add('hidden');
+            spinner.classList.remove('hidden');
+            btn.disabled = true;
+
+            var formData = new FormData();
+            formData.append('image', file);
+            formData.append('_token', '{{ csrf_token() }}');
+
+            fetch('{{ route("image.search") }}', {
+                method: 'POST',
+                body: formData,
+                redirect: 'follow',
+                credentials: 'same-origin',
+            })
+            .then(function (response) {
+                // Laravel redirects after POST → follow to final URL
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    // Non-redirect — show generic error
+                    showError('Image search failed. Please try again.');
+                }
+            })
+            .catch(function () {
+                showError('Network error. Please try again.');
+            })
+            .finally(function () {
+                icon.classList.remove('hidden');
+                spinner.classList.add('hidden');
+                btn.disabled = false;
+                fileInput.value = '';
+            });
+        });
+
+        function showError(msg) {
+            if (!errorBox) {
+                var box = document.createElement('div');
+                box.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#fef2f2;border:1px solid #fca5a5;color:#b91c1c;padding:8px 16px;border-radius:6px;font-size:13px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,.12)';
+                box.textContent = msg;
+                document.body.appendChild(box);
+                setTimeout(function () { box.remove(); }, 4000);
+            }
+        }
+
+        // Auto-dismiss session error toast
+        if (errorBox) {
+            setTimeout(function () { errorBox.style.display = 'none'; }, 5000);
+        }
+    });
+})();
+</script>
 
 </body>
 </html>

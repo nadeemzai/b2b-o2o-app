@@ -88,7 +88,7 @@ class Register extends Component
             'kyc_documents' => $documents,
         ]);
 
-        Auth::login($user);
+        Auth::guard('retailer')->login($user);
         session()->regenerate();
 
         $this->redirect(route('retailer.pending'), navigate: true);

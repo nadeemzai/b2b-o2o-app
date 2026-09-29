@@ -51,7 +51,7 @@ class CartPage extends Component
         }
 
         /** @var Retailer $retailer */
-        $retailer = auth()->user()->retailerProfile;
+        $retailer = auth('retailer')->user()->retailerProfile;
 
         // Build items array in the format OrderService expects.
         // Variant items and plain items both carry 'product_id' in their data.
