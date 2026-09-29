@@ -18,7 +18,7 @@ class ProductDetail extends Component
         // If a retailer is already logged in, send them to the retailer detail page
         // where they get real pricing, variant selection, and add-to-cart.
         if (auth('retailer')->check()) {
-            redirect()->route('retailer.catalogue.product', $product)->send();
+            redirect()->route('retailer.catalogue.product', $product);
             return;
         }
 
