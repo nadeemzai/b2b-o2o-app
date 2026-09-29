@@ -62,6 +62,7 @@ class Homepage extends Component
             'sections'    => $sections,
             'newArrivals' => $newArrivals,
             'hasMore'     => $hasMore,
+            'productRoute' => auth('retailer')->check() ? 'retailer.catalogue.product' : 'public.product',
         ])->layout('layouts.public', ['title' => 'OZ B2B Wholesale Marketplace']);
     }
 }

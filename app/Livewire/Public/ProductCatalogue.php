@@ -74,6 +74,7 @@ class ProductCatalogue extends Component
             'totalProducts'   => $totalProducts,
             'commissionRates' => $commissionRates,
             'hasMore'         => $hasMore,
+            'productRoute'    => auth('retailer')->check() ? 'retailer.catalogue.product' : 'public.product',
         ])->layout('layouts.public', ['title' => 'Product Catalogue']);
     }
 }
