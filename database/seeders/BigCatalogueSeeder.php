@@ -210,12 +210,13 @@ class BigCatalogueSeeder extends Seeder
             $product = Product::firstOrCreate(
                 ['sku' => $sku],
                 [
-                    'name_en'           => $nameEn,
-                    'description_en'    => $desc,
-                    'category_id'       => $category->id,
-                    'unit'              => $unit,
-                    'pieces_per_carton' => $ppc,
-                    'is_active'         => true,
+                    'name_en'               => $nameEn,
+                    'description_en'        => $desc,
+                    'category_id'           => $category->id,
+                    'unit'                  => $unit,
+                    'pieces_per_carton'     => $ppc,
+                    'huashu_base_price_pkr' => $basePrice,
+                    'is_active'             => true,
                 ]
             );
             $productCount++;

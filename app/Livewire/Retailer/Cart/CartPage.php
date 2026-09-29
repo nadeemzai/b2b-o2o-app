@@ -84,8 +84,8 @@ class CartPage extends Component
 
         $cart->clear();
 
-        session()->put('order_placed_success', 'Order placed successfully! Your store will prepare it shortly.');
-        $this->redirect(route('retailer.orders'));
+        // session flash no longer needed — confirmation page shows the details
+        $this->redirect(route('retailer.orders.confirmation', $order));
     }
 
     public function render(CartService $cart)

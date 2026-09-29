@@ -6,7 +6,6 @@ use App\Filament\Admin\Resources\OrderResource\Pages;
 use App\Models\Order;
 use App\Models\TownshipStore;
 use App\Services\OrderService;
-use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
@@ -137,13 +136,7 @@ class OrderResource extends Resource
             Section::make('Payment Proof')
                 ->columns(1)
                 ->schema([
-                    ImageEntry::make('payment_proof_path')
-                        ->label('Uploaded Proof Image')
-                        ->disk('public')
-                        ->height(320)
-                        ->width('auto')
-                        ->extraImgAttributes(['class' => 'rounded-lg border border-gray-200 shadow-sm'])
-                        ->placeholder('No proof uploaded yet')
+                    InfolistView::make('filament.infolists.payment-proof-lightbox')
                         ->visible(fn (Order $record): bool => (bool) $record->payment_proof_path),
                     TextEntry::make('payment_proof_path')
                         ->label('Proof Status')

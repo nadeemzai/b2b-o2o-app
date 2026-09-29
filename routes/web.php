@@ -10,6 +10,7 @@ use App\Livewire\Retailer\Catalogue\ProductList;
 use App\Livewire\Retailer\Catalogue\ProductDetail as RetailerProductDetail;
 use App\Livewire\Retailer\Cart\CartPage;
 use App\Livewire\Retailer\Orders\OrderHistory;
+use App\Livewire\Retailer\Orders\OrderConfirmation;
 use App\Livewire\Public\ProductCatalogue;
 use App\Livewire\Public\ProductDetail as PublicProductDetail;
 use App\Livewire\Public\Homepage as PublicHome;
@@ -65,6 +66,7 @@ Route::prefix('retailer')->name('retailer.')->middleware(['auth:retailer', 'reta
     Route::get('/catalogue/{product}', RetailerProductDetail::class)->name('catalogue.product');
     Route::get('/cart',      CartPage::class)->name('cart');
     Route::get('/orders',    OrderHistory::class)->name('orders');
+    Route::get('/orders/{order}/confirmation', OrderConfirmation::class)->name('orders.confirmation');
 });
 
 // ── Logout ────────────────────────────────────────────────────
