@@ -113,7 +113,7 @@
                         </div>
                         @endif
                         @if($retailPrice)
-                        <p class="text-[12px] font-bold text-brand mt-0.5 tabular-nums">{{ \App\Services\CurrencyService::format($retailPrice) }}</p>
+                        <x-price :value="$retailPrice" class="text-[12px] font-bold text-brand mt-0.5" />
                         @else
                         <p class="text-[10px] text-slate-400 italic mt-0.5">{{ __('ui.contact_for_price') }}</p>
                         @endif
@@ -213,7 +213,7 @@
                                 @endif
                                 <div class="mt-auto pt-1.5 border-t border-slate-50">
                                     @if($retailPrice)
-                                    <p class="text-sm font-extrabold text-brand tabular-nums">{{ \App\Services\CurrencyService::format($retailPrice) }}</p>
+                                    <x-price :value="$retailPrice" class="text-sm font-extrabold text-brand" />
                                     @else
                                     <p class="text-xs text-slate-400 italic">{{ __('ui.contact_for_price') }}</p>
                                     @endif

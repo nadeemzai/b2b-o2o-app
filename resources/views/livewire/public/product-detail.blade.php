@@ -161,7 +161,7 @@ $descText  = $isZh && ($product->description_zh ?? null)
                             <p class="text-[11px] text-slate-400 font-semibold uppercase tracking-widest mb-1">Wholesale Price</p>
                             @if($minPrice)
                             <div class="flex items-end gap-3 flex-wrap">
-                                <span class="text-4xl font-black text-brand leading-none tabular-nums">{{ \App\Services\CurrencyService::format($minPrice) }}</span>
+                                <x-price :value="$minPrice" class="text-4xl font-black text-brand" />
                                 <span class="text-sm text-slate-400 pb-1">/ {{ $unit }}</span>
                             </div>
                             @if($moq > 1)
@@ -591,7 +591,7 @@ $descText  = $isZh && ($product->description_zh ?? null)
                     <div class="p-3">
                         <h3 class="text-xs font-semibold text-slate-800 leading-snug line-clamp-2 mb-1.5">{{ $relName }}</h3>
                         @if($relPrice)
-                        <p class="text-sm font-bold text-brand tabular-nums">{{ \App\Services\CurrencyService::format($relPrice) }}</p>
+                        <x-price :value="$relPrice" class="text-sm font-bold text-brand" />
                         @else
                         <p class="text-xs text-slate-400 italic">Sign in for price</p>
                         @endif

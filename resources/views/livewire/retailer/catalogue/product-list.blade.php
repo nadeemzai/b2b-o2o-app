@@ -218,7 +218,7 @@
                             <div class="mt-auto pt-1.5 border-t border-slate-50 flex items-center justify-between gap-1">
                                 <div class="min-w-0">
                                     @if($price > 0)
-                                    <p class="text-sm font-extrabold text-brand tabular-nums leading-none">{{ \App\Services\CurrencyService::format($price) }}</p>
+                                    <x-price :value="$price" class="text-sm font-extrabold text-brand" />
                                     @if($moq > 1)
                                     <p class="text-[9px] text-orange-400 font-medium mt-0.5">Min {{ $moq }} {{ $product->unit }}</p>
                                     @endif

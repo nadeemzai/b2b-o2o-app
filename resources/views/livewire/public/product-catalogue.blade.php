@@ -151,7 +151,7 @@
                             <div class="mt-1 mb-3">
                                 @if($minPrice)
                                 <p class="text-xl font-bold text-brand tabular-nums leading-none">
-                                    {{ \App\Services\CurrencyService::format($minPrice) }}
+                                    <x-price :value="$minPrice" />
                                 </p>
                                 <p class="text-[11px] text-slate-400 mt-0.5">
                                     {{ __('ui.per_unit') }} {{ $product->unit }}

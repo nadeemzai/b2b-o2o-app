@@ -216,7 +216,7 @@ $soldLabel = $soldCount > 0
                             <p class="text-[11px] text-slate-400 font-semibold uppercase tracking-widest mb-1">Your Store Price</p>
                             @if($price)
                             <div class="flex items-end gap-3 flex-wrap">
-                                <span class="text-4xl font-black text-brand leading-none tabular-nums">{{ \App\Services\CurrencyService::format($price) }}</span>
+                                <x-price :value="$price" class="text-4xl font-black text-brand" />
                                 <span class="text-sm text-slate-400 pb-1">/ {{ $unit }}</span>
                             </div>
                             @if($moq > 1)
@@ -830,7 +830,7 @@ $soldLabel = $soldCount > 0
                         @endif
                         <div class="flex items-center justify-between gap-1 mt-auto">
                             @if($relPrice)
-                            <span class="text-xs font-extrabold text-brand tabular-nums">{{ \App\Services\CurrencyService::format($relPrice) }}</span>
+                            <x-price :value="$relPrice" class="text-xs font-extrabold text-brand" />
                             @else
                             <span class="text-[9px] text-slate-400 italic">Ask for price</span>
                             @endif
