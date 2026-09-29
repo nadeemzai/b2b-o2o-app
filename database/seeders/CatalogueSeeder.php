@@ -65,7 +65,8 @@ class CatalogueSeeder extends Seeder
                 $product = Product::firstOrCreate(
                     ['sku' => $pd['sku']],
                     [
-                        'name_en'     => $pd['name'],
+                        'name_en'               => $pd['name'],
+                        'huashu_base_price_pkr' => $pd['price'],
                         'category_id' => $category->id,
                         'unit'        => $pd['unit'],
                         'is_active'   => true,

@@ -101,7 +101,7 @@
         <x-new-arrivals-carousel
             :products="$newArrivals"
             view-all-route="public.catalogue"
-            product-route="public.product"
+            :product-route="$productRoute"
             heading="New Arrivals"
             class="mb-6"
         />
@@ -125,7 +125,7 @@
         <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));">
             @foreach($products as $product)
             @php $minPrice = $product->min_price; @endphp
-            <a href="{{ route('public.product', $product) }}"
+            <a href="{{ route($productRoute, $product) }}"
                class="group bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col">
 
                 {{-- Image --}}

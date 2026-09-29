@@ -79,7 +79,7 @@
             <x-new-arrivals-carousel
                 :products="$newArrivals"
                 view-all-route="public.catalogue"
-                product-route="public.product"
+                :product-route="$productRoute"
                 heading="New Arrivals"
                 class="mb-4"
             />
@@ -116,7 +116,7 @@
 
                     <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden flex flex-col group hover:shadow-md hover:border-orange-100 transition-all duration-150">
 
-                        <a href="{{ route('public.product', $product) }}"
+                        <a href="{{ route($productRoute, $product) }}"
                            class="aspect-square bg-gradient-to-br from-slate-50 to-slate-100 relative overflow-hidden block">
                             @if($product->primaryImage())
                                 <img src="{{ $product->primaryImage()->display_url }}"
@@ -142,7 +142,7 @@
                         </a>
 
                         <div class="p-3 flex flex-col flex-1">
-                            <a href="{{ route('public.product', $product) }}" class="hover:text-brand transition">
+                            <a href="{{ route($productRoute, $product) }}" class="hover:text-brand transition">
                                 <h3 class="text-sm font-semibold text-slate-800 leading-snug line-clamp-2 mb-1 min-h-[2.5rem]">
                                     {{ app()->getLocale() === 'zh_CN' && $product->name_zh ? $product->name_zh : $product->name_en }}
                                 </h3>
@@ -163,7 +163,7 @@
                             </div>
 
                             <div class="mt-auto flex gap-2">
-                                <a href="{{ route('public.product', $product) }}"
+                                <a href="{{ route($productRoute, $product) }}"
                                    class="flex-1 py-2 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-1.5 border border-brand text-brand hover:bg-orange-50">
                                     {{ __('ui.view_details') }}
                                 </a>
