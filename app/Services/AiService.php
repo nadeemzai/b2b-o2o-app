@@ -20,9 +20,10 @@ class AiService
             'claude-sonnet-4-5' => 'Claude Sonnet 4.5  (smarter)',
         ],
         'groq' => [
-            'meta-llama/llama-4-maverick-17b-128e-instruct' => 'Llama 4 Maverick  (vision, fast)',
-            'llama-3.3-70b-versatile'                       => 'Llama 3.3 70B  (text, powerful)',
-            'llama-3.1-8b-instant'                          => 'Llama 3.1 8B  (text, fastest)',
+            'llama-3.2-11b-vision-preview'  => 'Llama 3.2 11B Vision  (vision, fast)',
+            'llama-3.2-90b-vision-preview'  => 'Llama 3.2 90B Vision  (vision, powerful)',
+            'llama-3.3-70b-versatile'       => 'Llama 3.3 70B  (text, powerful)',
+            'llama-3.1-8b-instant'          => 'Llama 3.1 8B  (text, fastest)',
         ],
     ];
 
