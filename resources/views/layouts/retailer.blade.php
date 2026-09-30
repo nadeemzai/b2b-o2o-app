@@ -609,7 +609,7 @@
                         <template x-if="item.image">
                             <img :src="item.image" :alt="item.name"
                                  class="w-full h-full object-cover"
-                                 @error="$el.style.display='none'"/>
+                                 @@error="$el.style.display='none'"/>
                         </template>
                         <template x-if="!item.image">
                             <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-50 to-white">
