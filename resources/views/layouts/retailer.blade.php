@@ -412,17 +412,8 @@
                 {{-- Cart (reactive Livewire counter) --}}
                 @livewire('cart-count')
 
-                {{-- Messages --}}
-                <a href="#"
-                   title="Messages"
-                   class="hidden sm:flex flex-col items-center gap-0.5 px-2.5 py-2 text-slate-500 hover:text-brand rounded hover:bg-orange-50 transition group">
-                    <div class="relative">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
-                        </svg>
-                    </div>
-                    <span class="text-[9px] font-semibold whitespace-nowrap group-hover:text-brand">Messages</span>
-                </a>
+                {{-- Messages (reactive badge — count of unread store replies) --}}
+                @livewire('retailer.chat.message-count')
 
                 {{-- User account --}}
                 <div x-data="{ open: false }" class="relative">
