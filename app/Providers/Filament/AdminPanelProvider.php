@@ -11,6 +11,7 @@ use App\Filament\Admin\Resources\UserResource;
 use App\Filament\Admin\Pages\CommissionDashboard;
 use App\Filament\Admin\Pages\HomepageSettings;
 use App\Filament\Admin\Pages\ReviewSettings;
+use App\Filament\Admin\Pages\AiSettings;
 use App\Filament\Admin\Resources\ProductResource;
 use App\Filament\Admin\Widgets\OrdersByStatusChart;
 use App\Filament\Admin\Widgets\OrderStatsOverview;
@@ -70,6 +71,7 @@ class AdminPanelProvider extends PanelProvider
                 CommissionDashboard::class,
                 HomepageSettings::class,
                 ReviewSettings::class,
+                AiSettings::class,
             ])
             ->widgets([
                 OrderStatsOverview::class,
