@@ -27,6 +27,8 @@ class Product extends Model
         'pieces_per_carton',
         'huashu_base_price_pkr',
         'moq',
+        'origin',
+        'weight_g',
         'image_path',
         'is_active',
     ];

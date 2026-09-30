@@ -1,3 +1,4 @@
+{{-- Note: Str facade used for compare button --}}
 {{-- ── 1688-style B2B Catalogue ──────────────────────────────────────────── --}}
 <div class="-mx-4 sm:-mx-6 lg:-mx-8 -mt-6">
 
@@ -148,6 +149,25 @@
 
                         {{-- ── Image ────────────────────────────── --}}
                         <div class="aspect-square relative overflow-hidden bg-slate-50">
+
+                            {{-- Compare toggle button --}}
+                            <button
+                                x-data
+                                @click.prevent.stop="$store.compare.toggle({
+                                    id: {{ $product->id }},
+                                    name: @js(Str::limit(app()->getLocale() === 'zh_CN' && $product->name_zh ? $product->name_zh : $product->name_en, 50)),
+                                    image: @js($displaySrc ?? '')
+                                })"
+                                :class="$store.compare.has({{ $product->id }}) ? 'bg-brand text-white shadow' : 'bg-white/90 text-slate-500 hover:bg-brand hover:text-white backdrop-blur-sm'"
+                                :title="$store.compare.has({{ $product->id }}) ? 'Remove from compare' : ($store.compare.items.length >= 4 ? 'Compare list full' : 'Add to compare')"
+                                :disabled="!$store.compare.has({{ $product->id }}) && $store.compare.items.length >= 4"
+                                class="absolute top-1.5 left-1.5 w-6 h-6 rounded-md flex items-center justify-center transition z-10 disabled:opacity-30"
+                                aria-label="Toggle compare">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                            </button>
+
                             @if($displaySrc)
                                 <img src="{{ $displaySrc }}"
                                      alt="{{ $product->name_en }}"

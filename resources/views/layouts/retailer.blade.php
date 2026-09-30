@@ -33,6 +33,61 @@
         .writing-vertical { writing-mode: vertical-rl; text-orientation: mixed; }
     </style>
 
+
+    {{-- ── Compare store (localStorage-backed Alpine store) ────────────── --}}
+    <script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.store('compare', {
+            items: [],
+            maxItems: 4,
+
+            init() {
+                try {
+                    const saved = localStorage.getItem('oz_compare');
+                    if (saved) this.items = JSON.parse(saved) || [];
+                } catch(e) { this.items = []; }
+            },
+
+            save() {
+                try {
+                    localStorage.setItem('oz_compare', JSON.stringify(this.items));
+                } catch(e) {}
+            },
+
+            add(product) {
+                if (this.items.length >= this.maxItems) return;
+                if (this.has(product.id)) return;
+                this.items.push(product);
+                this.save();
+            },
+
+            remove(id) {
+                this.items = this.items.filter(p => p.id != id);
+                this.save();
+            },
+
+            toggle(product) {
+                this.has(product.id) ? this.remove(product.id) : this.add(product);
+            },
+
+            has(id) {
+                return this.items.some(p => p.id == id);
+            },
+
+            clear() {
+                this.items = [];
+                this.save();
+            },
+
+            goCompare() {
+                if (this.items.length < 2) return;
+                const ids = this.items.map(p => p.id).join(',');
+                window.location.href = '/retailer/compare?ids=' + ids;
+            }
+        });
+    });
+    </script>
+
     @livewireStyles
 </head>
 <body class="h-full flex flex-col">
@@ -326,14 +381,23 @@
             <div class="flex items-center shrink-0">
 
                 {{-- Price Comparison --}}
-                <a href="#"
-                   title="Price Comparison"
-                   class="hidden lg:flex flex-col items-center gap-0.5 px-2.5 py-2 text-slate-500 hover:text-brand rounded hover:bg-orange-50 transition group cursor-pointer">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
-                    <span class="text-[9px] font-semibold whitespace-nowrap group-hover:text-brand">Compare</span>
-                </a>
+                <div x-data class="relative hidden lg:flex">
+                    <button @click="$store.compare.goCompare()"
+                       :class="$store.compare.items.length > 0 ? 'text-brand' : 'text-slate-500'"
+                       title="Compare products"
+                       class="flex flex-col items-center gap-0.5 px-2.5 py-2 hover:text-brand rounded hover:bg-orange-50 transition group cursor-pointer">
+                        <div class="relative">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                            <span x-show="$store.compare.items.length > 0"
+                                  x-text="$store.compare.items.length"
+                                  x-cloak
+                                  class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-brand text-white text-[9px] font-black rounded-full flex items-center justify-center leading-none"></span>
+                        </div>
+                        <span class="text-[9px] font-semibold whitespace-nowrap group-hover:text-brand">Compare</span>
+                    </button>
+                </div>
 
                 {{-- Orders --}}
                 <a href="{{ route('retailer.orders') }}"
@@ -518,6 +582,96 @@
     });
 })();
 </script>
+
+
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+{{-- COMPARE BAR — sticky bottom, appears when 1+ products in compare list      --}}
+{{-- ══════════════════════════════════════════════════════════════════════════ --}}
+@auth
+<div x-data
+     x-show="$store.compare.items.length > 0"
+     x-cloak
+     x-transition:enter="transition ease-out duration-250"
+     x-transition:enter-start="translate-y-full"
+     x-transition:enter-end="translate-y-0"
+     x-transition:leave="transition ease-in duration-200"
+     x-transition:leave-start="translate-y-0"
+     x-transition:leave-end="translate-y-full"
+     class="fixed bottom-0 inset-x-0 z-50 bg-white border-t-2 border-brand shadow-2xl"
+     style="padding-bottom: env(safe-area-inset-bottom, 0px)">
+    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-3 sm:gap-4">
+
+        {{-- Thumbnails + empty slots --}}
+        <div class="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
+            <template x-for="item in $store.compare.items" :key="item.id">
+                <div class="relative group shrink-0">
+                    <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden">
+                        <template x-if="item.image">
+                            <img :src="item.image" :alt="item.name"
+                                 class="w-full h-full object-cover"
+                                 @@error="$el.style.display='none'"/>
+                        </template>
+                        <template x-if="!item.image">
+                            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-50 to-white">
+                                <svg class="w-4 h-4 text-brand/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+                                </svg>
+                            </div>
+                        </template>
+                    </div>
+                    {{-- Remove on hover --}}
+                    <button @click="$store.compare.remove(item.id)"
+                            class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-slate-600 hover:bg-red-500 text-white rounded-full items-center justify-center text-[9px] font-black hidden group-hover:flex transition">
+                        ✕
+                    </button>
+                </div>
+            </template>
+
+            {{-- Empty slots --}}
+            <template x-for="i in (4 - $store.compare.items.length)" :key="'e'+i">
+                <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 shrink-0 flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                </div>
+            </template>
+
+            {{-- Label --}}
+            <div class="hidden sm:block ml-1">
+                <p class="text-sm font-bold text-slate-800">
+                    <span x-text="$store.compare.items.length"></span>
+                    <span class="font-normal text-slate-500">/ 4 products</span>
+                </p>
+                <p class="text-[11px] text-slate-400">
+                    <template x-if="$store.compare.items.length < 2">
+                        <span>Add 1 more to compare</span>
+                    </template>
+                    <template x-if="$store.compare.items.length >= 2">
+                        <span>Ready to compare</span>
+                    </template>
+                </p>
+            </div>
+        </div>
+
+        {{-- Actions --}}
+        <div class="flex items-center gap-2 shrink-0">
+            <button @click="$store.compare.clear()"
+                    class="text-xs text-slate-400 hover:text-slate-600 px-3 py-2 rounded-lg hover:bg-slate-100 transition font-medium">
+                Clear
+            </button>
+            <button @click="$store.compare.goCompare()"
+                    :disabled="$store.compare.items.length < 2"
+                    class="flex items-center gap-1.5 px-4 sm:px-5 py-2.5 bg-brand hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition shadow-lg">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <span class="hidden sm:inline">Compare Now</span>
+                <span class="sm:hidden">Compare</span>
+            </button>
+        </div>
+    </div>
+</div>
+@endauth
 
 </body>
 </html>

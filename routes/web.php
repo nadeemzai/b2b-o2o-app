@@ -65,6 +65,7 @@ Route::prefix('retailer')->name('retailer.')->middleware(['auth:retailer', 'reta
     Route::get('/catalogue', ProductList::class)->name('catalogue');
     Route::get('/catalogue/{product}', RetailerProductDetail::class)->name('catalogue.product');
     Route::get('/cart',      CartPage::class)->name('cart');
+    Route::get('/compare',   \App\Livewire\Retailer\Catalogue\CompareProducts::class)->name('compare');
     Route::get('/orders',    OrderHistory::class)->name('orders');
     Route::get('/orders/{order}/confirmation', OrderConfirmation::class)->name('orders.confirmation');
 });
