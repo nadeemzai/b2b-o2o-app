@@ -43,10 +43,18 @@ class ProductCatalogue extends Component
             ->withPrice()
             ->with(['category', 'images'])
             ->when($this->categoryId, fn($q) => $q->where('category_id', $this->categoryId))
-            ->when($this->search, fn($q) => $q->where(function ($q) {
-                $q->where('name_en', 'like', "%{$this->search}%")
-                  ->orWhere('sku', 'like', "%{$this->search}%");
-            }));
+            ->when($this->search, function ($q) {
+                // Support comma-separated keyword lists (from image search)
+                $terms = array_filter(array_map('trim', explode(',', $this->search)));
+                $q->where(function ($q) use ($terms) {
+                    foreach ($terms as $term) {
+                        $q->orWhere('name_en',        'ilike', "%{$term}%")
+                          ->orWhere('name_ur',         'ilike', "%{$term}%")
+                          ->orWhere('description_en',  'ilike', "%{$term}%")
+                          ->orWhere('sku',              'ilike', "%{$term}%");
+                    }
+                });
+            });
 
         match ($this->sortBy) {
             'price_asc'  => $query->orderBy('huashu_base_price_pkr'),

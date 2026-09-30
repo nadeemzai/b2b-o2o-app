@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Services\AiService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class ImageSearchController extends Controller
 {
     /**
-     * Accept an uploaded image, send it to Claude Vision API,
+     * Accept an uploaded image, send it to the configured AI provider,
      * extract product-relevant keywords, and redirect to the catalogue.
      */
     public function search(Request $request)
@@ -19,64 +19,36 @@ class ImageSearchController extends Controller
             'image' => ['required', 'file', 'image', 'max:10240'], // 10 MB max
         ]);
 
-        $apiKey = config('services.anthropic.key');
+        $ai = new AiService();
 
-        if (! $apiKey) {
+        if (! $ai->hasKey()) {
             return redirect()
                 ->route('public.catalogue')
                 ->with('image_search_error', 'Image search is not configured. Please contact the administrator.');
         }
 
         try {
-            // Encode image as base64
             $file     = $request->file('image');
             $mimeType = $file->getMimeType();
             $base64   = base64_encode(file_get_contents($file->getRealPath()));
 
-            // Call Anthropic Claude vision
-            $response = Http::withHeaders([
-                'x-api-key'         => $apiKey,
-                'anthropic-version' => '2023-06-01',
-                'content-type'      => 'application/json',
-            ])->timeout(30)->post('https://api.anthropic.com/v1/messages', [
-                'model'      => 'claude-haiku-4-5',
-                'max_tokens' => 256,
-                'messages'   => [
-                    [
-                        'role'    => 'user',
-                        'content' => [
-                            [
-                                'type'  => 'image',
-                                'source' => [
-                                    'type'       => 'base64',
-                                    'media_type' => $mimeType,
-                                    'data'       => $base64,
-                                ],
-                            ],
-                            [
-                                'type' => 'text',
-                                'text' => 'This image is being used to search a B2B wholesale product catalogue (electronics, clothing, home goods, industrial parts, etc.). Identify the product category and key product attributes visible in the image. Respond with ONLY a short comma-separated list of 3–6 English search keywords — product name, category, and key attributes (e.g. "wireless headphones, bluetooth, over-ear"). No sentences, no punctuation other than commas.',
-                            ],
-                        ],
-                    ],
-                ],
-            ]);
+            $prompt = 'This image is from a B2B wholesale product catalogue search. '
+                . 'Your job is to extract 2–4 short search keywords a buyer would type to find this product. '
+                . 'Focus on: the product type/name, material, or main visual feature. '
+                . 'Output ONLY a comma-separated list of simple English words or short phrases '
+                . '(e.g. "tiger, stuffed toy" or "blue denim jacket" or "ceramic mug"). '
+                . 'No sentences, no explanations, no punctuation other than commas. '
+                . 'Keep each term under 3 words. Prefer the product name over descriptions.';
 
-            if ($response->successful()) {
-                $content = $response->json('content.0.text', '');
-                // Sanitise: keep only alphanumeric, spaces, commas, hyphens
-                $keywords = preg_replace('/[^a-zA-Z0-9\s,\-]/', '', $content);
-                $keywords = trim($keywords, ', ');
+            $content = $ai->chat($prompt, $base64, $mimeType);
 
-                if ($keywords) {
-                    return redirect()->route('public.catalogue', ['search' => $keywords]);
-                }
+            // Sanitise: keep only alphanumeric, spaces, commas, hyphens
+            $keywords = preg_replace('/[^a-zA-Z0-9\s,\-]/', '', $content);
+            $keywords = trim($keywords, ', ');
+
+            if ($keywords) {
+                return redirect()->route('public.catalogue', ['search' => $keywords]);
             }
-
-            Log::warning('Image search API call failed', [
-                'status' => $response->status(),
-                'body'   => $response->body(),
-            ]);
 
         } catch (\Throwable $e) {
             Log::error('Image search exception: ' . $e->getMessage());
