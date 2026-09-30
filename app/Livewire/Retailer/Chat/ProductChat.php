@@ -21,6 +21,12 @@ class ProductChat extends Component
     {
         $this->product = $product;
         $this->loadConversation();
+
+        // Auto-open when arriving from the Messages inbox (?chat=1)
+        if (request()->boolean('chat')) {
+            $this->open = true;
+            $this->markRead();
+        }
     }
 
     // ── Open / close panel ────────────────────────────────────────────────
@@ -30,6 +36,7 @@ class ProductChat extends Component
         $this->open = true;
         $this->loadConversation();
         $this->markRead();
+        $this->dispatch('chat-messages-read');
     }
 
     public function closeChat(): void
