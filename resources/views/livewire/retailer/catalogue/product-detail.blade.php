@@ -390,6 +390,10 @@ $soldLabel = $soldCount > 0
                         </div>
                         @endif
 
+
+                    {{-- ── Ask Seller (Chat) ──────────────────────────── --}}
+                    @livewire('retailer.chat.product-chat', ['product' => $product])
+
                     </div>{{-- /panel inner --}}
                 </div>{{-- /sticky panel --}}
             </div>{{-- /right column --}}

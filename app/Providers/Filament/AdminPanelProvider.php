@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Admin\Resources\BannerResource;
+use App\Filament\Admin\Resources\ConversationResource;
 use App\Filament\Admin\Resources\OrderAuditResource;
 use App\Filament\Admin\Resources\OrderResource;
 use App\Filament\Admin\Resources\RetailerResource;
@@ -52,6 +53,7 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Content'),
                 NavigationGroup::make('Catalogue'),
                 NavigationGroup::make('KYC & Retailers'),
+                NavigationGroup::make('Retailer Relations'),
                 NavigationGroup::make('Operations'),
                 NavigationGroup::make('Settings'),
                 NavigationGroup::make('System')
@@ -59,6 +61,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->resources([
                 BannerResource::class,
+                ConversationResource::class,
                 ProductResource::class,
                 RetailerResource::class,
                 TownshipStoreResource::class,
