@@ -392,6 +392,34 @@ $soldLabel = $soldCount > 0
 
 
                     {{-- ── Ask Seller (Chat) ──────────────────────────── --}}
+                    {{-- ── Compare button ──────────────────────────────────────── --}}
+                    <div class="mt-4"
+                         x-data="{
+                            productData: {
+                                id: {{ $product->id }},
+                                name: @js(Str::limit($name, 60)),
+                                image: @js($allImages->first() ?? '')
+                            }
+                         }">
+                        <button
+                            @click="$store.compare.toggle(productData)"
+                            :class="$store.compare.has({{ $product->id }})
+                                ? 'bg-brand text-white border-brand'
+                                : 'bg-white text-slate-600 border-slate-200 hover:border-brand hover:text-brand'"
+                            :disabled="!$store.compare.has({{ $product->id }}) && $store.compare.items.length >= 4"
+                            class="w-full flex items-center justify-center gap-2 px-4 py-2.5 border-2 rounded-xl text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                            <span x-text="$store.compare.has({{ $product->id }}) ? '✓ Added to Compare' : 'Add to Compare'"></span>
+                        </button>
+                        <p x-show="!$store.compare.has({{ $product->id }}) && $store.compare.items.length >= 4"
+                           x-cloak
+                           class="text-xs text-amber-600 text-center mt-1.5">
+                            Compare list is full (4 max). Remove a product first.
+                        </p>
+                    </div>
+
                     @livewire('retailer.chat.product-chat', ['product' => $product])
 
                     </div>{{-- /panel inner --}}

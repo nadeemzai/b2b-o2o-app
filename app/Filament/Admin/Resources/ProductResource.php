@@ -69,6 +69,19 @@ class ProductResource extends Resource
                         ->default(1)
                         ->integer()
                         ->helperText('Minimum units a retailer must order in one cart line.'),
+                    TextInput::make('origin')
+                        ->label('Origin / Brand')
+                        ->maxLength(100)
+                        ->placeholder('e.g. China · Huashu')
+                        ->helperText('Country of manufacture or brand name shown on compare page.'),
+                    TextInput::make('weight_g')
+                        ->label('Weight per Unit (g)')
+                        ->numeric()
+                        ->minValue(0)
+                        ->step(0.01)
+                        ->suffix('g')
+                        ->placeholder('e.g. 250')
+                        ->helperText('Weight in grams per single unit.'),
                 ])->columns(2),
 
             Section::make('Product Images')
