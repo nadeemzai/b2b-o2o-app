@@ -19,11 +19,18 @@ use App\Livewire\Retailer\Homepage as RetailerHome;
 
 // ── Locale & currency switching (works for guests and authenticated users) ──
 Route::post('/switch-locale/{locale}', function (string $locale) {
-    if (in_array($locale, ['en', 'zh_CN'], true)) {
+    $supported = ['en', 'zh_CN'];
+    if (in_array($locale, $supported, true)) {
         session(['locale' => $locale]);
         app()->setLocale($locale);
+    } else {
+        $locale = session('locale', 'en');
     }
-    return redirect()->back();
+    // Also write a cookie so the Huashu panel middleware can read it
+    // even across session-start ordering differences
+    return redirect()->back()->withCookie(
+        cookie()->forever('huashu_locale', $locale)
+    );
 })->name('switch.locale');
 
 Route::post('/switch-currency/{currency}', function (string $currency) {

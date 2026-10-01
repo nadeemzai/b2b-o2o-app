@@ -238,4 +238,12 @@ return [
     'view_all_deals'     => 'View all deals →',
 
 
+
+    // Huashu Admin Panel Navigation
+    'huashu_nav_orders'      => 'Orders',
+    'huashu_nav_catalogue'   => 'Catalogue',
+    'huashu_nav_messages'    => 'Messages',
+    'huashu_nav_dashboard'   => 'Dashboard',
+    'huashu_language'        => 'Language',
+
 ];

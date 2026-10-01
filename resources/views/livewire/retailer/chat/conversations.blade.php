@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-slate-50 dark:bg-slate-900">
+<div class="min-h-screen bg-slate-50 dark:bg-slate-900 pt-4">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {{-- ── Page header ────────────────────────────────────────────────────── --}}

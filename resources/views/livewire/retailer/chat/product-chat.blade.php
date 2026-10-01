@@ -56,13 +56,20 @@
     </div>
 
     {{-- ── SLIDE-OVER PANEL ─────────────────────────────────────────────── --}}
+    {{--
+        @teleport('body') renders this outside the .rpdp-right-sticky overflow
+        container so `fixed` positioning works relative to the true viewport.
+        Without this, overflow-y:auto on the sticky purchase panel clips/contains
+        the fixed overlay and makes it appear collapsed inside the panel.
+    --}}
     @if($open)
-    <div class="fixed inset-0 z-50 flex">
+    @teleport('body')
+    <div class="fixed inset-0 z-[200] flex" id="chat-slide-over">
         {{-- Backdrop --}}
         <div class="absolute inset-0 bg-black/40" wire:click="closeChat"></div>
 
         {{-- Panel --}}
-        <div class="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col">
+        <div class="absolute right-0 bottom-0 h-[calc(50vh+205px)] w-full max-w-md bg-white shadow-2xl flex flex-col rounded-[40px] opacity-90">
 
             {{-- Header --}}
             <div class="flex items-center gap-3 px-4 py-4 border-b border-gray-100 bg-white flex-shrink-0">
@@ -159,5 +166,6 @@
         document.addEventListener('livewire:updated', scrollBottom);
         scrollBottom();
     </script>
+    @endteleport
     @endif
 </div>

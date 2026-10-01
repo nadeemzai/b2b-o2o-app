@@ -14,6 +14,9 @@
                          class="w-full h-40 object-contain rounded-lg bg-gray-50 mb-3">
                 @endif
                 <p class="font-semibold text-gray-900 text-sm">{{ $product->name_en }}</p>
+                @if($product->name_zh)
+                    <p class="text-xs text-gray-400">{{ $product->name_zh }}</p>
+                @endif
                 <p class="text-xs text-gray-400 mt-1">SKU: {{ $product->sku }}</p>
                 <p class="text-xs text-gray-400">MOQ: {{ $product->moq }} {{ $product->unit }}</p>
             </x-filament::card>
@@ -46,19 +49,15 @@
             @if($this->record->claimed_by)
             <x-filament::card>
                 <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Ownership</h3>
-                @php
-                    $isOwnedByMe = $this->record->isClaimedBy('oz_admin');
-                @endphp
+                @php $isOwnedByMe = $this->record->isClaimedBy('huashu'); @endphp
                 <div class="flex items-start gap-2">
                     <div class="mt-0.5 flex-shrink-0">
                         @if($isOwnedByMe)
-                            {{-- Green lock: we own it --}}
                             <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                             </svg>
                         @else
-                            {{-- Red lock: another team owns it --}}
                             <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -67,7 +66,7 @@
                     </div>
                     <div>
                         <p class="text-sm font-semibold {{ $isOwnedByMe ? 'text-green-700' : 'text-red-600' }}">
-                            {{ $isOwnedByMe ? 'Claimed by you (OZ Admin)' : 'Claimed by ' . $this->record->claimedByLabel() }}
+                            {{ $isOwnedByMe ? 'Claimed by you (Huashu)' : 'Claimed by ' . $this->record->claimedByLabel() }}
                         </p>
                         @if($this->record->claimedByUser)
                             <p class="text-xs text-gray-400 mt-0.5">
@@ -130,11 +129,10 @@
                 {{-- Reply area --}}
                 @if($this->record->status === 'open')
                     @php
-                        $lockedByOther = $this->record->claimed_by !== null && ! $this->record->isClaimedBy('oz_admin');
+                        $lockedByOther = $this->record->claimed_by !== null && ! $this->record->isClaimedBy('huashu');
                     @endphp
 
                     @if($lockedByOther)
-                        {{-- Locked banner --}}
                         <div class="border-t border-red-100 pt-4 flex-shrink-0">
                             <div class="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
                                 <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,13 +143,12 @@
                                     <p class="text-sm font-semibold text-red-700">Reply locked</p>
                                     <p class="text-xs text-red-500 mt-0.5">
                                         This conversation is being handled by the <strong>{{ $this->record->claimedByLabel() }}</strong>.
-                                        Use "Release to Other Team" if a handover is needed.
+                                        Use "Release to OZ Admin" if a handover is needed.
                                     </p>
                                 </div>
                             </div>
                         </div>
                     @else
-                        {{-- Active reply input --}}
                         <div class="border-t border-gray-100 pt-4 flex-shrink-0">
                             <textarea wire:model="replyBody"
                                       placeholder="Type your reply…"
@@ -160,11 +157,11 @@
                             <div class="flex items-center justify-between">
                                 @if(! $this->record->claimed_by)
                                     <p class="text-xs text-blue-600">
-                                        ℹ️ Sending this reply will claim the conversation for OZ Admin Team.
+                                        ℹ️ Sending this reply will claim the conversation for Huashu Team.
                                     </p>
                                 @else
                                     <p class="text-xs text-green-600">
-                                        ✅ You own this thread as OZ Admin Team.
+                                        ✅ You own this thread as Huashu Team.
                                     </p>
                                 @endif
                                 <x-filament::button wire:click="sendReply"

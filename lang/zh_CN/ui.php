@@ -238,4 +238,12 @@ return [
     'view_all_deals'     => '查看全部特惠 →',
 
 
+
+    // Huashu Admin Panel Navigation
+    'huashu_nav_orders'      => '订单',
+    'huashu_nav_catalogue'   => '商品目录',
+    'huashu_nav_messages'    => '消息',
+    'huashu_nav_dashboard'   => '仪表盘',
+    'huashu_language'        => '语言',
+
 ];

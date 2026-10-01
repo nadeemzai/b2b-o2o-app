@@ -3,6 +3,9 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Huashu\Resources\CategoryResource;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Contracts\View\View;
+use App\Filament\Huashu\Resources\ConversationResource;
 use App\Filament\Huashu\Resources\OrderResource;
 use App\Filament\Huashu\Resources\ProductResource;
 use Filament\Http\Middleware\Authenticate;
@@ -14,6 +17,7 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use App\Http\Middleware\EnsureRole;
+use App\Http\Middleware\SetHuashuLocale;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -43,13 +47,15 @@ class HuashuPanelProvider extends PanelProvider
             ->darkMode()
             ->brandLogoHeight('2rem')
             ->navigationGroups([
-                NavigationGroup::make('Orders'),
-                NavigationGroup::make('Catalogue'),
+                NavigationGroup::make()->label(fn () => __('ui.huashu_nav_orders')),
+                NavigationGroup::make()->label(fn () => __('ui.huashu_nav_catalogue')),
+                NavigationGroup::make()->label(fn () => __('ui.huashu_nav_messages')),
             ])
             ->resources([
                 OrderResource::class,
                 CategoryResource::class,
                 ProductResource::class,
+                ConversationResource::class,
             ])
             ->pages([
                 Pages\Dashboard::class,
@@ -59,6 +65,10 @@ class HuashuPanelProvider extends PanelProvider
                 HuashuOrdersByStatusChart::class,
                 HuashuRecentOrdersTable::class,
             ])
+            ->renderHook(
+                PanelsRenderHook::TOPBAR_END,
+                fn (): View => view('filament.huashu.language-switcher'),
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -67,6 +77,7 @@ class HuashuPanelProvider extends PanelProvider
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,
+                SetHuashuLocale::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])

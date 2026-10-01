@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Admin\Resources\ConversationResource\Pages;
+namespace App\Filament\Huashu\Resources\ConversationResource\Pages;
 
-use App\Filament\Admin\Resources\ConversationResource;
+use App\Filament\Huashu\Resources\ConversationResource;
 use App\Models\Message;
 use Filament\Actions;
 use Filament\Notifications\Notification;
@@ -12,10 +12,10 @@ class ViewConversation extends ViewRecord
 {
     protected static string $resource = ConversationResource::class;
 
-    protected static string $view = 'filament.admin.resources.conversation.view';
+    protected static string $view = 'filament.huashu.resources.conversation.view';
 
-    /** Which panel identity this page represents — used for claim logic. */
-    protected string $claimPanel = 'oz_admin';
+    /** This page represents the Huashu panel. */
+    protected string $claimPanel = 'huashu';
 
     public string $replyBody = '';
 
@@ -23,7 +23,7 @@ class ViewConversation extends ViewRecord
     {
         parent::mount($record);
 
-        // Mark retailer messages as read when admin opens the conversation
+        // Mark retailer messages as read when Huashu admin opens the conversation
         $this->record->messages()
             ->where('sender_type', 'retailer')
             ->whereNull('read_at')
@@ -42,7 +42,7 @@ class ViewConversation extends ViewRecord
 
         $conversation = $this->record;
 
-        // Block if the OTHER panel has already claimed this thread
+        // Block if OZ Admin has already claimed this thread
         if ($conversation->claimed_by !== null && ! $conversation->isClaimedBy($this->claimPanel)) {
             Notification::make()
                 ->title('Conversation locked')
@@ -55,7 +55,7 @@ class ViewConversation extends ViewRecord
 
         // Auto-claim on first reply (first-writer wins)
         $conversation->claimFor($this->claimPanel, auth()->id());
-        $conversation->refresh(); // pick up the new claimed_by value
+        $conversation->refresh();
 
         Message::create([
             'conversation_id' => $conversation->id,
@@ -67,7 +67,6 @@ class ViewConversation extends ViewRecord
         $conversation->update(['last_message_at' => now()]);
         $this->replyBody = '';
 
-        // Refresh messages display
         $this->record->load('messages.sender', 'claimedByUser');
 
         Notification::make()
@@ -76,7 +75,7 @@ class ViewConversation extends ViewRecord
             ->send();
     }
 
-    // ── Close conversation ────────────────────────────────────────────────
+    // ── Close ─────────────────────────────────────────────────────────────
 
     public function closeConversation(): void
     {
@@ -88,7 +87,7 @@ class ViewConversation extends ViewRecord
             ->send();
     }
 
-    // ── Release claim (admins can hand off if needed) ─────────────────────
+    // ── Release claim ─────────────────────────────────────────────────────
 
     public function releaseClaim(): void
     {
@@ -102,7 +101,7 @@ class ViewConversation extends ViewRecord
 
         Notification::make()
             ->title('Claim released')
-            ->body('Another team can now reply to this conversation.')
+            ->body('OZ Admin team can now reply to this conversation.')
             ->success()
             ->send();
     }
@@ -113,11 +112,11 @@ class ViewConversation extends ViewRecord
     {
         return [
             Actions\Action::make('release_claim')
-                ->label('Release to Other Team')
+                ->label('Release to OZ Admin')
                 ->icon('heroicon-o-arrow-path')
                 ->color('warning')
                 ->requiresConfirmation()
-                ->modalDescription('This will allow the other admin team to take over and reply. Are you sure?')
+                ->modalDescription('This will allow the OZ Admin team to take over and reply. Are you sure?')
                 ->action('releaseClaim')
                 ->visible(fn () => $this->record->isClaimedBy($this->claimPanel)),
 
