@@ -3,7 +3,6 @@
 namespace App\Filament\Admin\Resources\ProductResource\Pages;
 
 use App\Filament\Admin\Resources\ProductResource;
-use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
 class ListProducts extends ListRecords
@@ -12,6 +11,6 @@ class ListProducts extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [Actions\CreateAction::make()];
+        return []; // read-only — no Create button for OzAdmin
     }
 }
