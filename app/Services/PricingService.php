@@ -101,8 +101,8 @@ class PricingService
             }
         }
 
-        // qty below all tier lower-bounds: show entry price (lowest tier)
-        return (float) $tiers->first()->price_pkr;
+        // qty below all tier lower-bounds: return base retailer price
+        return $this->retailerPrice($product);
     }
 
     /**

@@ -54,7 +54,7 @@ $soldLabel = $soldCount > 0
                 for (let i = this.tiers.length - 1; i >= 0; i--) {
                     if (q >= this.tiers[i].min_qty) return this.tiers[i].price_pkr;
                 }
-                return this.tiers[0].price_pkr;
+                return this.basePrice; // below all tiers: show base retailer price
             },
 
             get activeTierIdx() {
@@ -63,7 +63,7 @@ $soldLabel = $soldCount > 0
                 for (let i = this.tiers.length - 1; i >= 0; i--) {
                     if (q >= this.tiers[i].min_qty) return i;
                 }
-                return 0;
+                return -1; // below all tiers: no tier highlighted
             },
 
             get upsellMsg() {
