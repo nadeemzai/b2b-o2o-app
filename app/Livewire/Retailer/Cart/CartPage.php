@@ -4,8 +4,10 @@ namespace App\Livewire\Retailer\Cart;
 
 use App\Exceptions\InsufficientStockException;
 use App\Models\Retailer;
+use App\Models\Product;
 use App\Services\CartService;
 use App\Services\OrderService;
+use App\Services\PricingService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -19,7 +21,7 @@ class CartPage extends Component
      * Update qty for any cart line — works for both plain product keys (int)
      * and variant keys (string like "p5_v12").
      */
-    public function updateQty(string $key, int $qty, CartService $cart): void
+    public function updateQty(string $key, int $qty, CartService $cart, PricingService $pricing): void
     {
         $items = $cart->items();
         $key   = is_numeric($key) ? (int) $key : $key;
@@ -34,6 +36,19 @@ class CartPage extends Component
         }
 
         $cart->updateByKey($key, $qty);
+
+        // Re-price the line: a qty change may cross a volume-tier boundary.
+        if ($qty > 0 && isset($items[$key])) {
+            $productId = (int) $items[$key]['product_id'];
+            $product   = Product::with('priceTiers')->find($productId);
+            if ($product) {
+                $newPrice = $pricing->tierPrice($product, $qty)
+                         ?? $pricing->retailerPrice($product);
+                if ($newPrice !== null) {
+                    $cart->updatePriceByKey($key, $newPrice);
+                }
+            }
+        }
     }
 
     public function remove(string $key, CartService $cart): void

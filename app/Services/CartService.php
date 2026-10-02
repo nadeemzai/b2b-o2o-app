@@ -38,7 +38,10 @@ class CartService
         $key  = $productId;   // integer key for plain products
 
         if (isset($cart[$key])) {
-            $cart[$key]['qty'] = max($moq, $cart[$key]['qty'] + $qty);
+            // Replace qty and reprice — user set a specific quantity on the detail page,
+            // so "Add to Cart" means "I want this many total", not "add more on top".
+            $cart[$key]['qty']   = max($moq, $qty);
+            $cart[$key]['price'] = $price;
         } else {
             $cart[$key] = [
                 'product_id' => $productId,
@@ -76,7 +79,8 @@ class CartService
             if ($qty <= 0) {
                 unset($cart[$key]);
             } else {
-                $cart[$key]['qty'] = max($moq, $qty);   // enforce MOQ floor
+                $cart[$key]['qty']   = max($moq, $qty);   // enforce MOQ floor
+                $cart[$key]['price'] = $price;             // update to current tier price
             }
         } else {
             if ($qty > 0) {
@@ -116,6 +120,18 @@ class CartService
         if (isset($cart[$key])) {
             $moq = (int) ($cart[$key]['moq'] ?? 1);
             $cart[$key]['qty'] = max($moq, $qty);
+            session([$this->sessionKey => $cart]);
+        }
+    }
+
+    /**
+     * Update the stored unit price for a cart line (called when qty change crosses a tier).
+     */
+    public function updatePriceByKey(int|string $key, float $price): void
+    {
+        $cart = $this->items();
+        if (isset($cart[$key])) {
+            $cart[$key]['price'] = $price;
             session([$this->sessionKey => $cart]);
         }
     }
