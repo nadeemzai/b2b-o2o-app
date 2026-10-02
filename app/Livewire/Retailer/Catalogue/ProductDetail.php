@@ -23,6 +23,8 @@ class ProductDetail extends Component
     public int    $moq        = 1;
     public int    $available  = 0;
     public bool   $stockTracked = false;
+    /** @var array<int, array{min_qty:int,max_qty:int|null,price_pkr:float,label:string|null}> */
+    public array  $priceTiers   = [];
 
     /**
      * Variant qty inputs: keyed by ProductVariantOption id.
@@ -60,17 +62,19 @@ class ProductDetail extends Component
 
         $storeId = auth('retailer')->user()->retailerProfile->store_id;
 
-        $this->product = $product->load(['category', 'variantTypes.activeOptions', 'images']);
+        $this->product = $product->load(['category', 'variantTypes.activeOptions', 'images', 'priceTiers']);
 
         // Check for variants
         $this->hasVariants = $this->product->variantTypes
             ->filter(fn ($t) => $t->activeOptions->isNotEmpty())
             ->isNotEmpty();
 
-        // Retailer price via PricingService
-        $this->price = $pricing->retailerPrice($product);
-        $this->moq   = max(1, (int) $product->moq);
-        $this->qty   = $this->moq; // Start qty at MOQ
+        // Retailer price via PricingService (tier-aware)
+        $this->moq        = max(1, (int) $product->moq);
+        $this->qty        = $this->moq; // Start qty at MOQ
+        $this->priceTiers = $pricing->tiersArray($product);
+        $this->price      = $pricing->tierPrice($product, $this->moq)
+                         ?? $pricing->retailerPrice($product);
 
         // Initialise variant qtys at 0 so wire:model binds cleanly
         if ($this->hasVariants) {
@@ -110,20 +114,20 @@ class ProductDetail extends Component
     // Adding to cart
     // ──────────────────────────────────────────────
 
-    public function addToCart(CartService $cart): void
+    public function addToCart(CartService $cart, PricingService $pricing): void
     {
         if (! $this->price) {
             return;
         }
 
         if ($this->hasVariants) {
-            $this->addVariantsToCart($cart);
+            $this->addVariantsToCart($cart, $pricing);
         } else {
-            $this->addSimpleToCart($cart);
+            $this->addSimpleToCart($cart, $pricing);
         }
     }
 
-    private function addSimpleToCart(CartService $cart): void
+    private function addSimpleToCart(CartService $cart, PricingService $pricing): void
     {
         // Block only when stock IS tracked and we don't have enough
         if ($this->stockTracked && $this->available < $this->moq) {
@@ -136,10 +140,13 @@ class ProductDetail extends Component
 
         $safeQty = max($this->moq, $safeQty);
 
+        // Resolve tier-aware unit price at the actual qty being ordered
+        $unitPrice = $pricing->tierPrice($this->product, $safeQty) ?? $this->price;
+
         $cart->add(
             productId: $this->product->id,
             qty:       $safeQty,
-            price:     $this->price,
+            price:     $unitPrice,
             name:      $this->product->name_en,
             unit:      $this->product->unit,
             moq:       $this->moq,
@@ -149,7 +156,7 @@ class ProductDetail extends Component
         $this->dispatch('cart-updated');
     }
 
-    private function addVariantsToCart(CartService $cart): void
+    private function addVariantsToCart(CartService $cart, PricingService $pricing): void
     {
         $added = 0;
 
@@ -168,8 +175,9 @@ class ProductDetail extends Component
                 continue;
             }
 
-            // Price adjustment per option
-            $adjustedPrice = $this->price + (float) $option->price_adjustment_pkr;
+            // Tier-aware base price at this variant line qty, plus any option adjustment
+            $basePrice     = $pricing->tierPrice($this->product, $qty) ?? $this->price;
+            $adjustedPrice = $basePrice + (float) $option->price_adjustment_pkr;
 
             $cart->addVariant(
                 productId:       $this->product->id,

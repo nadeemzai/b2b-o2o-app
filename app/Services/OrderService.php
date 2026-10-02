@@ -69,6 +69,7 @@ class OrderService
             // ── 2. Load products with Huashu pricing ───────────────────────
             /** @var Collection<int, Product> $productMap (keyed by id) */
             $productMap = Product::withPrice()
+                ->with('priceTiers')   // eager-load for tier price resolution
                 ->whereIn('id', $productIds)
                 ->get()
                 ->keyBy('id');
@@ -115,10 +116,11 @@ class OrderService
                     );
                 }
 
-                // Price snapshots
+                // Price snapshots — use tier pricing when tiers exist, otherwise flat price
                 $commissionRate    = $commissionRates[$product->category_id] ?? 0.0;
                 $huashuUnitPrice   = (float) $product->huashu_base_price_pkr;
-                $retailerUnitPrice = $this->pricing->retailerPrice($product);
+                $retailerUnitPrice = $this->pricing->tierPrice($product, $qty)
+                                   ?? $this->pricing->retailerPrice($product);
 
                 $totalPkr   += $retailerUnitPrice * $qty;
                 $lineItems[] = [

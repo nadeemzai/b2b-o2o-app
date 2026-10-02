@@ -8,6 +8,7 @@ use App\Models\ProductImage;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\ProductPriceTier;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
@@ -101,6 +102,11 @@ class Product extends Model
         return $this->hasMany(StockMovement::class);
     }
 
+
+    public function priceTiers(): HasMany
+    {
+        return $this->hasMany(ProductPriceTier::class)->orderBy('min_qty');
+    }
     // ──────────────────────────────────────────────
     // Convenience
     // ──────────────────────────────────────────────
