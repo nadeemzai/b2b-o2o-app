@@ -100,7 +100,7 @@ class ProductResource extends Resource
                                 ->imageResizeTargetWidth('800')
                                 ->imageResizeTargetHeight('800')
                                 ->maxSize(3072)
-                                ->dehydrated(fn (?string $state): bool => filled($state))
+                                ->dehydrated(fn ($state): bool => filled($state))
                                 ->columnSpan(2),
                             \Filament\Forms\Components\TextInput::make('sort_order')
                                 ->label('Order')
