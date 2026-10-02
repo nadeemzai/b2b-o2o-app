@@ -27,6 +27,10 @@ class ViewOrder extends ViewRecord
                 ->modalDescription('Has the retailer\'s payment been confirmed? This cannot be undone easily.')
                 ->modalSubmitActionLabel('Yes, Verify Payment')
                 ->visible(fn (): bool => $this->record->canVerifyPayment())
+                ->disabled(fn (): bool => blank($this->record->payment_proof_path))
+                ->tooltip(fn (): ?string => blank($this->record->payment_proof_path)
+                    ? 'Payment proof not yet uploaded by the retailer'
+                    : null)
                 ->action(function (): void {
                     app(OrderService::class)->verifyPayment($this->record, auth()->id());
                     Notification::make()->title('Payment verified')->success()->send();
