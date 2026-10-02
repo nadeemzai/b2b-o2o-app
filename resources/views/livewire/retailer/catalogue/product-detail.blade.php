@@ -301,6 +301,24 @@ $soldLabel = $soldCount > 0
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-orange-50/60">
+                                        {{-- Base price row: always visible, active when qty < first tier --}}
+                                        @if(!empty($priceTiers) && !is_null($price))
+                                        <tr class="transition-colors"
+                                            :class="activeTierIdx === -1 ? 'bg-amber-50' : 'hover:bg-orange-50/40'">
+                                            <td class="px-3 py-2 font-semibold text-slate-700">
+                                                1{{ isset($priceTiers[0]['min_qty']) ? '–'.($priceTiers[0]['min_qty'] - 1) : '' }} {{ $unit }}
+                                                <span class="ml-1 text-slate-400 font-normal">(Base)</span>
+                                            </td>
+                                            <td class="px-3 py-2 text-right tabular-nums font-bold"
+                                                :class="activeTierIdx === -1 ? 'text-brand' : 'text-slate-600'">
+                                                PKR {{ number_format((float)$price, 2) }}
+                                            </td>
+                                            <td class="pr-2 py-2 text-right">
+                                                <span x-show="activeTierIdx === -1"
+                                                      class="text-[9px] bg-brand text-white rounded-full px-1.5 py-0.5 font-bold leading-none">✓</span>
+                                            </td>
+                                        </tr>
+                                        @endif
                                         @foreach($priceTiers as $i => $tier)
                                         <tr class="transition-colors"
                                             :class="activeTierIdx === {{ $i }} ? 'bg-amber-50' : 'hover:bg-orange-50/40'">
