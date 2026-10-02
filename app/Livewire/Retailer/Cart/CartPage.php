@@ -37,15 +37,22 @@ class CartPage extends Component
 
         $cart->updateByKey($key, $qty);
 
-        // Re-price the line: a qty change may cross a volume-tier boundary.
+        // Re-price: a qty change may cross a volume-tier boundary.
+        // price_pkr is a FLAT BUNDLE TOTAL — must update price_mode accordingly.
         if ($qty > 0 && isset($items[$key])) {
             $productId = (int) $items[$key]['product_id'];
             $product   = Product::with('priceTiers')->find($productId);
             if ($product) {
-                $newPrice = $pricing->tierPrice($product, $qty)
-                         ?? $pricing->retailerPrice($product);
-                if ($newPrice !== null) {
-                    $cart->updatePriceByKey($key, $newPrice);
+                $bundleTotal = $pricing->tierBundleTotal($product, $qty);
+                if ($bundleTotal !== null) {
+                    // Now in a bundle tier
+                    $cart->updatePriceByKey($key, $bundleTotal, 'bundle');
+                } else {
+                    // Below all tiers — switch back to per-unit base price
+                    $unitPrice = $pricing->retailerPrice($product);
+                    if ($unitPrice !== null) {
+                        $cart->updatePriceByKey($key, $unitPrice, 'per_unit');
+                    }
                 }
             }
         }

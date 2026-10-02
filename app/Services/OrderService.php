@@ -116,13 +116,23 @@ class OrderService
                     );
                 }
 
-                // Price snapshots — use tier pricing when tiers exist, otherwise flat price
-                $commissionRate    = $commissionRates[$product->category_id] ?? 0.0;
-                $huashuUnitPrice   = (float) $product->huashu_base_price_pkr;
-                $retailerUnitPrice = $this->pricing->tierPrice($product, $qty)
-                                   ?? $this->pricing->retailerPrice($product);
+                // Price snapshots — flat bundle total takes priority over per-unit pricing.
+                // price_pkr in product_price_tiers is a FLAT BUNDLE TOTAL, not per-unit.
+                $commissionRate  = $commissionRates[$product->category_id] ?? 0.0;
+                $huashuUnitPrice = (float) $product->huashu_base_price_pkr;
 
-                $totalPkr   += $retailerUnitPrice * $qty;
+                $bundleTotal = $this->pricing->tierBundleTotal($product, $qty);
+                if ($bundleTotal !== null) {
+                    // Volume tier: the retailer pays this flat amount regardless of exact qty
+                    $lineTotalPkr      = $bundleTotal;
+                    $retailerUnitPrice = round($bundleTotal / max(1, $qty), 4); // effective per-unit (for records)
+                } else {
+                    // Below all tiers: per-unit base pricing
+                    $retailerUnitPrice = $this->pricing->retailerPrice($product) ?? 0.0;
+                    $lineTotalPkr      = $retailerUnitPrice * $qty;
+                }
+
+                $totalPkr   += $lineTotalPkr;
                 $lineItems[] = [
                     'product_id'           => $productId,
                     'variant_option_id'    => $item['variant_option_id'] ?? null,

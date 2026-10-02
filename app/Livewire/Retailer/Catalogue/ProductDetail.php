@@ -140,17 +140,34 @@ class ProductDetail extends Component
 
         $safeQty = max($this->moq, $safeQty);
 
-        // Resolve tier-aware unit price at the actual qty being ordered
-        $unitPrice = $pricing->tierPrice($this->product, $safeQty) ?? $this->price;
+        // Check whether qty falls in a flat-bundle tier.
+        // price_pkr is a FLAT BUNDLE TOTAL for any qty within the range, NOT per-unit.
+        $bundleTotal = $pricing->tierBundleTotal($this->product, $safeQty);
 
-        $cart->add(
-            productId: $this->product->id,
-            qty:       $safeQty,
-            price:     $unitPrice,
-            name:      $this->product->name_en,
-            unit:      $this->product->unit,
-            moq:       $this->moq,
-        );
+        if ($bundleTotal !== null) {
+            // Volume tier: store the bundle total; CartService::totalPkr() won't multiply by qty.
+            $cart->add(
+                productId: $this->product->id,
+                qty:       $safeQty,
+                price:     $bundleTotal,
+                name:      $this->product->name_en,
+                unit:      $this->product->unit,
+                moq:       $this->moq,
+                priceMode: 'bundle',
+            );
+        } else {
+            // Below all tiers: per-unit base pricing
+            $unitPrice = $pricing->retailerPrice($this->product) ?? $this->price;
+            $cart->add(
+                productId: $this->product->id,
+                qty:       $safeQty,
+                price:     $unitPrice,
+                name:      $this->product->name_en,
+                unit:      $this->product->unit,
+                moq:       $this->moq,
+                priceMode: 'per_unit',
+            );
+        }
 
         session()->flash('cart_added', $this->product->name_en);
         $this->dispatch('cart-updated');
@@ -175,8 +192,9 @@ class ProductDetail extends Component
                 continue;
             }
 
-            // Tier-aware base price at this variant line qty, plus any option adjustment
-            $basePrice     = $pricing->tierPrice($this->product, $qty) ?? $this->price;
+            // Variant lines use per-unit base price + option adjustment.
+            // (Bundle tiers are not applied per-option for variant products.)
+            $basePrice     = $pricing->retailerPrice($this->product) ?? $this->price ?? 0.0;
             $adjustedPrice = $basePrice + (float) $option->price_adjustment_pkr;
 
             $cart->addVariant(
@@ -188,6 +206,7 @@ class ProductDetail extends Component
                 name:            $this->product->name_en,
                 unit:            $this->product->unit,
                 moq:             1,  // Per-variant lines use qty=1 as minimum
+                priceMode:       'per_unit',
             );
 
             $added++;

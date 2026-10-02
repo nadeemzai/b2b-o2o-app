@@ -40,7 +40,16 @@
                     </span>
                     @endif
 
-                    <p class="text-xs text-slate-400 mt-0.5">{{ $item['unit'] }} &middot; {{ \App\Services\CurrencyService::format($item['price']) }} each</p>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                        {{ $item['unit'] }}
+                        @if(($item['price_mode'] ?? 'per_unit') === 'bundle')
+                            &middot;
+                            <span class="font-semibold text-brand">Bundle: {{ \App\Services\CurrencyService::format($item['price']) }}</span>
+                            <span class="text-slate-300">(covers all {{ $item['qty'] }} {{ $item['unit'] }})</span>
+                        @else
+                            &middot; {{ \App\Services\CurrencyService::format($item['price']) }} each
+                        @endif
+                    </p>
 
                     @if(($item['moq'] ?? 1) > 1)
                     <span class="inline-block mt-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">Min {{ $item['moq'] }} units</span>
@@ -69,7 +78,12 @@
 
                 {{-- Line total --}}
                 <div class="text-right w-24 mt-0.5">
-                    <p class="text-sm font-bold text-slate-800 tabular-nums">{{ \App\Services\CurrencyService::format($item['price'] * $item['qty']) }}</p>
+                    @php
+                        $lineTotal = ($item['price_mode'] ?? 'per_unit') === 'bundle'
+                            ? $item['price']                   // flat bundle — don't multiply
+                            : $item['price'] * $item['qty'];   // per-unit
+                    @endphp
+                    <p class="text-sm font-bold text-slate-800 tabular-nums">{{ \App\Services\CurrencyService::format($lineTotal) }}</p>
                 </div>
 
                 {{-- Remove --}}

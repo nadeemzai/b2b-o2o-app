@@ -272,7 +272,9 @@ $soldLabel = $soldCount > 0
                             @if($price)
                             <div class="flex items-end gap-3 flex-wrap">
                                 <span class="text-4xl font-black text-brand tabular-nums" x-text="tiers.length ? fmt(unitPrice) : 'PKR ' + new Intl.NumberFormat('en-US',{minimumFractionDigits:2}).format({{ (float)($price ?? 0) }})"></span>
-                                <span class="text-sm text-slate-400 pb-1">/ {{ $unit }}</span>
+                                {{-- Label switches: "/ pcs" for base price, "bundle total" when inside a tier --}}
+                                <span class="text-sm text-slate-400 pb-1"
+                                      x-text="activeTierIdx >= 0 ? 'bundle total' : '/ {{ $unit }}'">/&nbsp;{{ $unit }}</span>
                             </div>
                             @if($moq > 1)
                             <div class="flex items-center gap-2 mt-2">
