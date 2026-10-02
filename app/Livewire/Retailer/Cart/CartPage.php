@@ -4,8 +4,10 @@ namespace App\Livewire\Retailer\Cart;
 
 use App\Exceptions\InsufficientStockException;
 use App\Models\Retailer;
+use App\Models\Product;
 use App\Services\CartService;
 use App\Services\OrderService;
+use App\Services\PricingService;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -19,7 +21,7 @@ class CartPage extends Component
      * Update qty for any cart line — works for both plain product keys (int)
      * and variant keys (string like "p5_v12").
      */
-    public function updateQty(string $key, int $qty, CartService $cart): void
+    public function updateQty(string $key, int $qty, CartService $cart, PricingService $pricing): void
     {
         $items = $cart->items();
         $key   = is_numeric($key) ? (int) $key : $key;
@@ -34,6 +36,26 @@ class CartPage extends Component
         }
 
         $cart->updateByKey($key, $qty);
+
+        // Re-price: a qty change may cross a volume-tier boundary.
+        // price_pkr is a FLAT BUNDLE TOTAL — must update price_mode accordingly.
+        if ($qty > 0 && isset($items[$key])) {
+            $productId = (int) $items[$key]['product_id'];
+            $product   = Product::with('priceTiers')->find($productId);
+            if ($product) {
+                $bundleTotal = $pricing->tierBundleTotal($product, $qty);
+                if ($bundleTotal !== null) {
+                    // Now in a bundle tier
+                    $cart->updatePriceByKey($key, $bundleTotal, 'bundle');
+                } else {
+                    // Below all tiers — switch back to per-unit base price
+                    $unitPrice = $pricing->retailerPrice($product);
+                    if ($unitPrice !== null) {
+                        $cart->updatePriceByKey($key, $unitPrice, 'per_unit');
+                    }
+                }
+            }
+        }
     }
 
     public function remove(string $key, CartService $cart): void

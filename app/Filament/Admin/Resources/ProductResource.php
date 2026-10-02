@@ -100,6 +100,7 @@ class ProductResource extends Resource
                                 ->imageResizeTargetWidth('800')
                                 ->imageResizeTargetHeight('800')
                                 ->maxSize(3072)
+                                ->dehydrated(fn ($state): bool => filled($state))
                                 ->columnSpan(2),
                             \Filament\Forms\Components\TextInput::make('sort_order')
                                 ->label('Order')
@@ -216,22 +217,22 @@ class ProductResource extends Resource
                 Tables\Filters\TernaryFilter::make('is_deal')->label('Deal'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ViewAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+            ->bulkActions([]);
     }
+
+    // Read-only for OzAdmin — product catalog is managed in the Huashu panel
+    public static function canCreate(): bool        { return false; }
+    public static function canEdit($record): bool   { return false; }
+    public static function canDelete($record): bool { return false; }
+    public static function canDeleteAny(): bool     { return false; }
 
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListProducts::route('/'),
-            'create' => Pages\CreateProduct::route('/create'),
-            'edit'   => Pages\EditProduct::route('/{record}/edit'),
+            'index' => Pages\ListProducts::route('/'),
+            'view'  => Pages\ViewProduct::route('/{record}'),
         ];
     }
 }

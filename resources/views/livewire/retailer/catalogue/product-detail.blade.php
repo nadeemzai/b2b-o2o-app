@@ -39,6 +39,60 @@ $soldLabel = $soldCount > 0
 @media (max-width:1023px) { .rpdp-thumb-strip { display:none; } }
     </style>
 
+    <script>
+    function productPricing(tiers, moq, basePrice, maxQty, initialQty) {
+        return {
+            qty: initialQty ?? 1,
+            tiers: tiers,
+            moq: moq,
+            basePrice: basePrice,
+            maxQty: maxQty,
+
+            get unitPrice() {
+                if (!this.tiers.length) return this.basePrice;
+                let q = parseInt(this.qty) || 1;
+                for (let i = this.tiers.length - 1; i >= 0; i--) {
+                    if (q >= this.tiers[i].min_qty) return this.tiers[i].price_pkr;
+                }
+                return this.basePrice; // below all tiers: show base retailer price
+            },
+
+            get activeTierIdx() {
+                if (!this.tiers.length) return -1;
+                let q = parseInt(this.qty) || 1;
+                for (let i = this.tiers.length - 1; i >= 0; i--) {
+                    if (q >= this.tiers[i].min_qty) return i;
+                }
+                return -1; // below all tiers: no tier highlighted
+            },
+
+            get upsellMsg() {
+                if (!this.tiers.length) return '';
+                let q = parseInt(this.qty) || 1;
+                let next = this.tiers.find(t => t.min_qty > q);
+                if (!next) return '';
+                let gap = next.min_qty - q;
+                return 'Add ' + gap + ' more to unlock PKR ' + Number(next.price_pkr).toFixed(2) + '/unit';
+            },
+
+            fmt(n) {
+                return 'PKR ' + new Intl.NumberFormat('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(n);
+            },
+
+            init() {
+                // Entangle with Livewire
+                let wire = this.$wire;
+                Object.defineProperty(this, 'qty', {
+                    get: () => wire.qty,
+                    set: (v) => { wire.qty = v; },
+                    configurable: true,
+                    enumerable: true,
+                });
+            }
+        };
+    }
+    </script>
+
 
     {{-- ══ BREADCRUMB BAR ═══════════════════════════════════════════════ --}}
     <div class="bg-brand px-4 sm:px-6 lg:px-8 py-3">
@@ -69,6 +123,18 @@ $soldLabel = $soldCount > 0
             <svg class="w-5 h-5 text-emerald-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
             <span><strong>{{ session('cart_added') }}</strong> added to your cart.</span>
             <a href="{{ route('retailer.cart') }}" class="ml-auto text-emerald-700 font-semibold hover:underline text-xs">View Cart →</a>
+        </div>
+    </div>
+    @endif
+
+    {{-- ══ CART ERROR FLASH ════════════════════════════════════════════════ --}}
+    @if(session('cart_error'))
+    <div class="mx-4 sm:mx-6 lg:mx-8 mt-3" x-data x-init="setTimeout(() => $el.remove(), 5000)">
+        <div class="bg-red-50 border border-red-200 text-red-800 rounded-xl px-4 py-3 text-sm flex items-center gap-2 shadow-sm">
+            <svg class="w-5 h-5 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+            </svg>
+            <span>{{ session('cart_error') }}</span>
         </div>
     </div>
     @endif
@@ -165,7 +231,8 @@ $soldLabel = $soldCount > 0
             {{-- ══ RIGHT COLUMN: Sticky Purchase Panel ════════════════ --}}
             <div class="w-full xl:w-1/2 shrink-0">
                 <div class="rpdp-right-sticky bg-white rounded-2xl border border-slate-100 shadow-sm">
-                    <div class="p-5 lg:p-6">
+                    <div class="p-5 lg:p-6"
+                         x-data="productPricing(@js($priceTiers ?? []), {{ (int)$moq }}, {{ (float)($price ?? 0) }}, {{ $maxQty }}, {{ (int)($qty ?? 1) }})">
 
                         {{-- Name --}}
                         <h1 class="text-xl font-bold text-slate-900 leading-snug mb-1">{{ $name }}</h1>
@@ -216,8 +283,10 @@ $soldLabel = $soldCount > 0
                             <p class="text-[11px] text-slate-400 font-semibold uppercase tracking-widest mb-1">Your Store Price</p>
                             @if($price)
                             <div class="flex items-end gap-3 flex-wrap">
-                                <x-price :value="$price" class="text-4xl font-black text-brand" />
-                                <span class="text-sm text-slate-400 pb-1">/ {{ $unit }}</span>
+                                <span class="text-4xl font-black text-brand tabular-nums" x-text="tiers.length ? fmt(unitPrice) : 'PKR ' + new Intl.NumberFormat('en-US',{minimumFractionDigits:2}).format({{ (float)($price ?? 0) }})"></span>
+                                {{-- Label switches: "/ pcs" for base price, "bundle total" when inside a tier --}}
+                                <span class="text-sm text-slate-400 pb-1"
+                                      x-text="activeTierIdx >= 0 ? 'bundle total' : '/ {{ $unit }}'">/&nbsp;{{ $unit }}</span>
                             </div>
                             @if($moq > 1)
                             <div class="flex items-center gap-2 mt-2">
@@ -233,6 +302,62 @@ $soldLabel = $soldCount > 0
                             @endif
                             @if($stockTracked && $available > 0 && $moq > 1)
                             <p class="text-xs text-slate-400 mt-1.5">Min order: <strong class="text-amber-600 font-semibold">{{ $moq }}</strong> · Available: <strong class="text-emerald-600 font-semibold">{{ number_format($available) }}</strong> {{ $unit }}</p>
+                            @endif
+                            {{-- ── Volume price tiers table ──────────────────── --}}
+                            @if(!empty($priceTiers))
+                            <div class="mt-3 overflow-hidden rounded-xl border border-orange-100">
+                                <table class="w-full text-xs">
+                                    <thead>
+                                        <tr class="bg-orange-50/80 border-b border-orange-100">
+                                            <th class="text-left px-3 py-2 text-slate-500 font-semibold uppercase tracking-wider">Qty Range</th>
+                                            <th class="text-right px-3 py-2 text-slate-500 font-semibold uppercase tracking-wider">Unit Price</th>
+                                            <th class="w-6"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-orange-50/60">
+                                        {{-- Base price row: always visible, active when qty < first tier --}}
+                                        @if(!empty($priceTiers) && !is_null($price))
+                                        <tr class="transition-colors"
+                                            :class="activeTierIdx === -1 ? 'bg-amber-50' : 'hover:bg-orange-50/40'">
+                                            <td class="px-3 py-2 font-semibold text-slate-700">
+                                                1{{ isset($priceTiers[0]['min_qty']) ? '–'.($priceTiers[0]['min_qty'] - 1) : '' }} {{ $unit }}
+                                                <span class="ml-1 text-slate-400 font-normal">(Base)</span>
+                                            </td>
+                                            <td class="px-3 py-2 text-right tabular-nums font-bold"
+                                                :class="activeTierIdx === -1 ? 'text-brand' : 'text-slate-600'">
+                                                PKR {{ number_format((float)$price, 2) }}
+                                            </td>
+                                            <td class="pr-2 py-2 text-right">
+                                                <span x-show="activeTierIdx === -1"
+                                                      class="text-[9px] bg-brand text-white rounded-full px-1.5 py-0.5 font-bold leading-none">✓</span>
+                                            </td>
+                                        </tr>
+                                        @endif
+                                        @foreach($priceTiers as $i => $tier)
+                                        <tr class="transition-colors"
+                                            :class="activeTierIdx === {{ $i }} ? 'bg-amber-50' : 'hover:bg-orange-50/40'">
+                                            <td class="px-3 py-2 font-semibold text-slate-700">
+                                                {{ $tier['min_qty'] }}{{ isset($tier['max_qty']) && $tier['max_qty'] !== null ? '–'.$tier['max_qty'] : '+' }} {{ $unit }}
+                                                @if($tier['label'])<span class="ml-1 text-slate-400 font-normal">({{ $tier['label'] }})</span>@endif
+                                            </td>
+                                            <td class="px-3 py-2 text-right tabular-nums font-bold"
+                                                :class="activeTierIdx === {{ $i }} ? 'text-brand' : 'text-slate-600'">
+                                                PKR {{ number_format((float)$tier['price_pkr'], 2) }}
+                                            </td>
+                                            <td class="pr-2 py-2 text-right">
+                                                <span x-show="activeTierIdx === {{ $i }}"
+                                                      class="text-[9px] bg-brand text-white rounded-full px-1.5 py-0.5 font-bold leading-none">✓</span>
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                            {{-- Upsell nudge --}}
+                            <p x-show="upsellMsg" x-cloak
+                               x-text="upsellMsg"
+                               class="text-[11px] text-blue-600 font-semibold mt-1.5 flex items-center gap-1">
+                            </p>
                             @endif
                             @else
                             <p class="text-base text-slate-400 italic">Price not available — contact your account manager</p>
@@ -334,23 +459,24 @@ $soldLabel = $soldCount > 0
                             <p class="text-xs text-slate-400 mt-2 text-center">Enter 0 to skip a variant option</p>
 
                             @else
-                            <div x-data="{ localQty: $wire.entangle('qty') }">
+                            <div>
                                 <div class="flex items-stretch gap-3 mb-3">
                                     <div class="flex items-center border-2 border-slate-200 rounded-xl overflow-hidden bg-white">
                                         <button type="button"
-                                                @click="localQty = Math.max({{ $moq }}, localQty - 1)"
+                                                @click="qty = Math.max(moq, qty - 1)"
                                                 class="w-11 h-12 text-slate-500 hover:bg-orange-50 text-xl font-bold transition flex items-center justify-center border-r border-slate-200">−</button>
                                         <input type="number"
-                                               x-model.number="localQty"
+                                               x-model.number="qty"
                                                min="{{ $moq }}"
                                                max="{{ $maxQty }}"
+                                               @blur="qty = Math.min(maxQty, Math.max(moq, parseInt($event.target.value) || moq))"
                                                class="w-16 h-12 text-center text-lg font-bold text-slate-800 border-0 focus:outline-none bg-white tabular-nums" />
                                         <button type="button"
-                                                @click="localQty = Math.min({{ $maxQty }}, localQty + 1)"
+                                                @click="qty = Math.min(maxQty, qty + 1)"
                                                 class="w-11 h-12 text-slate-500 hover:bg-orange-50 text-xl font-bold transition flex items-center justify-center border-l border-slate-200">+</button>
                                     </div>
 
-                                    <button wire:click="addToCart"
+                                    <button @click="$wire.addToCart(qty)"
                                             wire:loading.attr="disabled"
                                             class="flex-1 py-3 rounded-xl text-base font-bold bg-brand text-white hover:bg-brand-dark active:scale-95 transition shadow-md flex items-center justify-center gap-2 disabled:opacity-60">
                                         <span wire:loading.remove wire:target="addToCart" class="flex items-center gap-2">
@@ -370,10 +496,10 @@ $soldLabel = $soldCount > 0
                                     @endif
                                     @if($stockTracked)
                                     <p class="text-xs text-slate-400">Max available: {{ number_format($available) }} {{ $unit }}
-                                        @if($pcsCarton) · <span x-text="Math.ceil(localQty / {{ $pcsCarton }})"></span> carton(s) @endif
+                                        @if($pcsCarton) · <span x-text="Math.ceil(qty / {{ $pcsCarton }})"></span> carton(s) @endif
                                     </p>
                                     @elseif($pcsCarton)
-                                    <p class="text-xs text-slate-400">Cartons needed: <span x-text="Math.ceil(localQty / {{ $pcsCarton }})"></span></p>
+                                    <p class="text-xs text-slate-400">Cartons needed: <span x-text="Math.ceil(qty / {{ $pcsCarton }})"></span></p>
                                     @endif
                                 </div>
                             </div>

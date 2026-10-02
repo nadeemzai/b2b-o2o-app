@@ -21,7 +21,7 @@ class OrderFactory extends Factory
             'store_id'       => TownshipStore::factory(),
             'status'         => Order::STATUS_PENDING,
             'total_pkr'      => $this->faker->randomFloat(2, 100, 5000),
-            'payment_method' => 'cod',
+            'payment_method' => 'dbt',
             'collected_pkr'  => null,
             'notes'          => null,
         ];

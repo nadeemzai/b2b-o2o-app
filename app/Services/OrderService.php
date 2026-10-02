@@ -69,6 +69,7 @@ class OrderService
             // ── 2. Load products with Huashu pricing ───────────────────────
             /** @var Collection<int, Product> $productMap (keyed by id) */
             $productMap = Product::withPrice()
+                ->with('priceTiers')   // eager-load for tier price resolution
                 ->whereIn('id', $productIds)
                 ->get()
                 ->keyBy('id');
@@ -115,12 +116,23 @@ class OrderService
                     );
                 }
 
-                // Price snapshots
-                $commissionRate    = $commissionRates[$product->category_id] ?? 0.0;
-                $huashuUnitPrice   = (float) $product->huashu_base_price_pkr;
-                $retailerUnitPrice = $this->pricing->retailerPrice($product);
+                // Price snapshots — flat bundle total takes priority over per-unit pricing.
+                // price_pkr in product_price_tiers is a FLAT BUNDLE TOTAL, not per-unit.
+                $commissionRate  = $commissionRates[$product->category_id] ?? 0.0;
+                $huashuUnitPrice = (float) $product->huashu_base_price_pkr;
 
-                $totalPkr   += $retailerUnitPrice * $qty;
+                $bundleTotal = $this->pricing->tierBundleTotal($product, $qty);
+                if ($bundleTotal !== null) {
+                    // Volume tier: the retailer pays this flat amount regardless of exact qty
+                    $lineTotalPkr      = $bundleTotal;
+                    $retailerUnitPrice = round($bundleTotal / max(1, $qty), 4); // effective per-unit (for records)
+                } else {
+                    // Below all tiers: per-unit base pricing
+                    $retailerUnitPrice = $this->pricing->retailerPrice($product) ?? 0.0;
+                    $lineTotalPkr      = $retailerUnitPrice * $qty;
+                }
+
+                $totalPkr   += $lineTotalPkr;
                 $lineItems[] = [
                     'product_id'           => $productId,
                     'variant_option_id'    => $item['variant_option_id'] ?? null,
@@ -141,7 +153,7 @@ class OrderService
                 'store_id'       => $storeId,
                 'status'         => Order::STATUS_PENDING,
                 'total_pkr'      => round($totalPkr, 2),
-                'payment_method' => 'cod',
+                'payment_method' => 'dbt',
             ]);
 
             // ── 5. Create OrderItems + reserve stock ───────────────────────
@@ -386,7 +398,7 @@ class OrderService
 
     /**
      * Mark as delivered, consume reservations, record stock outbound movement,
-     * and record collected COD amount.
+     * and record collected DBT payment amount.
      */
     public function deliverOrder(Order $order, float $collectedPkr, int $deliveredByUserId): Order
     {

@@ -68,4 +68,91 @@ class PricingService
 
         return $rates;
     }
+
+    // ──────────────────────────────────────────────
+    // Volume / Tier Pricing
+    // ──────────────────────────────────────────────
+
+    /**
+     * Resolve the retailer-facing unit price for a given quantity,
+     * applying tiered pricing when tiers exist.
+     *
+     * Algorithm: walk tiers from highest min_qty downward.
+     * Return the first tier whose min_qty <= $qty.
+     * Falls back to flat retailerPrice() when no tiers are configured.
+     *
+     * @param  Product  $product  Must have priceTiers relation loaded (or will eager-load).
+     * @param  int      $qty      Quantity being ordered / displayed.
+     * @return float|null         Resolved unit price, or null if product has no price.
+     */
+    public function tierPrice(Product $product, int $qty): ?float
+    {
+        $tiers = $product->relationLoaded('priceTiers')
+            ? $product->priceTiers
+            : $product->priceTiers()->orderBy('min_qty')->get();
+
+        if ($tiers->isEmpty()) {
+            return $this->retailerPrice($product);
+        }
+
+        foreach ($tiers->sortByDesc('min_qty') as $tier) {
+            if ($qty >= $tier->min_qty) {
+                return (float) $tier->price_pkr;
+            }
+        }
+
+        // qty below all tier lower-bounds: return base retailer price
+        return $this->retailerPrice($product);
+    }
+
+
+    /**
+     * Returns the flat bundle total for the matching volume tier, or null when
+     * qty falls below all tier thresholds (base per-unit pricing applies).
+     *
+     * price_pkr in product_price_tiers is a FLAT BUNDLE TOTAL paid regardless
+     * of exact quantity within the tier range — NOT a per-unit price.
+     *
+     * @param  Product  $product  Must have priceTiers relation loaded (or will eager-load).
+     * @param  int      $qty      Quantity being ordered.
+     * @return float|null         Flat bundle total, or null if qty is below all tiers.
+     */
+    public function tierBundleTotal(Product $product, int $qty): ?float
+    {
+        $tiers = $product->relationLoaded('priceTiers')
+            ? $product->priceTiers
+            : $product->priceTiers()->orderBy('min_qty')->get();
+
+        if ($tiers->isEmpty()) {
+            return null;
+        }
+
+        foreach ($tiers->sortByDesc('min_qty') as $tier) {
+            if ($qty >= $tier->min_qty) {
+                return (float) $tier->price_pkr; // flat bundle total for this tier
+            }
+        }
+
+        return null; // qty below all tier thresholds → base per-unit pricing applies
+    }
+
+    /**
+     * Return all tiers as a plain array suitable for JSON / Alpine.js.
+     *
+     * @return array<int, array{min_qty:int,max_qty:int|null,price_pkr:float,label:string|null}>
+     */
+    public function tiersArray(Product $product): array
+    {
+        $tiers = $product->relationLoaded('priceTiers')
+            ? $product->priceTiers
+            : $product->priceTiers()->orderBy('min_qty')->get();
+
+        return $tiers->map(fn ($t) => [
+            'min_qty'   => (int)   $t->min_qty,
+            'max_qty'   => $t->max_qty !== null ? (int) $t->max_qty : null,
+            'price_pkr' => (float) $t->price_pkr,
+            'label'     => $t->label,
+        ])->values()->all();
+    }
+
 }

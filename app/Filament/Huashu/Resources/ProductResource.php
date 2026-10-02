@@ -50,7 +50,7 @@ class ProductResource extends Resource
             ])->columns(2),
 
             Section::make('Huashu Pricing & MOQ')
-                ->description('Base price determines the retailer selling price via category commission rate.')
+                ->description('Base price determines the retailer selling price via category commission rate. Volume tiers override flat price at order time.')
                 ->schema([
                     TextInput::make('huashu_base_price_pkr')
                         ->label('Huashu Base Price (PKR)')
@@ -67,6 +67,54 @@ class ProductResource extends Resource
                         ->default(1)
                         ->integer()
                         ->helperText('Minimum units a retailer must order in one cart line.'),
+
+                    Repeater::make('priceTiers')
+                        ->relationship('priceTiers')
+                        ->label('Volume Price Tiers')
+                        ->helperText('Define quantity bands with different unit prices. Leave "Max Qty" empty for the top-open band (e.g. "100+" units).')
+                        ->schema([
+                            TextInput::make('min_qty')
+                                ->label('Min Qty')
+                                ->numeric()
+                                ->integer()
+                                ->minValue(1)
+                                ->default(1)
+                                ->required()
+                                ->placeholder('e.g. 1'),
+                            TextInput::make('max_qty')
+                                ->label('Max Qty')
+                                ->numeric()
+                                ->integer()
+                                ->minValue(1)
+                                ->nullable()
+                                ->placeholder('e.g. 99 (blank = unlimited)'),
+                            TextInput::make('price_pkr')
+                                ->label('Unit Price (PKR)')
+                                ->numeric()
+                                ->minValue(0)
+                                ->step(0.01)
+                                ->prefix('PKR')
+                                ->required()
+                                ->placeholder('e.g. 750.00'),
+                            TextInput::make('label')
+                                ->label('Label')
+                                ->maxLength(60)
+                                ->placeholder('e.g. Retail, Wholesale, Bulk'),
+                        ])
+                        ->columns(4)
+                        ->addActionLabel('Add Tier')
+                        ->reorderable('min_qty')
+                        ->collapsible()
+                        ->collapsed(false)
+                        ->defaultItems(0)
+                        ->itemLabel(fn (array $state): ?string =>
+                            isset($state['min_qty'], $state['price_pkr'])
+                                ? ($state['label'] ? "{$state['label']}: " : '')
+                                  . "{$state['min_qty']}–"
+                                  . ($state['max_qty'] ?? '∞')
+                                  . ' @ PKR ' . number_format((float)$state['price_pkr'], 2)
+                                : null
+                        ),
                 ])->columns(2),
 
             Section::make('Product Image')

@@ -28,7 +28,7 @@ class StockSeeder extends Seeder
                         'store_id'   => $store->id,
                     ],
                     [
-                        'qty_on_hand'  => 200,
+                        'qty_on_hand'  => 100000,
                         'qty_reserved' => 0,
                     ]
                 );

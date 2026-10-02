@@ -23,6 +23,8 @@ class ProductDetail extends Component
     public int    $moq        = 1;
     public int    $available  = 0;
     public bool   $stockTracked = false;
+    /** @var array<int, array{min_qty:int,max_qty:int|null,price_pkr:float,label:string|null}> */
+    public array  $priceTiers   = [];
 
     /**
      * Variant qty inputs: keyed by ProductVariantOption id.
@@ -60,17 +62,19 @@ class ProductDetail extends Component
 
         $storeId = auth('retailer')->user()->retailerProfile->store_id;
 
-        $this->product = $product->load(['category', 'variantTypes.activeOptions', 'images']);
+        $this->product = $product->load(['category', 'variantTypes.activeOptions', 'images', 'priceTiers']);
 
         // Check for variants
         $this->hasVariants = $this->product->variantTypes
             ->filter(fn ($t) => $t->activeOptions->isNotEmpty())
             ->isNotEmpty();
 
-        // Retailer price via PricingService
-        $this->price = $pricing->retailerPrice($product);
-        $this->moq   = max(1, (int) $product->moq);
-        $this->qty   = $this->moq; // Start qty at MOQ
+        // Retailer price via PricingService (tier-aware)
+        $this->moq        = max(1, (int) $product->moq);
+        $this->qty        = 1; // Show entry-tier price on load; MOQ enforced at add-to-cart
+        $this->priceTiers = $pricing->tiersArray($product);
+        $this->price      = $pricing->tierPrice($product, 1)
+                         ?? $pricing->retailerPrice($product);
 
         // Initialise variant qtys at 0 so wire:model binds cleanly
         if ($this->hasVariants) {
@@ -110,46 +114,92 @@ class ProductDetail extends Component
     // Adding to cart
     // ──────────────────────────────────────────────
 
-    public function addToCart(CartService $cart): void
+    /**
+     * Called by Alpine via @click="$wire.addToCart(qty)" for simple products
+     * so the current UI qty is passed directly — avoids the async wire.qty
+     * property-sync race where $this->qty is still 1 when the action fires.
+     * Variants button uses wire:click with no arg, so $qty defaults to 0.
+     */
+    public function addToCart(int $qty = 0, CartService $cart, PricingService $pricing): void
     {
         if (! $this->price) {
             return;
         }
 
+        // Use the qty passed from Alpine; fall back to $this->qty for variants path
+        $effectiveQty = $qty > 0 ? $qty : $this->qty;
+
         if ($this->hasVariants) {
-            $this->addVariantsToCart($cart);
+            $this->addVariantsToCart($cart, $pricing);
         } else {
-            $this->addSimpleToCart($cart);
+            $this->addSimpleToCart($cart, $pricing, $effectiveQty);
         }
     }
 
-    private function addSimpleToCart(CartService $cart): void
+    private function addSimpleToCart(CartService $cart, PricingService $pricing, int $passedQty = 0): void
     {
-        // Block only when stock IS tracked and we don't have enough
-        if ($this->stockTracked && $this->available < $this->moq) {
-            return;
+        // $passedQty > 0 means Alpine sent us the current UI qty directly.
+        // This is more reliable than $this->qty which may not have synced yet.
+        $baseQty = $passedQty > 0 ? $passedQty : $this->qty;
+        $baseQty = max($this->moq, $baseQty);
+
+        // Stock gate — only enforced when the product has a stock record.
+        if ($this->stockTracked) {
+            if ($this->available < $this->moq) {
+                // Fully out of stock; the blade already hides the button, but guard here too.
+                session()->flash('cart_error', 'This product is currently out of stock.');
+                return;
+            }
+
+            if ($baseQty > $this->available) {
+                // User typed a qty above what's available — reject clearly instead of
+                // silently clamping (which would change the tier and price without warning).
+                session()->flash('cart_error',
+                    "Only {$this->available} units available. Please reduce your quantity to {$this->available} or less."
+                );
+                return;
+            }
         }
 
-        $safeQty = $this->stockTracked
-            ? min($this->qty, $this->available)
-            : $this->qty;
+        $safeQty = $baseQty; // qty is already validated; no silent clamping needed
 
-        $safeQty = max($this->moq, $safeQty);
+        // Ensure priceTiers relation is loaded (Livewire re-hydration strips eager loads).
+        $this->product->loadMissing('priceTiers');
 
-        $cart->add(
-            productId: $this->product->id,
-            qty:       $safeQty,
-            price:     $this->price,
-            name:      $this->product->name_en,
-            unit:      $this->product->unit,
-            moq:       $this->moq,
-        );
+        // Check whether qty falls in a flat-bundle tier.
+        // price_pkr is a FLAT BUNDLE TOTAL for any qty within the range, NOT per-unit.
+        $bundleTotal = $pricing->tierBundleTotal($this->product, $safeQty);
+
+        if ($bundleTotal !== null) {
+            // Volume tier: store the bundle total; CartService::totalPkr() won't multiply by qty.
+            $cart->add(
+                productId: $this->product->id,
+                qty:       $safeQty,
+                price:     $bundleTotal,
+                name:      $this->product->name_en,
+                unit:      $this->product->unit,
+                moq:       $this->moq,
+                priceMode: 'bundle',
+            );
+        } else {
+            // Below all tiers: per-unit base pricing
+            $unitPrice = $pricing->retailerPrice($this->product) ?? $this->price;
+            $cart->add(
+                productId: $this->product->id,
+                qty:       $safeQty,
+                price:     $unitPrice,
+                name:      $this->product->name_en,
+                unit:      $this->product->unit,
+                moq:       $this->moq,
+                priceMode: 'per_unit',
+            );
+        }
 
         session()->flash('cart_added', $this->product->name_en);
         $this->dispatch('cart-updated');
     }
 
-    private function addVariantsToCart(CartService $cart): void
+    private function addVariantsToCart(CartService $cart, PricingService $pricing): void
     {
         $added = 0;
 
@@ -168,8 +218,10 @@ class ProductDetail extends Component
                 continue;
             }
 
-            // Price adjustment per option
-            $adjustedPrice = $this->price + (float) $option->price_adjustment_pkr;
+            // Variant lines use per-unit base price + option adjustment.
+            // (Bundle tiers are not applied per-option for variant products.)
+            $basePrice     = $pricing->retailerPrice($this->product) ?? $this->price ?? 0.0;
+            $adjustedPrice = $basePrice + (float) $option->price_adjustment_pkr;
 
             $cart->addVariant(
                 productId:       $this->product->id,
@@ -180,6 +232,7 @@ class ProductDetail extends Component
                 name:            $this->product->name_en,
                 unit:            $this->product->unit,
                 moq:             1,  // Per-variant lines use qty=1 as minimum
+                priceMode:       'per_unit',
             );
 
             $added++;
