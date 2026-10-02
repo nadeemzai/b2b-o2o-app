@@ -5,7 +5,9 @@ namespace App\Services;
 /**
  * Cart session structure:
  *
- *  Non-variant item:   key = (int) $productId
+ *  Non-variant (per-unit): key = "p{productId}_u"  (string)
+ *  Non-variant (bundle):   key = "p{productId}_b"  (string)
+ *    Same product can have BOTH keys simultaneously (bundle qty + extra unit qty on separate lines).
  *    ['product_id' => int, 'qty' => int, 'price' => float, 'price_mode' => 'per_unit'|'bundle', 'name' => str, 'unit' => str, 'moq' => int]
  *
  *  Variant item:       key = "p{productId}_v{variantOptionId}"  (string)
@@ -35,7 +37,9 @@ class CartService
     {
         $cart = $this->items();
         $moq  = max(1, $moq);
-        $key  = $productId;   // integer key for plain products
+        // Separate keys for bundle vs per-unit so the same product can have two
+        // independent cart lines (e.g. 100-unit bundle + 2 extra units side by side).
+        $key  = $priceMode === 'bundle' ? "p{$productId}_b" : "p{$productId}_u";
 
         if (isset($cart[$key])) {
             // Replace qty and reprice — user set a specific quantity on the detail page,
