@@ -71,9 +71,9 @@ class ProductDetail extends Component
 
         // Retailer price via PricingService (tier-aware)
         $this->moq        = max(1, (int) $product->moq);
-        $this->qty        = $this->moq; // Start qty at MOQ
+        $this->qty        = 1; // Show entry-tier price on load; MOQ enforced at add-to-cart
         $this->priceTiers = $pricing->tiersArray($product);
-        $this->price      = $pricing->tierPrice($product, $this->moq)
+        $this->price      = $pricing->tierPrice($product, 1)
                          ?? $pricing->retailerPrice($product);
 
         // Initialise variant qtys at 0 so wire:model binds cleanly
