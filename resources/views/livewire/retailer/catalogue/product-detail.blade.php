@@ -463,7 +463,7 @@ $soldLabel = $soldCount > 0
                                                 class="w-11 h-12 text-slate-500 hover:bg-orange-50 text-xl font-bold transition flex items-center justify-center border-l border-slate-200">+</button>
                                     </div>
 
-                                    <button wire:click="addToCart"
+                                    <button @click="$wire.addToCart(qty)"
                                             wire:loading.attr="disabled"
                                             class="flex-1 py-3 rounded-xl text-base font-bold bg-brand text-white hover:bg-brand-dark active:scale-95 transition shadow-md flex items-center justify-center gap-2 disabled:opacity-60">
                                         <span wire:loading.remove wire:target="addToCart" class="flex items-center gap-2">

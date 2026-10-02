@@ -114,31 +114,47 @@ class ProductDetail extends Component
     // Adding to cart
     // ──────────────────────────────────────────────
 
-    public function addToCart(CartService $cart, PricingService $pricing): void
+    /**
+     * Called by Alpine via @click="$wire.addToCart(qty)" for simple products
+     * so the current UI qty is passed directly — avoids the async wire.qty
+     * property-sync race where $this->qty is still 1 when the action fires.
+     * Variants button uses wire:click with no arg, so $qty defaults to 0.
+     */
+    public function addToCart(int $qty = 0, CartService $cart, PricingService $pricing): void
     {
         if (! $this->price) {
             return;
         }
 
+        // Use the qty passed from Alpine; fall back to $this->qty for variants path
+        $effectiveQty = $qty > 0 ? $qty : $this->qty;
+
         if ($this->hasVariants) {
             $this->addVariantsToCart($cart, $pricing);
         } else {
-            $this->addSimpleToCart($cart, $pricing);
+            $this->addSimpleToCart($cart, $pricing, $effectiveQty);
         }
     }
 
-    private function addSimpleToCart(CartService $cart, PricingService $pricing): void
+    private function addSimpleToCart(CartService $cart, PricingService $pricing, int $passedQty = 0): void
     {
         // Block only when stock IS tracked and we don't have enough
         if ($this->stockTracked && $this->available < $this->moq) {
             return;
         }
 
+        // $passedQty > 0 means Alpine sent us the current UI qty directly.
+        // This is more reliable than $this->qty which may not have synced yet.
+        $baseQty = $passedQty > 0 ? $passedQty : $this->qty;
+
         $safeQty = $this->stockTracked
-            ? min($this->qty, $this->available)
-            : $this->qty;
+            ? min($baseQty, $this->available)
+            : $baseQty;
 
         $safeQty = max($this->moq, $safeQty);
+
+        // Ensure priceTiers relation is loaded (Livewire re-hydration strips eager loads).
+        $this->product->loadMissing('priceTiers');
 
         // Check whether qty falls in a flat-bundle tier.
         // price_pkr is a FLAT BUNDLE TOTAL for any qty within the range, NOT per-unit.
