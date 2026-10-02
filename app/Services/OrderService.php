@@ -153,7 +153,7 @@ class OrderService
                 'store_id'       => $storeId,
                 'status'         => Order::STATUS_PENDING,
                 'total_pkr'      => round($totalPkr, 2),
-                'payment_method' => 'cod',
+                'payment_method' => 'dbt',
             ]);
 
             // ── 5. Create OrderItems + reserve stock ───────────────────────
@@ -398,7 +398,7 @@ class OrderService
 
     /**
      * Mark as delivered, consume reservations, record stock outbound movement,
-     * and record collected COD amount.
+     * and record collected DBT payment amount.
      */
     public function deliverOrder(Order $order, float $collectedPkr, int $deliveredByUserId): Order
     {

@@ -60,7 +60,7 @@ class OrderDetail extends Component
 
         app(OrderService::class)->deliverOrder(
             $this->order,
-            (float) $this->order->total_pkr,  // Huashu records at order total; OZ handles actual COD
+            (float) $this->order->total_pkr,  // Huashu records at order total; OZ handles actual DBT payment verification
             auth()->id(),
         );
 

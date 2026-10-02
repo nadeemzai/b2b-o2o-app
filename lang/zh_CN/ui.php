@@ -189,7 +189,7 @@ return [
     'view_all_prices' => '查看所有门店价格',
     'contact_account_manager' => '请联系您的客户经理下特殊订单',
     'payment' => '付款方式',
-    'cod' => '货到付款',
+    'cod' => '直接银行转账 (DBT)',
     'cod_notice' => '仅支持货到付款 · 您的门店将联系您确认送货时间',
     'placing_order' => '下单中…',
     'browse_catalogue_btn' => '浏览商品目录',
