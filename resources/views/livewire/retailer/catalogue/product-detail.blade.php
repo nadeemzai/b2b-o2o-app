@@ -40,9 +40,9 @@ $soldLabel = $soldCount > 0
     </style>
 
     <script>
-    function productPricing(tiers, moq, basePrice, maxQty) {
+    function productPricing(tiers, moq, basePrice, maxQty, initialQty) {
         return {
-            qty: moq,
+            qty: initialQty ?? 1,
             tiers: tiers,
             moq: moq,
             basePrice: basePrice,
@@ -50,7 +50,7 @@ $soldLabel = $soldCount > 0
 
             get unitPrice() {
                 if (!this.tiers.length) return this.basePrice;
-                let q = parseInt(this.qty) || this.moq;
+                let q = parseInt(this.qty) || 1;
                 for (let i = this.tiers.length - 1; i >= 0; i--) {
                     if (q >= this.tiers[i].min_qty) return this.tiers[i].price_pkr;
                 }
@@ -59,7 +59,7 @@ $soldLabel = $soldCount > 0
 
             get activeTierIdx() {
                 if (!this.tiers.length) return -1;
-                let q = parseInt(this.qty) || this.moq;
+                let q = parseInt(this.qty) || 1;
                 for (let i = this.tiers.length - 1; i >= 0; i--) {
                     if (q >= this.tiers[i].min_qty) return i;
                 }
@@ -68,7 +68,7 @@ $soldLabel = $soldCount > 0
 
             get upsellMsg() {
                 if (!this.tiers.length) return '';
-                let q = parseInt(this.qty) || this.moq;
+                let q = parseInt(this.qty) || 1;
                 let next = this.tiers.find(t => t.min_qty > q);
                 if (!next) return '';
                 let gap = next.min_qty - q;
@@ -220,7 +220,7 @@ $soldLabel = $soldCount > 0
             <div class="w-full xl:w-1/2 shrink-0">
                 <div class="rpdp-right-sticky bg-white rounded-2xl border border-slate-100 shadow-sm">
                     <div class="p-5 lg:p-6"
-                         x-data="productPricing(@js($priceTiers ?? []), {{ (int)$moq }}, {{ (float)($price ?? 0) }}, {{ $maxQty }})">
+                         x-data="productPricing(@js($priceTiers ?? []), {{ (int)$moq }}, {{ (float)($price ?? 0) }}, {{ $maxQty }}, {{ (int)($qty ?? 1) }})">
 
                         {{-- Name --}}
                         <h1 class="text-xl font-bold text-slate-900 leading-snug mb-1">{{ $name }}</h1>
