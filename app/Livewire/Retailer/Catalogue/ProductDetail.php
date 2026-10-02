@@ -138,20 +138,30 @@ class ProductDetail extends Component
 
     private function addSimpleToCart(CartService $cart, PricingService $pricing, int $passedQty = 0): void
     {
-        // Block only when stock IS tracked and we don't have enough
-        if ($this->stockTracked && $this->available < $this->moq) {
-            return;
-        }
-
         // $passedQty > 0 means Alpine sent us the current UI qty directly.
         // This is more reliable than $this->qty which may not have synced yet.
         $baseQty = $passedQty > 0 ? $passedQty : $this->qty;
+        $baseQty = max($this->moq, $baseQty);
 
-        $safeQty = $this->stockTracked
-            ? min($baseQty, $this->available)
-            : $baseQty;
+        // Stock gate — only enforced when the product has a stock record.
+        if ($this->stockTracked) {
+            if ($this->available < $this->moq) {
+                // Fully out of stock; the blade already hides the button, but guard here too.
+                session()->flash('cart_error', 'This product is currently out of stock.');
+                return;
+            }
 
-        $safeQty = max($this->moq, $safeQty);
+            if ($baseQty > $this->available) {
+                // User typed a qty above what's available — reject clearly instead of
+                // silently clamping (which would change the tier and price without warning).
+                session()->flash('cart_error',
+                    "Only {$this->available} units available. Please reduce your quantity to {$this->available} or less."
+                );
+                return;
+            }
+        }
+
+        $safeQty = $baseQty; // qty is already validated; no silent clamping needed
 
         // Ensure priceTiers relation is loaded (Livewire re-hydration strips eager loads).
         $this->product->loadMissing('priceTiers');

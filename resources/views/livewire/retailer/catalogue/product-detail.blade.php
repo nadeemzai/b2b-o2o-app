@@ -127,6 +127,18 @@ $soldLabel = $soldCount > 0
     </div>
     @endif
 
+    {{-- ══ CART ERROR FLASH ════════════════════════════════════════════════ --}}
+    @if(session('cart_error'))
+    <div class="mx-4 sm:mx-6 lg:mx-8 mt-3" x-data x-init="setTimeout(() => $el.remove(), 5000)">
+        <div class="bg-red-50 border border-red-200 text-red-800 rounded-xl px-4 py-3 text-sm flex items-center gap-2 shadow-sm">
+            <svg class="w-5 h-5 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+            </svg>
+            <span>{{ session('cart_error') }}</span>
+        </div>
+    </div>
+    @endif
+
     {{-- ══ MAIN CONTENT ═════════════════════════════════════════════════ --}}
     <div class="px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto"
          x-data="{ activeImg: 0, activeTab: 'attributes' }">
@@ -457,6 +469,7 @@ $soldLabel = $soldCount > 0
                                                x-model.number="qty"
                                                min="{{ $moq }}"
                                                max="{{ $maxQty }}"
+                                               @blur="qty = Math.min(maxQty, Math.max(moq, parseInt($event.target.value) || moq))"
                                                class="w-16 h-12 text-center text-lg font-bold text-slate-800 border-0 focus:outline-none bg-white tabular-nums" />
                                         <button type="button"
                                                 @click="qty = Math.min(maxQty, qty + 1)"
