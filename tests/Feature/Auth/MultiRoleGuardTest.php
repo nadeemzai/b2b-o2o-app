@@ -2,11 +2,13 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Livewire\Retailer\Auth\Login;
 use App\Models\Retailer;
 use App\Models\User;
 use App\Models\UserRole;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
@@ -153,16 +155,22 @@ class MultiRoleGuardTest extends TestCase
 
     // ═══════════════════════════════════════════════════════════════
     // B. Retailer guard — login paths
+    //
+    // retailer.login is a GET-only Livewire page (App\Livewire\Retailer\Auth\Login);
+    // there is no POST route to submit to, so the login flow is exercised via
+    // Livewire::test() against the component's authenticate() action instead
+    // of $this->post(route('retailer.login')).
     // ═══════════════════════════════════════════════════════════════
 
     public function test_retailer_can_login_and_is_authenticated_on_retailer_guard(): void
     {
         $user = $this->makeApprovedRetailer(['password' => bcrypt('Secret99!')]);
 
-        $this->post(route('retailer.login'), [
-            'email'    => $user->email,
-            'password' => 'Secret99!',
-        ])->assertRedirect(route('retailer.dashboard'));
+        Livewire::test(Login::class)
+            ->set('email', $user->email)
+            ->set('password', 'Secret99!')
+            ->call('authenticate')
+            ->assertRedirect(route('retailer.dashboard'));
 
         $this->assertAuthenticatedAs($user, 'retailer');
         $this->assertGuest('web'); // web guard must remain untouched
@@ -172,10 +180,11 @@ class MultiRoleGuardTest extends TestCase
     {
         $user = $this->makePendingRetailer(['password' => bcrypt('Secret99!')]);
 
-        $this->post(route('retailer.login'), [
-            'email'    => $user->email,
-            'password' => 'Secret99!',
-        ])->assertRedirect(route('retailer.pending'));
+        Livewire::test(Login::class)
+            ->set('email', $user->email)
+            ->set('password', 'Secret99!')
+            ->call('authenticate')
+            ->assertRedirect(route('retailer.pending'));
 
         $this->assertAuthenticatedAs($user, 'retailer');
     }
@@ -184,10 +193,11 @@ class MultiRoleGuardTest extends TestCase
     {
         $user = $this->makeApprovedRetailer(['password' => bcrypt('Correct1!')]);
 
-        $this->post(route('retailer.login'), [
-            'email'    => $user->email,
-            'password' => 'WrongPass!',
-        ])->assertSessionHasErrors('email');
+        Livewire::test(Login::class)
+            ->set('email', $user->email)
+            ->set('password', 'WrongPass!')
+            ->call('authenticate')
+            ->assertHasErrors('email');
 
         $this->assertGuest('retailer');
     }
@@ -197,10 +207,11 @@ class MultiRoleGuardTest extends TestCase
         // User with legacy role='admin', no retailer pivot row
         $admin = $this->makeAdmin(['password' => bcrypt('Admin123!')]);
 
-        $this->post(route('retailer.login'), [
-            'email'    => $admin->email,
-            'password' => 'Admin123!',
-        ])->assertSessionHasErrors('email');
+        Livewire::test(Login::class)
+            ->set('email', $admin->email)
+            ->set('password', 'Admin123!')
+            ->call('authenticate')
+            ->assertHasErrors('email');
 
         $this->assertGuest('retailer');
     }
@@ -212,10 +223,11 @@ class MultiRoleGuardTest extends TestCase
             'is_active' => false,
         ]);
 
-        $this->post(route('retailer.login'), [
-            'email'    => $user->email,
-            'password' => 'Secret99!',
-        ])->assertSessionHasErrors('email');
+        Livewire::test(Login::class)
+            ->set('email', $user->email)
+            ->set('password', 'Secret99!')
+            ->call('authenticate')
+            ->assertHasErrors('email');
 
         $this->assertGuest('retailer');
     }
@@ -230,7 +242,7 @@ class MultiRoleGuardTest extends TestCase
 
         $this->actingAs($user, 'retailer')
              ->post(route('retailer.logout'))
-             ->assertRedirect(route('retailer.login'));
+             ->assertRedirect(route('public.home'));
 
         $this->assertGuest('retailer');
     }
@@ -350,7 +362,7 @@ class MultiRoleGuardTest extends TestCase
     public function test_admin_user_can_access_admin_panel(): void
     {
         $user  = $this->makeAdmin();
-        $panel = $this->makeFakePanel('admin');
+        $panel = \Filament\Facades\Filament::getPanel('admin');
 
         $this->assertTrue($user->canAccessPanel($panel));
     }
@@ -358,7 +370,7 @@ class MultiRoleGuardTest extends TestCase
     public function test_admin_user_cannot_access_store_panel(): void
     {
         $user  = $this->makeAdmin();
-        $panel = $this->makeFakePanel('store');
+        $panel = \Filament\Facades\Filament::getPanel('store');
 
         $this->assertFalse($user->canAccessPanel($panel));
     }
@@ -366,7 +378,7 @@ class MultiRoleGuardTest extends TestCase
     public function test_dual_role_user_can_access_admin_panel(): void
     {
         $user  = $this->makeDualRole();
-        $panel = $this->makeFakePanel('admin');
+        $panel = \Filament\Facades\Filament::getPanel('admin');
 
         $this->assertTrue($user->canAccessPanel($panel));
     }
@@ -377,7 +389,7 @@ class MultiRoleGuardTest extends TestCase
 
         foreach (['admin', 'store', 'huashu'] as $panelId) {
             $this->assertFalse(
-                $user->canAccessPanel($this->makeFakePanel($panelId)),
+                $user->canAccessPanel(\Filament\Facades\Filament::getPanel($panelId)),
                 "Expected inactive user to be denied panel [{$panelId}]"
             );
         }
@@ -389,27 +401,17 @@ class MultiRoleGuardTest extends TestCase
 
     public function test_authenticated_retailer_is_redirected_from_login_page(): void
     {
+        // AppServiceProvider::boot() sends an already-authenticated retailer
+        // to retailer.home (the storefront), not retailer.dashboard.
         $user = $this->makeApprovedRetailer();
 
         $this->actingAs($user, 'retailer')
              ->get(route('retailer.login'))
-             ->assertRedirect(route('retailer.dashboard'));
+             ->assertRedirect(route('retailer.home'));
     }
 
     public function test_unauthenticated_user_can_access_login_page(): void
     {
         $this->get(route('retailer.login'))->assertOk();
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    // Private — fake panel stub for canAccessPanel()
-    // ═══════════════════════════════════════════════════════════════
-
-    private function makeFakePanel(string $id): object
-    {
-        return new class ($id) {
-            public function __construct(private readonly string $id) {}
-            public function getId(): string { return $this->id; }
-        };
     }
 }

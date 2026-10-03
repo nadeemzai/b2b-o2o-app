@@ -13,10 +13,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // PostgreSQL syntax: ALTER COLUMN … SET DEFAULT
-        DB::statement("ALTER TABLE orders ALTER COLUMN payment_method SET DEFAULT 'dbt'");
+        $driver = DB::getDriverName();
 
-        // Migrate any existing 'cod' rows to 'dbt'
+        // SQLite (used in tests) does not support ALTER COLUMN — skip;
+        // tests always run with a fresh schema so the column default is
+        // whatever the seeder/factory uses, which is already 'dbt'.
+        if ($driver === 'pgsql') {
+            DB::statement("ALTER TABLE orders ALTER COLUMN payment_method SET DEFAULT 'dbt'");
+        } elseif ($driver === 'mysql' || $driver === 'mariadb') {
+            DB::statement("ALTER TABLE orders MODIFY COLUMN payment_method VARCHAR(20) NOT NULL DEFAULT 'dbt'");
+        }
+
+        // Migrate any existing 'cod' rows to 'dbt' (all drivers support this)
         DB::table('orders')->where('payment_method', 'cod')->update(['payment_method' => 'dbt']);
     }
 
@@ -25,6 +33,12 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("ALTER TABLE orders ALTER COLUMN payment_method SET DEFAULT 'cod'");
+        $driver = DB::getDriverName();
+
+        if ($driver === 'pgsql') {
+            DB::statement("ALTER TABLE orders ALTER COLUMN payment_method SET DEFAULT 'cod'");
+        } elseif ($driver === 'mysql' || $driver === 'mariadb') {
+            DB::statement("ALTER TABLE orders MODIFY COLUMN payment_method VARCHAR(20) NOT NULL DEFAULT 'cod'");
+        }
     }
 };

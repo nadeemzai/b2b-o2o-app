@@ -3,6 +3,7 @@
 namespace Tests\Feature\Retailer;
 
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\ProductStorePrice;
 use App\Models\Retailer;
 use App\Models\StockLevel;
@@ -35,9 +36,13 @@ class OrderTest extends TestCase
             'store_id' => $store->id,
         ]);
 
-        // Create a product with a price and stock at this store
+        // Create a product with a Huashu base price (required by OrderService's
+        // pricing lookup), then stock + a store-specific listing price for it.
+        $product = Product::factory()->create(['huashu_base_price_pkr' => 250.00]);
+
         $stockLevel = StockLevel::factory()
             ->for($store, 'store')
+            ->for($product, 'product')
             ->withStock($onHand, $reserved)
             ->create();
 

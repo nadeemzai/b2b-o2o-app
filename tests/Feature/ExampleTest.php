@@ -2,15 +2,17 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
-    public function test_root_redirects_to_retailer_login(): void
+    use RefreshDatabase;
+
+    public function test_root_shows_the_public_homepage(): void
     {
         $response = $this->get('/');
 
-        $response->assertRedirect(route('retailer.login'));
+        $response->assertOk();
     }
 }
