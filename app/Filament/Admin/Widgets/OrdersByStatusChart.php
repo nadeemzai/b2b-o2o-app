@@ -3,18 +3,39 @@
 namespace App\Filament\Admin\Widgets;
 
 use App\Models\Order;
+use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
-use Illuminate\Support\Collection;
+use Livewire\Attributes\On;
 
 class OrdersByStatusChart extends ChartWidget
 {
-    protected static ?string $heading = 'Orders by Status';
-
     protected static ?int $sort = 2;
 
     protected int | string | array $columnSpan = 'full';
 
     protected static ?string $maxHeight = '220px';
+
+    public string $dateFrom = '';
+    public string $dateTo   = '';
+
+    public function mount(): void
+    {
+        $this->dateFrom = now()->startOfMonth()->toDateString();
+        $this->dateTo   = now()->toDateString();
+    }
+
+    #[On('oz-date-range-updated')]
+    public function updateDateRange(string $from, string $to): void
+    {
+        $this->dateFrom = $from;
+        $this->dateTo   = $to;
+    }
+
+    public function getHeading(): string
+    {
+        $label = $this->getPeriodLabel();
+        return "Orders by Status — {$label}";
+    }
 
     protected function getData(): array
     {
@@ -29,6 +50,8 @@ class OrdersByStatusChart extends ChartWidget
 
         $counts = Order::query()
             ->selectRaw('status, count(*) as total')
+            ->when($this->dateFrom, fn ($q) => $q->whereDate('created_at', '>=', $this->dateFrom))
+            ->when($this->dateTo,   fn ($q) => $q->whereDate('created_at', '<=', $this->dateTo))
             ->groupBy('status')
             ->pluck('total', 'status');
 
@@ -71,5 +94,17 @@ class OrdersByStatusChart extends ChartWidget
     protected function getType(): string
     {
         return 'bar';
+    }
+
+    private function getPeriodLabel(): string
+    {
+        if ($this->dateFrom === '' && $this->dateTo === '') {
+            return 'All Time';
+        }
+
+        $from = $this->dateFrom ? Carbon::parse($this->dateFrom)->format('d M Y') : '—';
+        $to   = $this->dateTo   ? Carbon::parse($this->dateTo)->format('d M Y')   : '—';
+
+        return $from === $to ? $from : "{$from} → {$to}";
     }
 }

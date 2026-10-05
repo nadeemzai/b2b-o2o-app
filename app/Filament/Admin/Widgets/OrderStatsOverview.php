@@ -7,24 +7,51 @@ use App\Models\Retailer;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Livewire\Attributes\On;
 
 class OrderStatsOverview extends BaseWidget
 {
     protected static ?int $sort = 1;
 
+    public string $dateFrom = '';
+    public string $dateTo   = '';
+
+    public function mount(): void
+    {
+        $this->dateFrom = now()->startOfMonth()->toDateString();
+        $this->dateTo   = now()->toDateString();
+    }
+
+    #[On('oz-date-range-updated')]
+    public function updateDateRange(string $from, string $to): void
+    {
+        $this->dateFrom = $from;
+        $this->dateTo   = $to;
+    }
+
     protected function getStats(): array
     {
-        $monthStart = Carbon::now()->startOfMonth();
+        // ── Period-aware base query ──────────────────────────────────────
+        $inPeriod = fn () => Order::query()
+            ->when($this->dateFrom, fn ($q) => $q->whereDate('created_at', '>=', $this->dateFrom))
+            ->when($this->dateTo,   fn ($q) => $q->whereDate('created_at', '<=', $this->dateTo));
 
-        $commissionThisMonth = Order::query()
+        $periodLabel = $this->getPeriodLabel();
+
+        // Period-scoped counts
+        $ordersInPeriod = $inPeriod()->count();
+
+        $commissionInPeriod = Order::query()
             ->where('status', Order::STATUS_DELIVERED)
-            ->where('updated_at', '>=', $monthStart)
+            ->when($this->dateFrom, fn ($q) => $q->whereDate('updated_at', '>=', $this->dateFrom))
+            ->when($this->dateTo,   fn ($q) => $q->whereDate('updated_at', '<=', $this->dateTo))
             ->sum('oz_commission_pkr');
 
-        $pendingKyc = Retailer::where('kyc_status', 'pending')->count();
-        $awaitingVerification = Order::where('status', Order::STATUS_PENDING)->count();
-        $readyToTransfer = Order::where('status', Order::STATUS_PAYMENT_VERIFIED)->count();
-        $activeRetailers = Retailer::where('kyc_status', 'approved')->count();
+        // ── Always-current operational queues ───────────────────────────
+        $pendingKyc            = Retailer::where('kyc_status', 'pending')->count();
+        $awaitingVerification  = Order::where('status', Order::STATUS_PENDING)->count();
+        $readyToTransfer       = Order::where('status', Order::STATUS_PAYMENT_VERIFIED)->count();
+        $activeRetailers       = Retailer::where('kyc_status', 'approved')->count();
 
         return [
             Stat::make('Pending KYC', $pendingKyc)
@@ -42,8 +69,13 @@ class OrderStatsOverview extends BaseWidget
                 ->descriptionIcon('heroicon-m-arrow-right-circle')
                 ->color($readyToTransfer > 0 ? 'info' : 'gray'),
 
-            Stat::make('Commission This Month', 'PKR ' . number_format($commissionThisMonth, 0))
-                ->description('From delivered orders — ' . Carbon::now()->format('F Y'))
+            Stat::make('Orders — ' . $periodLabel, $ordersInPeriod)
+                ->description('New orders placed in selected period')
+                ->descriptionIcon('heroicon-m-shopping-cart')
+                ->color('primary'),
+
+            Stat::make('Commission — ' . $periodLabel, 'PKR ' . number_format($commissionInPeriod, 0))
+                ->description('From delivered orders in selected period')
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('success'),
 
@@ -52,5 +84,17 @@ class OrderStatsOverview extends BaseWidget
                 ->descriptionIcon('heroicon-m-users')
                 ->color('primary'),
         ];
+    }
+
+    private function getPeriodLabel(): string
+    {
+        if ($this->dateFrom === '' && $this->dateTo === '') {
+            return 'All Time';
+        }
+
+        $from = $this->dateFrom ? Carbon::parse($this->dateFrom)->format('d M Y') : '—';
+        $to   = $this->dateTo   ? Carbon::parse($this->dateTo)->format('d M Y')   : '—';
+
+        return $from === $to ? $from : "{$from} → {$to}";
     }
 }

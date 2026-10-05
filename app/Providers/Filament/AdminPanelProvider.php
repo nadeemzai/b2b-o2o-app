@@ -14,6 +14,7 @@ use App\Filament\Admin\Pages\HomepageSettings;
 use App\Filament\Admin\Pages\ReviewSettings;
 use App\Filament\Admin\Pages\AiSettings;
 use App\Filament\Admin\Resources\ProductResource;
+use App\Filament\Admin\Widgets\OzDateRangeFilter;
 use App\Filament\Admin\Widgets\OrdersByStatusChart;
 use App\Filament\Admin\Widgets\OrderStatsOverview;
 use App\Filament\Admin\Widgets\RecentOrdersTable;
@@ -77,6 +78,7 @@ class AdminPanelProvider extends PanelProvider
                 AiSettings::class,
             ])
             ->widgets([
+                OzDateRangeFilter::class,
                 OrderStatsOverview::class,
                 OrdersByStatusChart::class,
                 RecentOrdersTable::class,
