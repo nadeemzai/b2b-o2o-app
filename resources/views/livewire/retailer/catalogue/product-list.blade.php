@@ -142,6 +142,13 @@
                         $soldLabel = $soldCount !== null
                             ? ($soldCount >= 1000 ? round($soldCount / 1000, 1) . 'k' : $soldCount)
                             : null;
+                        // Volume tier pricing
+                        $tiers          = $product->priceTiers->sortBy('min_qty');
+                        $lowestTier     = $tiers->first();
+                        $hasVolumeTiers = $tiers->count() > 0;
+                        $entryUnitPrice = ($hasVolumeTiers && $lowestTier && $lowestTier->min_qty > 0)
+                            ? round((float) $lowestTier->price_pkr / $lowestTier->min_qty, 2)
+                            : null;
                     @endphp
 
                     <a href="{{ route('retailer.catalogue.product', $product) }}"
@@ -237,7 +244,19 @@
                             {{-- Price + add-to-cart icon --}}
                             <div class="mt-auto pt-1.5 border-t border-slate-50 flex items-center justify-between gap-1">
                                 <div class="min-w-0">
-                                    @if($price > 0)
+                                    @if($hasVolumeTiers && $entryUnitPrice)
+                                    {{-- Volume tier: show entry unit price with "From" prefix --}}
+                                    <p class="text-[9px] text-slate-400 font-medium leading-none mb-0.5">From</p>
+                                    <x-price :value="$entryUnitPrice" class="text-sm font-extrabold text-brand leading-none" />
+                                    <p class="text-[8px] text-slate-400 leading-none">/ {{ $product->unit }}</p>
+                                    <span class="inline-flex items-center gap-0.5 mt-1 bg-amber-50 text-amber-700 border border-amber-200 text-[8px] font-semibold px-1.5 py-0.5 rounded-full leading-none">
+                                        <svg class="w-2 h-2 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
+                                        Volume discounts
+                                    </span>
+                                    @if($moq > 1)
+                                    <p class="text-[9px] text-orange-400 font-medium mt-0.5">Min {{ $moq }} {{ $product->unit }}</p>
+                                    @endif
+                                    @elseif($price > 0)
                                     <x-price :value="$price" class="text-sm font-extrabold text-brand" />
                                     @if($moq > 1)
                                     <p class="text-[9px] text-orange-400 font-medium mt-0.5">Min {{ $moq }} {{ $product->unit }}</p>
