@@ -26,6 +26,7 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
+use App\Filament\Huashu\Widgets\HuashuDateRangeFilter;
 use App\Filament\Huashu\Widgets\HuashuOrderStatsOverview;
 use App\Filament\Huashu\Widgets\HuashuOrdersByStatusChart;
 use App\Filament\Huashu\Widgets\HuashuRecentOrdersTable;
@@ -61,6 +62,7 @@ class HuashuPanelProvider extends PanelProvider
                 Pages\Dashboard::class,
             ])
             ->widgets([
+                HuashuDateRangeFilter::class,
                 HuashuOrderStatsOverview::class,
                 HuashuOrdersByStatusChart::class,
                 HuashuRecentOrdersTable::class,

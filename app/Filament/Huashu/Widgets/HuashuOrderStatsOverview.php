@@ -6,39 +6,62 @@ use App\Models\Order;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Livewire\Attributes\On;
 
 class HuashuOrderStatsOverview extends BaseWidget
 {
     protected static ?int $sort = 1;
 
+    public string $dateFrom = '';
+    public string $dateTo   = '';
+
+    public function mount(): void
+    {
+        // Default: this month — synced with filter widget's default preset
+        $this->dateFrom = now()->startOfMonth()->toDateString();
+        $this->dateTo   = now()->toDateString();
+    }
+
+    #[On('huashu-date-range-updated')]
+    public function updateDateRange(string $from, string $to): void
+    {
+        $this->dateFrom = $from;
+        $this->dateTo   = $to;
+    }
+
     protected function getStats(): array
     {
-        $monthStart = Carbon::now()->startOfMonth();
+        $hasRange = $this->dateFrom !== '' || $this->dateTo !== '';
 
-        // Orders newly transferred to Huashu — awaiting action
-        $awaitingFulfillment = Order::where('status', Order::STATUS_TRANSFERRED)->count();
+        // Base query with optional date filter on created_at
+        $base = fn () => Order::query()
+            ->forHuashu()
+            ->when($this->dateFrom, fn ($q) => $q->whereDate('created_at', '>=', $this->dateFrom))
+            ->when($this->dateTo,   fn ($q) => $q->whereDate('created_at', '<=', $this->dateTo));
 
-        // Currently being processed / sourced
-        $fulfilling = Order::where('status', Order::STATUS_FULFILLING)->count();
+        // For delivered/revenue: filter by updated_at (the date they were marked delivered)
+        $delivered = fn () => Order::query()
+            ->forHuashu()
+            ->where('status', Order::STATUS_DELIVERED)
+            ->when($this->dateFrom, fn ($q) => $q->whereDate('updated_at', '>=', $this->dateFrom))
+            ->when($this->dateTo,   fn ($q) => $q->whereDate('updated_at', '<=', $this->dateTo));
 
-        // Dispatched to OZ Store — pending retailer delivery confirmation
-        $dispatched = Order::where('status', Order::STATUS_DISPATCHED)->count();
+        $awaitingFulfillment = $base()->where('status', Order::STATUS_TRANSFERRED)->count();
+        $fulfilling          = $base()->where('status', Order::STATUS_FULFILLING)->count();
+        $dispatched          = $base()->where('status', Order::STATUS_DISPATCHED)->count();
+        $deliveredCount      = $delivered()->count();
+        $revenue             = $delivered()->sum('total_pkr');
+        $activePipeline      = $awaitingFulfillment + $fulfilling + $dispatched;
 
-        // Delivered this calendar month
-        $deliveredThisMonth = Order::where('status', Order::STATUS_DELIVERED)
-            ->where('updated_at', '>=', $monthStart)
-            ->count();
-
-        // All-time delivered count
-        $deliveredTotal = Order::where('status', Order::STATUS_DELIVERED)->count();
-
-        // Revenue processed this month (sum of order totals for delivered orders this month)
-        $revenueThisMonth = Order::where('status', Order::STATUS_DELIVERED)
-            ->where('updated_at', '>=', $monthStart)
-            ->sum('total_pkr');
-
-        // Active pipeline (transferred + fulfilling + dispatched)
-        $activePipeline = $awaitingFulfillment + $fulfilling + $dispatched;
+        $periodLabel = $hasRange
+            ? ($this->dateFrom === $this->dateTo && $this->dateFrom !== ''
+                ? Carbon::parse($this->dateFrom)->format('d M Y')
+                : trim(
+                    ($this->dateFrom ? Carbon::parse($this->dateFrom)->format('d M') : '') .
+                    ' – ' .
+                    ($this->dateTo ? Carbon::parse($this->dateTo)->format('d M Y') : '')
+                , ' –'))
+            : 'All Time';
 
         return [
             Stat::make('Awaiting Fulfillment', $awaitingFulfillment)
@@ -56,13 +79,13 @@ class HuashuOrderStatsOverview extends BaseWidget
                 ->descriptionIcon('heroicon-m-truck')
                 ->color($dispatched > 0 ? 'primary' : 'gray'),
 
-            Stat::make('Delivered This Month', $deliveredThisMonth)
-                ->description('Completed — ' . Carbon::now()->format('F Y') . ' (' . $deliveredTotal . ' all-time)')
+            Stat::make('Delivered', $deliveredCount)
+                ->description('Completed — ' . $periodLabel)
                 ->descriptionIcon('heroicon-m-check-badge')
                 ->color('success'),
 
-            Stat::make('Revenue Processed', 'PKR ' . number_format($revenueThisMonth, 0))
-                ->description('Delivered order value — ' . Carbon::now()->format('F Y'))
+            Stat::make('Revenue Processed', 'PKR ' . number_format($revenue, 0))
+                ->description('Delivered order value — ' . $periodLabel)
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('success'),
 
