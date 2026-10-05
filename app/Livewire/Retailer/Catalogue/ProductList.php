@@ -62,6 +62,7 @@ class ProductList extends Component
                 'category',
                 'images',
                 'stockLevels' => fn($q) => $q->where('store_id', $storeId),
+                'priceTiers',
             ])
             ->when($this->categoryId, fn($q) => $q->where('category_id', $this->categoryId))
             ->when($this->search, fn($q) => $q->where(function ($q) {
