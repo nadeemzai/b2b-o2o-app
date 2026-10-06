@@ -18,6 +18,8 @@ use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
+use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Table;
 
 class OrderResource extends Resource
@@ -223,6 +225,25 @@ class OrderResource extends Resource
                     ->trueColor('success')
                     ->falseColor('gray')
                     ->tooltip(fn (?string $state): string => $state ? 'Payment proof uploaded' : 'No proof yet'),
+                TextColumn::make('order_city')
+                    ->label('City')
+                    ->placeholder('—')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: false),
+                TextColumn::make('device_type')
+                    ->label('Device')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'mobile_app' => 'warning',
+                        'web'        => 'info',
+                        default      => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'mobile_app' => 'Mobile App',
+                        'web'        => 'Web',
+                        default      => 'Unknown',
+                    })
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('created_at')
                     ->label('Placed')
                     ->dateTime()
@@ -242,6 +263,29 @@ class OrderResource extends Resource
                 SelectFilter::make('store_id')
                     ->options(fn () => TownshipStore::orderBy('name')->pluck('name', 'id')->toArray())
                     ->label('Store'),
+                Filter::make('order_city')
+                    ->label('City')
+                    ->form([
+                        \Filament\Forms\Components\TextInput::make('city')
+                            ->placeholder('e.g. Lahore')
+                            ->label('City Name'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['city'] ?? null,
+                            fn ($q, $city) => $q->where('order_city', 'like', "%{$city}%")
+                        );
+                    })
+                    ->indicateUsing(function (array $data): ?string {
+                        return ($data['city'] ?? null) ? 'City: ' . $data['city'] : null;
+                    }),
+                SelectFilter::make('device_type')
+                    ->label('Device Type')
+                    ->options([
+                        'web'        => 'Web',
+                        'mobile_app' => 'Mobile App',
+                        'unknown'    => 'Unknown',
+                    ]),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),

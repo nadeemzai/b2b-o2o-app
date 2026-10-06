@@ -34,6 +34,7 @@ class StorePanelProvider extends PanelProvider
                 'primary' => Color::Emerald,
             ])
             ->brandName('B2B O2O — Store Ops')
+            ->favicon(asset('favicon.ico'))
             ->navigationGroups([
                 NavigationGroup::make('Orders'),
                 NavigationGroup::make('Inventory'),

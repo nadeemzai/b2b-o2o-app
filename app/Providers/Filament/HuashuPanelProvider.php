@@ -44,6 +44,7 @@ class HuashuPanelProvider extends PanelProvider
                 'primary' => Color::Sky,
             ])
             ->brandName('OZ Wholesale - 2 - Huashu International')
+            ->favicon(asset('favicon.ico'))
             ->brandLogo(fn() => view('filament.brand-logo-huashu'))
             ->darkMode()
             ->brandLogoHeight('2rem')

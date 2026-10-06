@@ -11,12 +11,14 @@ use App\Services\PricingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Services\OrderLocationService;
 
 class OrderController extends Controller
 {
-    public function __construct(private readonly OrderService $orderService)
-    {
-    }
+    public function __construct(
+        private readonly OrderService $orderService,
+        private readonly OrderLocationService $locationService,
+    ) {}
 
     // ──────────────────────────────────────────────
     // GET /api/retailer/orders
@@ -72,9 +74,12 @@ class OrderController extends Controller
         $items = $request->mergedItems();
         $order = $this->orderService->placeOrder($retailer, $items);
 
+        // Capture geolocation + device type asynchronously (non-blocking on failure)
+        $locationData = $this->locationService->collect($request);
         if (isset($validated['notes'])) {
-            $order->update(['notes' => $validated['notes']]);
+            $locationData['notes'] = $validated['notes'];
         }
+        $order->update($locationData);
 
         return response()->json(['data' => new OrderResource($order)], 201);
     }

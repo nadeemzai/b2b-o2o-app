@@ -31,6 +31,13 @@ class Order extends Model
         'fx_usd_rate',
         'fx_cny_rate',
         'fx_captured_at',
+        'order_city',
+        'order_area',
+        'order_latitude',
+        'order_longitude',
+        'device_type',
+        'user_agent',
+        'ip_address',
     ];
 
     protected $casts = [

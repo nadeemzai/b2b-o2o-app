@@ -16,6 +16,8 @@ use App\Filament\Admin\Pages\AiSettings;
 use App\Filament\Admin\Resources\ProductResource;
 use App\Filament\Admin\Widgets\OzDateRangeFilter;
 use App\Filament\Admin\Widgets\OrdersByStatusChart;
+use App\Filament\Admin\Widgets\OrdersByCityChart;
+use App\Filament\Admin\Widgets\DeviceTypeStatsWidget;
 use App\Filament\Admin\Widgets\OrderStatsOverview;
 use App\Filament\Admin\Widgets\RecentOrdersTable;
 use Filament\Http\Middleware\Authenticate;
@@ -47,6 +49,7 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Blue,
             ])
             ->brandName('OZ Wholesale B2B')
+            ->favicon(asset('favicon.ico'))
             ->brandLogo(fn() => view('filament.brand-logo'))
             ->darkMode()
             ->brandLogoHeight('2rem')
@@ -81,6 +84,8 @@ class AdminPanelProvider extends PanelProvider
                 OzDateRangeFilter::class,
                 OrderStatsOverview::class,
                 OrdersByStatusChart::class,
+                OrdersByCityChart::class,
+                DeviceTypeStatsWidget::class,
                 RecentOrdersTable::class,
             ])
             ->middleware([
