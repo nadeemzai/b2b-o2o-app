@@ -3,77 +3,70 @@
 namespace App\Filament\Admin\Widgets;
 
 use App\Models\Order;
-use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\On;
 
 class OrdersByCityChart extends ChartWidget
 {
+    protected static ?string $heading = 'Orders by City';
+
     protected static ?int $sort = 3;
 
-    protected int | string | array $columnSpan = 'full';
-
-    protected static ?string $maxHeight = '260px';
-
-    public string $dateFrom = '';
-    public string $dateTo   = '';
-
-    public function mount(): void
-    {
-        $this->dateFrom = now()->startOfMonth()->toDateString();
-        $this->dateTo   = now()->toDateString();
-    }
+    /** Received from the OzDateRangeFilter widget. */
+    public ?string $ozFrom = null;
+    public ?string $ozTo   = null;
 
     #[On('oz-date-range-updated')]
     public function updateDateRange(string $from, string $to): void
     {
-        $this->dateFrom = $from;
-        $this->dateTo   = $to;
-    }
-
-    public function getHeading(): string
-    {
-        $from  = $this->dateFrom ? Carbon::parse($this->dateFrom)->format('d M') : '—';
-        $to    = $this->dateTo   ? Carbon::parse($this->dateTo)->format('d M Y') : '—';
-        return "Orders by City — {$from} to {$to}";
+        $this->ozFrom = $from;
+        $this->ozTo   = $to;
     }
 
     protected function getData(): array
     {
-        $rows = Order::query()
-            ->select(
-                DB::raw("COALESCE(NULLIF(TRIM(order_city), ''), 'Unknown') AS city"),
-                DB::raw('COUNT(*) AS total')
-            )
-            ->when($this->dateFrom, fn ($q) => $q->whereDate('created_at', '>=', $this->dateFrom))
-            ->when($this->dateTo,   fn ($q) => $q->whereDate('created_at', '<=', $this->dateTo))
-            ->groupBy('city')
+        // Graceful fallback: migration hasn't run yet → return empty chart.
+        if (! Schema::hasColumn('orders', 'order_city')) {
+            return [
+                'datasets' => [
+                    [
+                        'label'           => 'Orders',
+                        'data'            => [],
+                        'backgroundColor' => [],
+                    ],
+                ],
+                'labels' => [],
+            ];
+        }
+
+        $query = Order::query()
+            ->selectRaw("COALESCE(NULLIF(TRIM(order_city), ''), 'Unknown') AS city, COUNT(*) AS total")
+            ->when($this->ozFrom, fn ($q) => $q->whereDate('created_at', '>=', $this->ozFrom))
+            ->when($this->ozTo,   fn ($q) => $q->whereDate('created_at', '<=', $this->ozTo))
+            ->groupByRaw("COALESCE(NULLIF(TRIM(order_city), ''), 'Unknown')")
             ->orderByDesc('total')
-            ->limit(15)   // show top 15 cities
+            ->limit(15)
             ->get();
 
-        $palette = [
+        $colors = [
             '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-            '#06b6d4', '#f97316', '#84cc16', '#ec4899', '#14b8a6',
-            '#6366f1', '#eab308', '#d946ef', '#0ea5e9', '#22c55e',
+            '#06b6d4', '#f97316', '#14b8a6', '#e11d48', '#84cc16',
+            '#6366f1', '#ec4899', '#0ea5e9', '#a16207', '#7c3aed',
         ];
-
-        $labels = $rows->pluck('city')->toArray();
-        $data   = $rows->pluck('total')->toArray();
-        $colors = array_slice($palette, 0, count($labels));
 
         return [
             'datasets' => [
                 [
                     'label'           => 'Orders',
-                    'data'            => $data,
-                    'backgroundColor' => $colors,
-                    'borderColor'     => $colors,
-                    'borderWidth'     => 1,
+                    'data'            => $query->pluck('total')->toArray(),
+                    'backgroundColor' => collect($query)->keys()
+                        ->map(fn ($i) => $colors[$i % count($colors)])
+                        ->toArray(),
                 ],
             ],
-            'labels' => $labels,
+            'labels' => $query->pluck('city')->toArray(),
         ];
     }
 
@@ -85,12 +78,15 @@ class OrdersByCityChart extends ChartWidget
     protected function getOptions(): array
     {
         return [
-            'indexAxis' => 'y',   // horizontal bar — easier to read city names
+            'indexAxis' => 'y',
             'plugins'   => [
                 'legend' => ['display' => false],
             ],
             'scales' => [
-                'x' => ['beginAtZero' => true, 'ticks' => ['precision' => 0]],
+                'x' => [
+                    'ticks' => ['stepSize' => 1],
+                    'beginAtZero' => true,
+                ],
             ],
         ];
     }

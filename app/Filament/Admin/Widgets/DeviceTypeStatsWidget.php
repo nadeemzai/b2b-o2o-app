@@ -3,72 +3,81 @@
 namespace App\Filament\Admin\Widgets;
 
 use App\Models\Order;
-use Carbon\Carbon;
-use Filament\Widgets\StatsOverviewWidget as BaseWidget;
+use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\On;
 
-class DeviceTypeStatsWidget extends BaseWidget
+class DeviceTypeStatsWidget extends StatsOverviewWidget
 {
     protected static ?int $sort = 4;
 
-    protected int | string | array $columnSpan = 'full';
-
-    public string $dateFrom = '';
-    public string $dateTo   = '';
-
-    public function mount(): void
-    {
-        $this->dateFrom = now()->startOfMonth()->toDateString();
-        $this->dateTo   = now()->toDateString();
-    }
+    /** Received from the OzDateRangeFilter widget. */
+    public ?string $ozFrom = null;
+    public ?string $ozTo   = null;
 
     #[On('oz-date-range-updated')]
     public function updateDateRange(string $from, string $to): void
     {
-        $this->dateFrom = $from;
-        $this->dateTo   = $to;
+        $this->ozFrom = $from;
+        $this->ozTo   = $to;
     }
 
     protected function getStats(): array
     {
-        $from = $this->dateFrom;
-        $to   = $this->dateTo;
+        // Graceful fallback: migration hasn't run yet → show placeholder stats.
+        if (! Schema::hasColumn('orders', 'device_type')) {
+            return [
+                Stat::make('Mobile App Orders', '—')
+                    ->description('Run migration to enable')
+                    ->color('gray'),
+                Stat::make('Web Orders', '—')
+                    ->description('Run migration to enable')
+                    ->color('gray'),
+                Stat::make('Unknown Device', '—')
+                    ->description('Run migration to enable')
+                    ->color('gray'),
+            ];
+        }
 
-        $baseQuery = fn () => Order::query()
-            ->when($from, fn ($q) => $q->whereDate('created_at', '>=', $from))
-            ->when($to,   fn ($q) => $q->whereDate('created_at', '<=', $to));
+        $query = Order::query()
+            ->when($this->ozFrom, fn ($q) => $q->whereDate('created_at', '>=', $this->ozFrom))
+            ->when($this->ozTo,   fn ($q) => $q->whereDate('created_at', '<=', $this->ozTo));
 
-        $total     = (clone $baseQuery())->count();
-        $mobile    = (clone $baseQuery())->where('device_type', 'mobile_app')->count();
-        $web       = (clone $baseQuery())->where('device_type', 'web')->count();
-        $unknown   = (clone $baseQuery())->where('device_type', 'unknown')->count();
+        $total  = (clone $query)->count();
+        $mobile = (clone $query)->where('device_type', 'mobile_app')->count();
+        $web    = (clone $query)->where('device_type', 'web')->count();
+        $unknown = (clone $query)->where('device_type', 'unknown')->count();
 
-        $mobilePercent = $total > 0 ? round($mobile / $total * 100, 1) : 0;
-        $webPercent    = $total > 0 ? round($web    / $total * 100, 1) : 0;
+        $pct = fn (int $n): string => $total > 0
+            ? round(($n / $total) * 100, 1) . '% of orders'
+            : '0% of orders';
 
-        $label = $this->getPeriodLabel();
+        $period = $this->getPeriodLabel();
 
         return [
-            Stat::make("📱 Mobile App Orders ({$label})", $mobile)
-                ->description("{$mobilePercent}% of all orders")
-                ->color('warning'),
+            Stat::make('Mobile App Orders', number_format($mobile))
+                ->description($pct($mobile) . ($period ? " · {$period}" : ''))
+                ->color('warning')
+                ->icon('heroicon-o-device-phone-mobile'),
 
-            Stat::make("🌐 Web Orders ({$label})", $web)
-                ->description("{$webPercent}% of all orders")
-                ->color('info'),
+            Stat::make('Web Orders', number_format($web))
+                ->description($pct($web) . ($period ? " · {$period}" : ''))
+                ->color('info')
+                ->icon('heroicon-o-computer-desktop'),
 
-            Stat::make("❓ Unknown Device ({$label})", $unknown)
-                ->description('No device header / UA detected')
-                ->color('gray'),
+            Stat::make('Unknown Device', number_format($unknown))
+                ->description($pct($unknown) . ($period ? " · {$period}" : ''))
+                ->color('gray')
+                ->icon('heroicon-o-question-mark-circle'),
         ];
     }
 
     private function getPeriodLabel(): string
     {
-        if ($this->dateFrom && $this->dateTo) {
-            return Carbon::parse($this->dateFrom)->format('d M') . ' – ' . Carbon::parse($this->dateTo)->format('d M Y');
+        if ($this->ozFrom && $this->ozTo) {
+            return date('d M', strtotime($this->ozFrom)) . ' – ' . date('d M Y', strtotime($this->ozTo));
         }
-        return 'All Time';
+        return '';
     }
 }

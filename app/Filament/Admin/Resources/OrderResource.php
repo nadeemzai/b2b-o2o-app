@@ -6,10 +6,11 @@ use App\Filament\Admin\Resources\OrderResource\Pages;
 use App\Models\Order;
 use App\Models\TownshipStore;
 use App\Services\OrderService;
+use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\View as InfolistView;
 use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
@@ -17,10 +18,10 @@ use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
-use Illuminate\Database\Eloquent\Builder;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class OrderResource extends Resource
 {
@@ -41,7 +42,6 @@ class OrderResource extends Resource
             'payment_verified' => 'info',
             'transferred'      => 'primary',
             'fulfilling'       => 'info',
-            'dispatched'       => 'warning',
             'delivered'        => 'success',
             'cancelled'        => 'danger',
             default            => 'gray',
@@ -55,7 +55,6 @@ class OrderResource extends Resource
             'payment_verified' => 'Payment Verified',
             'transferred'      => 'Transferred to Huashu',
             'fulfilling'       => 'Fulfilling',
-            'dispatched'       => 'Dispatched to OZ Store',
             'delivered'        => 'Delivered',
             'cancelled'        => 'Cancelled',
             default            => ucwords(str_replace('_', ' ', $state)),
@@ -69,10 +68,6 @@ class OrderResource extends Resource
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist->schema([
-
-            InfolistView::make('filament.admin.infolists.order-progress-bar')
-                ->columnSpanFull()
-                ->viewData(fn ($record) => ['record' => $record]),
 
             Section::make('Order Summary')
                 ->columns(3)
@@ -104,6 +99,39 @@ class OrderResource extends Resource
                         ->columnSpanFull(),
                 ]),
 
+            Section::make('Location & Device')
+                ->columns(3)
+                ->schema([
+                    TextEntry::make('order_city')
+                        ->label('City')
+                        ->placeholder('—'),
+                    TextEntry::make('order_area')
+                        ->label('Area')
+                        ->placeholder('—'),
+                    TextEntry::make('device_type')
+                        ->label('Device')
+                        ->badge()
+                        ->formatStateUsing(fn (?string $state): string => match ($state) {
+                            'mobile_app' => 'Mobile App',
+                            'web'        => 'Web',
+                            default      => 'Unknown',
+                        })
+                        ->color(fn (?string $state): string => match ($state) {
+                            'mobile_app' => 'warning',
+                            'web'        => 'info',
+                            default      => 'gray',
+                        }),
+                    TextEntry::make('ip_address')
+                        ->label('IP Address')
+                        ->placeholder('—'),
+                    TextEntry::make('order_latitude')
+                        ->label('Latitude')
+                        ->placeholder('—'),
+                    TextEntry::make('order_longitude')
+                        ->label('Longitude')
+                        ->placeholder('—'),
+                ]),
+
             Section::make('OZ Commission & Transfer')
                 ->columns(3)
                 ->schema([
@@ -131,14 +159,20 @@ class OrderResource extends Resource
                 ])
                 ->hidden(fn (Order $record): bool =>
                     ! in_array($record->status, [
-                        'payment_verified', 'transferred', 'fulfilling', 'dispatched', 'delivered',
+                        'payment_verified', 'transferred', 'fulfilling', 'delivered',
                     ])
                 ),
 
             Section::make('Payment Proof')
                 ->columns(1)
                 ->schema([
-                    InfolistView::make('filament.infolists.payment-proof-lightbox')
+                    ImageEntry::make('payment_proof_path')
+                        ->label('Uploaded Proof Image')
+                        ->disk('public')
+                        ->height(320)
+                        ->width('auto')
+                        ->extraImgAttributes(['class' => 'rounded-lg border border-gray-200 shadow-sm'])
+                        ->placeholder('No proof uploaded yet')
                         ->visible(fn (Order $record): bool => (bool) $record->payment_proof_path),
                     TextEntry::make('payment_proof_path')
                         ->label('Proof Status')
@@ -157,7 +191,6 @@ class OrderResource extends Resource
                         ->label('')
                         ->schema([
                             TextEntry::make('product.name')->label('Product'),
-                            TextEntry::make('variant_label')->label('Variant')->placeholder('—'),
                             TextEntry::make('qty')->label('Qty'),
                             TextEntry::make('unit_price_pkr')
                                 ->label('Retailer Price')
@@ -173,11 +206,35 @@ class OrderResource extends Resource
                         ->columns(5),
                 ]),
 
-            Section::make('Audit Trail')
-                ->icon('heroicon-o-clipboard-document-list')
+            Section::make('Status History')
                 ->schema([
-                    InfolistView::make('filament.admin.infolists.order-audit-timeline')
-                        ->viewData(fn ($record) => ['record' => $record->loadMissing('statusHistory.changedBy')]),
+                    RepeatableEntry::make('statusHistory')
+                        ->label('')
+                        ->schema([
+                            TextEntry::make('from_status')
+                                ->label('From')
+                                ->formatStateUsing(fn (?string $state): string => $state
+                                    ? self::statusLabel($state)
+                                    : '—')
+                                ->placeholder('—'),
+                            TextEntry::make('to_status')
+                                ->label('To')
+                                ->badge()
+                                ->color(fn (?string $state): string => $state ? self::statusColor($state) : 'gray')
+                                ->formatStateUsing(fn (?string $state): string => $state
+                                    ? self::statusLabel($state)
+                                    : '—'),
+                            TextEntry::make('changedBy.name')
+                                ->label('Changed By')
+                                ->placeholder('—'),
+                            TextEntry::make('note')
+                                ->label('Note')
+                                ->placeholder('—'),
+                            TextEntry::make('created_at')
+                                ->label('At')
+                                ->dateTime(),
+                        ])
+                        ->columns(5),
                 ]),
         ]);
     }
@@ -205,6 +262,25 @@ class OrderResource extends Resource
                     ->badge()
                     ->color(fn (string $state): string => self::statusColor($state))
                     ->formatStateUsing(fn (string $state): string => self::statusLabel($state)),
+                TextColumn::make('order_city')
+                    ->label('City')
+                    ->placeholder('—')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: false),
+                TextColumn::make('device_type')
+                    ->label('Device')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'mobile_app' => 'warning',
+                        'web'        => 'info',
+                        default      => 'gray',
+                    })
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'mobile_app' => 'Mobile App',
+                        'web'        => 'Web',
+                        default      => 'Unknown',
+                    })
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('total_pkr')
                     ->label('Total (PKR)')
                     ->money('PKR')
@@ -225,25 +301,6 @@ class OrderResource extends Resource
                     ->trueColor('success')
                     ->falseColor('gray')
                     ->tooltip(fn (?string $state): string => $state ? 'Payment proof uploaded' : 'No proof yet'),
-                TextColumn::make('order_city')
-                    ->label('City')
-                    ->placeholder('—')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: false),
-                TextColumn::make('device_type')
-                    ->label('Device')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'mobile_app' => 'warning',
-                        'web'        => 'info',
-                        default      => 'gray',
-                    })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'mobile_app' => 'Mobile App',
-                        'web'        => 'Web',
-                        default      => 'Unknown',
-                    })
-                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('created_at')
                     ->label('Placed')
                     ->dateTime()
@@ -256,7 +313,6 @@ class OrderResource extends Resource
                         'payment_verified' => 'Payment Verified',
                         'transferred'      => 'Transferred to Huashu',
                         'fulfilling'       => 'Fulfilling',
-                        'dispatched'       => 'Dispatched to OZ Store',
                         'delivered'        => 'Delivered',
                         'cancelled'        => 'Cancelled',
                     ]),
@@ -266,19 +322,17 @@ class OrderResource extends Resource
                 Filter::make('order_city')
                     ->label('City')
                     ->form([
-                        \Filament\Forms\Components\TextInput::make('city')
-                            ->placeholder('e.g. Lahore')
-                            ->label('City Name'),
+                        TextInput::make('city')->placeholder('e.g. Lahore'),
                     ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query->when(
+                    ->query(fn (Builder $query, array $data): Builder =>
+                        $query->when(
                             $data['city'] ?? null,
                             fn ($q, $city) => $q->where('order_city', 'like', "%{$city}%")
-                        );
-                    })
-                    ->indicateUsing(function (array $data): ?string {
-                        return ($data['city'] ?? null) ? 'City: ' . $data['city'] : null;
-                    }),
+                        )
+                    )
+                    ->indicateUsing(fn (array $data): ?string =>
+                        ($data['city'] ?? null) ? 'City: ' . $data['city'] : null
+                    ),
                 SelectFilter::make('device_type')
                     ->label('Device Type')
                     ->options([
@@ -289,14 +343,6 @@ class OrderResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-
-                // ── Download PDF ───────────────────────────────────────────────
-                Action::make('download_pdf')
-                    ->label('PDF')
-                    ->icon('heroicon-o-document')
-                    ->color('gray')
-                    ->url(fn (Order $record) => route('admin.orders.pdf', $record))
-                    ->openUrlInNewTab(),
 
                 // ── Verify Payment ─────────────────────────────────────────
                 Action::make('verify_payment')

@@ -2,22 +2,14 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Admin\Resources\BannerResource;
-use App\Filament\Admin\Resources\ConversationResource;
-use App\Filament\Admin\Resources\OrderAuditResource;
 use App\Filament\Admin\Resources\OrderResource;
 use App\Filament\Admin\Resources\RetailerResource;
 use App\Filament\Admin\Resources\TownshipStoreResource;
 use App\Filament\Admin\Resources\UserResource;
 use App\Filament\Admin\Pages\CommissionDashboard;
-use App\Filament\Admin\Pages\HomepageSettings;
-use App\Filament\Admin\Pages\ReviewSettings;
-use App\Filament\Admin\Pages\AiSettings;
-use App\Filament\Admin\Resources\ProductResource;
-use App\Filament\Admin\Widgets\OzDateRangeFilter;
-use App\Filament\Admin\Widgets\OrdersByStatusChart;
-use App\Filament\Admin\Widgets\OrdersByCityChart;
 use App\Filament\Admin\Widgets\DeviceTypeStatsWidget;
+use App\Filament\Admin\Widgets\OrdersByCityChart;
+use App\Filament\Admin\Widgets\OrdersByStatusChart;
 use App\Filament\Admin\Widgets\OrderStatsOverview;
 use App\Filament\Admin\Widgets\RecentOrdersTable;
 use Filament\Http\Middleware\Authenticate;
@@ -45,43 +37,28 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->authGuard('admin')
             ->login()
+            ->favicon(asset('favicon.ico'))
             ->colors([
                 'primary' => Color::Blue,
             ])
-            ->brandName('OZ Wholesale B2B')
-            ->favicon(asset('favicon.ico'))
-            ->brandLogo(fn() => view('filament.brand-logo'))
-            ->darkMode()
-            ->brandLogoHeight('2rem')
+            ->brandName('B2B O2O — Admin')
             ->navigationGroups([
-                NavigationGroup::make('Content'),
-                NavigationGroup::make('Catalogue'),
                 NavigationGroup::make('KYC & Retailers'),
-                NavigationGroup::make('Retailer Relations'),
                 NavigationGroup::make('Operations'),
-                NavigationGroup::make('Settings'),
                 NavigationGroup::make('System')
                     ->collapsed(),
             ])
             ->resources([
-                BannerResource::class,
-                ConversationResource::class,
-                ProductResource::class,
                 RetailerResource::class,
                 TownshipStoreResource::class,
                 OrderResource::class,
-                OrderAuditResource::class,
                 UserResource::class,
             ])
             ->pages([
                 Pages\Dashboard::class,
                 CommissionDashboard::class,
-                HomepageSettings::class,
-                ReviewSettings::class,
-                AiSettings::class,
             ])
             ->widgets([
-                OzDateRangeFilter::class,
                 OrderStatsOverview::class,
                 OrdersByStatusChart::class,
                 OrdersByCityChart::class,

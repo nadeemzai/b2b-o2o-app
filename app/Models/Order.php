@@ -31,6 +31,7 @@ class Order extends Model
         'fx_usd_rate',
         'fx_cny_rate',
         'fx_captured_at',
+        // Geolocation & device tracking
         'order_city',
         'order_area',
         'order_latitude',
@@ -46,9 +47,11 @@ class Order extends Model
         'oz_commission_pkr'        => 'decimal:2',
         'payment_verified_at'      => 'datetime',
         'transferred_to_huashu_at' => 'datetime',
-        'fx_usd_rate'             => 'decimal:6',
-        'fx_cny_rate'             => 'decimal:6',
-        'fx_captured_at'          => 'datetime',
+        'fx_usd_rate'              => 'decimal:6',
+        'fx_cny_rate'              => 'decimal:6',
+        'fx_captured_at'           => 'datetime',
+        'order_latitude'           => 'decimal:7',
+        'order_longitude'          => 'decimal:7',
     ];
 
     // ──────────────────────────────────────────────
@@ -243,5 +246,4 @@ class Order extends Model
         }
         return round((float) $this->total_pkr * $this->fxRate($currency), 2);
     }
-
 }

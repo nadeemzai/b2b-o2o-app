@@ -6,19 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\PlaceOrderRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
+use App\Services\OrderLocationService;
 use App\Services\OrderService;
 use App\Services\PricingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use App\Services\OrderLocationService;
 
 class OrderController extends Controller
 {
     public function __construct(
-        private readonly OrderService $orderService,
+        private readonly OrderService         $orderService,
         private readonly OrderLocationService $locationService,
-    ) {}
+    ) {
+    }
 
     // ──────────────────────────────────────────────
     // GET /api/retailer/orders
@@ -74,11 +75,13 @@ class OrderController extends Controller
         $items = $request->mergedItems();
         $order = $this->orderService->placeOrder($retailer, $items);
 
-        // Capture geolocation + device type asynchronously (non-blocking on failure)
+        // Capture geolocation + device metadata (non-blocking on failure).
         $locationData = $this->locationService->collect($request);
+
         if (isset($validated['notes'])) {
             $locationData['notes'] = $validated['notes'];
         }
+
         $order->update($locationData);
 
         return response()->json(['data' => new OrderResource($order)], 201);
@@ -172,15 +175,10 @@ class OrderController extends Controller
     /**
      * Re-add a past order's active items to the cart and return them.
      *
-     * Mobile may not use a server-side cart, so this endpoint returns both
-     * the list of re-orderable items (with current prices) AND a cart_token
-     * so the mobile client can optionally POST to /api/retailer/orders to
-     * place the repeat order directly.
-     *
      * Response shape:
      * {
-     *   "added":        3,
-     *   "skipped":      1,
+     *   "added":   3,
+     *   "skipped": 1,
      *   "items": [
      *     { "product_id": 1, "qty": 5, "price_pkr": 450.00, "name": "..." }
      *   ]

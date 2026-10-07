@@ -24,8 +24,13 @@ return new class extends Migration
     {
         Schema::table('orders', function (Blueprint $table) {
             $table->dropColumn([
-                'order_city', 'order_area', 'order_latitude', 'order_longitude',
-                'device_type', 'user_agent', 'ip_address',
+                'order_city',
+                'order_area',
+                'order_latitude',
+                'order_longitude',
+                'device_type',
+                'user_agent',
+                'ip_address',
             ]);
         });
     }

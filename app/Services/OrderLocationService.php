@@ -6,123 +6,117 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-/**
- * Captures geolocation (from IP) and device type for an incoming order request.
- *
- * Geolocation: calls ip-api.com (free, no API key required up to 1,000 req/day).
- *              Falls back gracefully — all fields null — if the call fails or times out.
- *
- * Device type: checks, in order:
- *   1. Custom app headers (configurable; see MOBILE_APP_HEADERS below).
- *   2. User-Agent string patterns common to mobile apps / Flutter apps.
- *   3. Defaults to 'web'.
- *
- * To adapt to your mobile app's exact header, add it to MOBILE_APP_HEADERS below.
- */
 class OrderLocationService
 {
     /**
-     * Header name → expected value (case-insensitive).
-     * The mobile app should send ONE of these on every request.
-     *
-     * Common patterns:
-     *   'X-App-Platform' => 'android' or 'ios'
-     *   'X-Client-Type'  => 'mobile'
-     *   'X-App-Source'   => 'mobile_app'
-     *   'X-Platform'     => 'mobile'
-     *
-     * If the header is present with ANY value (not just a specific one), set the
-     * value to null — e.g. ['X-Mobile-App' => null] means: presence is enough.
+     * HTTP headers that identify a mobile app client.
+     * If the header key exists AND either the value is null (any value accepted)
+     * or the value matches exactly, the request is classified as mobile_app.
      */
     private const MOBILE_APP_HEADERS = [
-        'X-App-Platform'  => null,   // any value → mobile
+        'X-App-Platform'  => null,     // any value → mobile
         'X-Client-Type'   => 'mobile',
         'X-App-Source'    => 'mobile_app',
         'X-Platform'      => 'mobile',
         'X-App-Type'      => 'mobile',
+        'X-Mobile-App'    => null,     // any value → mobile
     ];
 
     /**
-     * User-Agent substrings that indicate a mobile app (not a mobile browser).
-     * Flutter, React Native, Kotlin OkHttp, Swift URLSession, etc.
+     * Substrings (case-insensitive) in the User-Agent that indicate a mobile app.
      */
     private const MOBILE_UA_PATTERNS = [
-        'flutter',
-        'okhttp',
-        'dart:io',
-        'reactnative',
-        'nativescript',
-        'ozgroup',     // put your app's UA string here if it's custom
+        'flutter', 'okhttp', 'dart:io', 'dartio', 'reactnative',
+        'nativescript', 'ozgroup', 'b2bo2o',
     ];
 
     // ──────────────────────────────────────────────
+    // Public API
+    // ──────────────────────────────────────────────
 
     /**
-     * Resolve the real client IP, respecting common proxies.
+     * Collect all location + device metadata from the request.
+     * Returns an array ready to merge into Order::update().
      */
-    public function getClientIp(Request $request): ?string
+    public function collect(Request $request): array
     {
-        // Respect X-Forwarded-For (load balancers, Nginx proxies)
-        $forwarded = $request->header('X-Forwarded-For');
-        if ($forwarded) {
-            // Take the leftmost (original client) IP
-            return trim(explode(',', $forwarded)[0]);
-        }
+        $ip          = $this->getClientIp($request);
+        $deviceType  = $this->detectDeviceType($request);
+        $location    = $ip && ! $this->isPrivateIp($ip)
+            ? $this->resolveLocation($ip)
+            : [];
 
-        return $request->ip();
+        return [
+            'ip_address'       => $ip,
+            'user_agent'       => substr((string) $request->userAgent(), 0, 500),
+            'device_type'      => $deviceType,
+            'order_city'       => $location['city']      ?? null,
+            'order_area'       => $location['area']      ?? null,
+            'order_latitude'   => $location['latitude']  ?? null,
+            'order_longitude'  => $location['longitude'] ?? null,
+        ];
     }
 
     /**
-     * Detect device type from the request headers and User-Agent.
-     *
-     * @return 'mobile_app'|'web'|'unknown'
+     * Resolve the real client IP, handling common proxy headers.
+     */
+    public function getClientIp(Request $request): ?string
+    {
+        $candidates = array_filter([
+            $request->header('CF-Connecting-IP'),   // Cloudflare
+            $request->header('X-Real-IP'),
+            $request->header('X-Forwarded-For'),    // may be comma-list
+            $request->ip(),
+        ]);
+
+        foreach ($candidates as $value) {
+            // X-Forwarded-For can be "client, proxy1, proxy2"
+            $ip = trim(explode(',', $value)[0]);
+            if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                return $ip;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Detect whether the request comes from a mobile app or a web browser.
      */
     public function detectDeviceType(Request $request): string
     {
-        // 1. Custom app headers
-        foreach (self::MOBILE_APP_HEADERS as $header => $expectedValue) {
-            $headerValue = $request->header($header);
-            if ($headerValue !== null) {
-                if ($expectedValue === null) {
-                    return 'mobile_app';   // any presence is enough
-                }
-                if (strtolower($headerValue) === strtolower($expectedValue)) {
+        // 1. Check custom mobile-app headers first (most reliable signal).
+        foreach (self::MOBILE_APP_HEADERS as $header => $expected) {
+            $value = $request->header($header);
+            if ($value !== null) {
+                if ($expected === null || strtolower($value) === strtolower($expected)) {
                     return 'mobile_app';
                 }
             }
         }
 
-        // 2. User-Agent patterns
-        $ua = strtolower($request->userAgent() ?? '');
+        // 2. Fall back to User-Agent pattern matching.
+        $ua = strtolower((string) $request->userAgent());
         foreach (self::MOBILE_UA_PATTERNS as $pattern) {
             if (str_contains($ua, $pattern)) {
                 return 'mobile_app';
             }
         }
 
-        return 'web';
+        // 3. If there's a User-Agent at all, classify as web.
+        if ($ua !== '') {
+            return 'web';
+        }
+
+        return 'unknown';
     }
 
     /**
-     * Resolve city/area/lat/lng from the client IP using ip-api.com (free tier).
-     *
-     * Returns an array:
-     * [
-     *   'city'      => string|null,
-     *   'area'      => string|null,   // region / province
-     *   'latitude'  => float|null,
-     *   'longitude' => float|null,
-     * ]
+     * Call ip-api.com to resolve a public IP to city-level location data.
+     * Returns empty array on any failure (timeout, rate-limit, bad IP).
      */
     public function resolveLocation(string $ip): array
     {
-        $empty = ['city' => null, 'area' => null, 'latitude' => null, 'longitude' => null];
-
-        // Skip loopback / private IPs (local dev, internal proxies)
-        if ($this->isPrivateIp($ip)) {
-            return $empty;
-        }
-
         try {
             $response = Http::timeout(3)
                 ->retry(1, 200)
@@ -131,76 +125,40 @@ class OrderLocationService
                 ]);
 
             if (! $response->successful()) {
-                return $empty;
+                return [];
             }
 
             $data = $response->json();
 
             if (($data['status'] ?? '') !== 'success') {
-                return $empty;
+                return [];
             }
 
             return [
                 'city'      => $data['city']       ?? null,
-                'area'      => $data['regionName']  ?? null,
+                'area'      => $data['regionName'] ?? null,
                 'latitude'  => isset($data['lat']) ? (float) $data['lat'] : null,
                 'longitude' => isset($data['lon']) ? (float) $data['lon'] : null,
             ];
-
         } catch (\Throwable $e) {
-            Log::warning('OrderLocationService: geolocation lookup failed', [
+            Log::warning('OrderLocationService: geolocation failed', [
                 'ip'    => $ip,
                 'error' => $e->getMessage(),
             ]);
-            return $empty;
+            return [];
         }
     }
 
-    /**
-     * Collect all location + device data for an incoming request.
-     *
-     * Returns array ready to mass-assign onto the Order model:
-     * [
-     *   'ip_address'       => string|null,
-     *   'user_agent'       => string|null,
-     *   'device_type'      => 'web'|'mobile_app'|'unknown',
-     *   'order_city'       => string|null,
-     *   'order_area'       => string|null,
-     *   'order_latitude'   => float|null,
-     *   'order_longitude'  => float|null,
-     * ]
-     */
-    public function collect(Request $request): array
-    {
-        $ip         = $this->getClientIp($request);
-        $deviceType = $this->detectDeviceType($request);
-        $location   = $this->resolveLocation($ip ?? '');
-
-        return [
-            'ip_address'      => $ip,
-            'user_agent'      => substr($request->userAgent() ?? '', 0, 500),
-            'device_type'     => $deviceType,
-            'order_city'      => $location['city'],
-            'order_area'      => $location['area'],
-            'order_latitude'  => $location['latitude'],
-            'order_longitude' => $location['longitude'],
-        ];
-    }
-
     // ──────────────────────────────────────────────
-    // Private helpers
+    // Helpers
     // ──────────────────────────────────────────────
 
     private function isPrivateIp(string $ip): bool
     {
-        if (in_array($ip, ['127.0.0.1', '::1', 'localhost'], true)) {
-            return true;
-        }
-        // FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
-        return filter_var(
+        return ! filter_var(
             $ip,
             FILTER_VALIDATE_IP,
             FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
-        ) === false;
+        );
     }
 }
