@@ -203,4 +203,33 @@ class CartService
     {
         return empty($this->items());
     }
+
+    // ──────────────────────────────────────────────
+    // DB persistence (survives logout)
+    // ──────────────────────────────────────────────
+
+    /**
+     * Save the current session cart to the retailer's DB record.
+     * Call this BEFORE session()->invalidate() on logout.
+     */
+    public function persistToDb(\App\Models\Retailer $retailer): void
+    {
+        $items = $this->items();
+        $retailer->update(['saved_cart' => empty($items) ? null : $items]);
+    }
+
+    /**
+     * Load the retailer's saved cart from DB into the current session.
+     * Call this AFTER session()->regenerate() on login.
+     * Existing session cart is replaced only when the DB cart is non-empty.
+     */
+    public function restoreFromDb(\App\Models\Retailer $retailer): void
+    {
+        $saved = $retailer->saved_cart ?? [];
+        if (! empty($saved)) {
+            session([$this->sessionKey => $saved]);
+            // Clear the saved copy so it doesn't get re-applied on a second login
+            $retailer->update(['saved_cart' => null]);
+        }
+    }
 }

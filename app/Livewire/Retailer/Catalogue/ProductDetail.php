@@ -120,8 +120,10 @@ class ProductDetail extends Component
      * property-sync race where $this->qty is still 1 when the action fires.
      * Variants button uses wire:click with no arg, so $qty defaults to 0.
      */
-    public function addToCart(int $qty = 0, CartService $cart, PricingService $pricing): void
+    public function addToCart(int $qty = 0): void
     {
+        $cart    = app(CartService::class);
+        $pricing = app(PricingService::class);
         if (! $this->price) {
             return;
         }
@@ -130,14 +132,16 @@ class ProductDetail extends Component
         $effectiveQty = $qty > 0 ? $qty : $this->qty;
 
         if ($this->hasVariants) {
-            $this->addVariantsToCart($cart, $pricing);
+            $this->addVariantsToCart();
         } else {
-            $this->addSimpleToCart($cart, $pricing, $effectiveQty);
+            $this->addSimpleToCart($effectiveQty);
         }
     }
 
-    private function addSimpleToCart(CartService $cart, PricingService $pricing, int $passedQty = 0): void
+    private function addSimpleToCart(int $passedQty = 0): void
     {
+        $cart    = app(CartService::class);
+        $pricing = app(PricingService::class);
         // $passedQty > 0 means Alpine sent us the current UI qty directly.
         // This is more reliable than $this->qty which may not have synced yet.
         $baseQty = $passedQty > 0 ? $passedQty : $this->qty;
@@ -199,8 +203,10 @@ class ProductDetail extends Component
         $this->dispatch('cart-updated');
     }
 
-    private function addVariantsToCart(CartService $cart, PricingService $pricing): void
+    private function addVariantsToCart(): void
     {
+        $cart    = app(CartService::class);
+        $pricing = app(PricingService::class);
         $added = 0;
 
         foreach ($this->variantQtys as $optionId => $qty) {

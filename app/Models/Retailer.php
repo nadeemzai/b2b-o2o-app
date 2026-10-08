@@ -23,10 +23,12 @@ class Retailer extends Model
         'kyc_status',
         'kyc_rejection_reason',
         'kyc_documents',
+        'saved_cart',
     ];
 
     protected $casts = [
         'kyc_documents' => 'array',
+        'saved_cart'    => 'array',
     ];
 
     // ──────────────────────────────────────────────

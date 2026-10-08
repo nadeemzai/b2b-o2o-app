@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Admin\Resources\OrderAuditResource;
 use App\Filament\Admin\Resources\OrderResource;
 use App\Filament\Admin\Resources\RetailerResource;
 use App\Filament\Admin\Resources\TownshipStoreResource;
@@ -52,6 +53,7 @@ class AdminPanelProvider extends PanelProvider
                 RetailerResource::class,
                 TownshipStoreResource::class,
                 OrderResource::class,
+                OrderAuditResource::class,
                 UserResource::class,
             ])
             ->pages([

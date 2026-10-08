@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\CartService;
 use Illuminate\View\View;
 
 class AuthController extends Controller
@@ -52,6 +53,11 @@ class AuthController extends Controller
 
         $retailer = $user->retailerProfile;
 
+        // Restore any cart the retailer had before they logged out.
+        if ($retailer) {
+            app(CartService::class)->restoreFromDb($retailer);
+        }
+
         if ($retailer && $retailer->isApproved()) {
             return redirect()->intended(route('retailer.dashboard'));
         }
@@ -62,6 +68,12 @@ class AuthController extends Controller
     // POST /retailer/logout
     public function logout(Request $request): RedirectResponse
     {
+        // Persist the session cart to DB before the session is wiped.
+        $user = Auth::guard('retailer')->user();
+        if ($user && $user->retailerProfile) {
+            app(CartService::class)->persistToDb($user->retailerProfile);
+        }
+
         Auth::guard('retailer')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

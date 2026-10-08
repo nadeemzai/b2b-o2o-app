@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Retailer\Auth;
 
+use App\Services\CartService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
@@ -52,6 +53,11 @@ class Login extends Component
         session()->regenerate();
 
         $retailer = $user->retailerProfile;
+
+        // Restore any cart the retailer had before they logged out.
+        if ($retailer) {
+            app(CartService::class)->restoreFromDb($retailer);
+        }
         if ($retailer && $retailer->isApproved()) {
             $this->redirect(route('retailer.dashboard'), navigate: true);
         } else {
