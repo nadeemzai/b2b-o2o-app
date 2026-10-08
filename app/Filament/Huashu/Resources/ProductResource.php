@@ -102,6 +102,7 @@ class ProductResource extends Resource
                                 ->placeholder('e.g. Retail, Wholesale, Bulk'),
                         ])
                         ->columns(4)
+                        ->columnSpanFull()
                         ->addActionLabel('Add Tier')
                         ->reorderable('min_qty')
                         ->collapsible()
