@@ -21,8 +21,8 @@ class KycDocumentController extends Controller
         $docs = $retailer->kyc_documents ?? [];
         $path = $docs[$field] ?? null;
 
-        abort_unless($path && Storage::disk('kyc')->exists($path), 404);
+        abort_unless($path && Storage::disk('private')->exists($path), 404);
 
-        return Storage::disk('kyc')->response($path);
+        return Storage::disk('private')->response($path);
     }
 }

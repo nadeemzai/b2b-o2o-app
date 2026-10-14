@@ -76,6 +76,7 @@ Route::prefix('retailer')->name('retailer.')->middleware(['auth:retailer', 'reta
     Route::get('/messages',  \App\Livewire\Retailer\Chat\Conversations::class)->name('messages');
     Route::get('/orders',    OrderHistory::class)->name('orders');
     Route::get('/orders/{order}/confirmation', OrderConfirmation::class)->name('orders.confirmation');
+    Route::get('/account', \App\Livewire\Retailer\Account\ProfileEdit::class)->name('account');
 });
 
 // ── Logout ────────────────────────────────────────────────────

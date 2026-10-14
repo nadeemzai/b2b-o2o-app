@@ -225,19 +225,23 @@
                 </svg>
             </a>
 
-            {{-- Me / Profile --}}
-            <a href="#" @click="navOpen = false"
-               class="flex items-center gap-4 px-5 py-4 group transition border-l-4 border-transparent hover:bg-orange-50 hover:border-brand/40">
-                <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-brand flex items-center justify-center shrink-0 transition">
+            {{-- Me / Account --}}
+            <a href="{{ route('retailer.account') }}" @click="navOpen = false"
+               class="flex items-center gap-4 px-5 py-4 group transition
+                      {{ request()->routeIs('retailer.account') ? 'bg-orange-50 border-l-4 border-brand' : 'border-l-4 border-transparent hover:bg-orange-50 hover:border-brand/40' }}">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0
+                            {{ request()->routeIs('retailer.account') ? 'bg-brand text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-brand' }} transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-slate-800 group-hover:text-brand transition">Me</p>
+                    <p class="text-sm font-semibold {{ request()->routeIs('retailer.account') ? 'text-brand' : 'text-slate-800 group-hover:text-brand' }} transition">My Account</p>
                     <p class="text-[11px] text-slate-400 truncate">{{ auth()->user()->name }}</p>
                 </div>
-                <span class="text-[9px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded font-medium shrink-0">Soon</span>
+                <svg class="w-4 h-4 text-slate-300 group-hover:text-brand/60 transition shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
             </a>
 
         </nav>
@@ -484,6 +488,12 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                                 </svg>
                                 My Orders
+                            </a>
+                            <a href="{{ route('retailer.account') }}" class="flex items-center gap-3 px-4 py-2.5 text-slate-700 hover:bg-orange-50 hover:text-brand transition text-sm">
+                                <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                My Account
                             </a>
                         </div>
                         {{-- Sign out --}}

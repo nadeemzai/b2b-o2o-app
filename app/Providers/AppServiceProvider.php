@@ -8,12 +8,16 @@ use App\Models\StoreStaff;
 use App\Policies\AdminRetailerPolicy;
 use App\Policies\RetailerPolicy;
 use App\Policies\StoreStaffPolicy;
+use App\Events\KycApproved;
+use App\Events\KycRejected;
 use App\Events\OrderDelivered;
 use App\Events\OrderDispatched;
 use App\Events\OrderFulfilling;
 use App\Events\OrderPlaced;
 use App\Events\OrderTransferred;
 use App\Events\PaymentVerified;
+use App\Listeners\SendKycApprovedNotification;
+use App\Listeners\SendKycRejectedNotification;
 use App\Listeners\SendOrderDeliveredNotification;
 use App\Listeners\SendOrderDispatchedNotification;
 use App\Listeners\SendOrderFulfillingNotification;
@@ -60,6 +64,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Retailer::class,   AdminRetailerPolicy::class);
 
         // ── Event → Listener bindings ──────────────────────────────────
+        Event::listen(KycApproved::class,      SendKycApprovedNotification::class);
+        Event::listen(KycRejected::class,      SendKycRejectedNotification::class);
         Event::listen(OrderPlaced::class,      SendOrderPlacedNotification::class);
         Event::listen(PaymentVerified::class,  SendPaymentVerifiedNotification::class);
         Event::listen(OrderTransferred::class, SendOrderTransferredNotification::class);

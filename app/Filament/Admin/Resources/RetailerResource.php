@@ -2,6 +2,8 @@
 
 namespace App\Filament\Admin\Resources;
 
+use App\Events\KycApproved;
+use App\Events\KycRejected;
 use App\Filament\Admin\Resources\RetailerResource\Pages;
 use App\Models\Retailer;
 use App\Models\TownshipStore;
@@ -17,6 +19,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Event;
 
 class RetailerResource extends Resource
 {
@@ -152,7 +155,8 @@ class RetailerResource extends Resource
                     ->visible(fn (Retailer $record): bool => $record->kyc_status === 'pending')
                     ->action(function (Retailer $record): void {
                         $record->update(['kyc_status' => 'approved', 'kyc_rejection_reason' => null]);
-                        Notification::make()->title('Retailer approved')->success()->send();
+                        Event::dispatch(new KycApproved($record));
+                        Notification::make()->title('Retailer approved — email sent')->success()->send();
                     }),
 
                 Action::make('reject')
@@ -171,7 +175,8 @@ class RetailerResource extends Resource
                             'kyc_status'           => 'rejected',
                             'kyc_rejection_reason' => $data['reason'],
                         ]);
-                        Notification::make()->title('Retailer rejected')->warning()->send();
+                        Event::dispatch(new KycRejected($record, $data['reason']));
+                        Notification::make()->title('Retailer KYC rejected — email sent')->warning()->send();
                     }),
 
                 Action::make('re_approve')
@@ -182,7 +187,8 @@ class RetailerResource extends Resource
                     ->visible(fn (Retailer $record): bool => $record->kyc_status === 'rejected')
                     ->action(function (Retailer $record): void {
                         $record->update(['kyc_status' => 'approved', 'kyc_rejection_reason' => null]);
-                        Notification::make()->title('Retailer re-approved')->success()->send();
+                        Event::dispatch(new KycApproved($record));
+                        Notification::make()->title('Retailer re-approved — email sent')->success()->send();
                     }),
             ])
             ->bulkActions([

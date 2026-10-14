@@ -89,7 +89,7 @@ class ProductResource extends Resource
                                 ->nullable()
                                 ->placeholder('e.g. 99 (blank = unlimited)'),
                             TextInput::make('price_pkr')
-                                ->label('Unit Price (PKR)')
+                                ->label('Bundle Price (PKR)')
                                 ->numeric()
                                 ->minValue(0)
                                 ->step(0.01)

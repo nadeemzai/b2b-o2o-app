@@ -11,7 +11,9 @@ use Livewire\WithFileUploads;
 /**
  * Retailer KYC Document Upload
  *
- * Handles CNIC front/back + optional business doc uploads.
+ * Handles CNIC front/back + optional business doc uploads,
+ * plus CNIC number, NTN number, and STRN number text fields.
+ *
  * Files land in:  storage/app/private/kyc/{retailer_id}/
  * Status resets to 'pending' on every submission.
  *
@@ -22,6 +24,11 @@ use Livewire\WithFileUploads;
 class UploadDocuments extends Component
 {
     use WithFileUploads;
+
+    // ── Text identifier fields ─────────────────────────────────
+    public string $cnicNumber  = '';
+    public string $ntnNumber   = '';
+    public string $strnNumber  = '';
 
     // ── Temporary upload properties ───────────────────────────
     public $cnicFront   = null;
@@ -47,6 +54,11 @@ class UploadDocuments extends Component
             $this->rejectionReason  = $retailer->kyc_rejection_reason;
             $this->existingPaths    = $retailer->kyc_documents ?? [];
             $this->hasExistingDocs  = ! empty($this->existingPaths);
+
+            // Pre-fill saved identifier text values
+            $this->cnicNumber  = $retailer->cnic  ?? '';
+            $this->ntnNumber   = $retailer->ntn   ?? '';
+            $this->strnNumber  = $retailer->strn  ?? '';
         }
     }
 
@@ -56,6 +68,12 @@ class UploadDocuments extends Component
         $required = $this->hasExistingDocs ? 'nullable' : 'required';
 
         return [
+            // Text identifiers
+            'cnicNumber'  => ['required', 'string', 'min:13', 'max:15', 'regex:/^\d{5}-\d{7}-\d{1}$/'],
+            'ntnNumber'   => ['nullable', 'string', 'max:20'],
+            'strnNumber'  => ['nullable', 'string', 'max:20'],
+
+            // File uploads
             'cnicFront'   => array_merge([$required], array_slice(self::FILE_RULES, 1)),
             'cnicBack'    => array_merge([$required], array_slice(self::FILE_RULES, 1)),
             'businessDoc' => self::FILE_RULES,
@@ -65,6 +83,12 @@ class UploadDocuments extends Component
     public function messages(): array
     {
         return [
+            'cnicNumber.required'  => 'CNIC number is required.',
+            'cnicNumber.regex'     => 'CNIC must be in the format XXXXX-XXXXXXX-X (e.g. 42101-1234567-9).',
+            'cnicNumber.min'       => 'Please enter a valid 13-digit CNIC number.',
+            'ntnNumber.max'        => 'NTN number may not exceed 20 characters.',
+            'strnNumber.max'       => 'STRN number may not exceed 20 characters.',
+
             'cnicFront.required'   => 'CNIC front photo is required for first submission.',
             'cnicBack.required'    => 'CNIC back photo is required for first submission.',
             'cnicFront.mimes'      => 'CNIC front must be a JPG, PNG, or PDF (max 5 MB).',
@@ -77,9 +101,12 @@ class UploadDocuments extends Component
     }
 
     // ── Real-time validation ──────────────────────────────────
-    public function updatedCnicFront(): void   { $this->validateOnly('cnicFront'); }
-    public function updatedCnicBack(): void    { $this->validateOnly('cnicBack'); }
-    public function updatedBusinessDoc(): void { $this->validateOnly('businessDoc'); }
+    public function updatedCnicNumber(): void   { $this->validateOnly('cnicNumber'); }
+    public function updatedNtnNumber(): void    { $this->validateOnly('ntnNumber'); }
+    public function updatedStrnNumber(): void   { $this->validateOnly('strnNumber'); }
+    public function updatedCnicFront(): void    { $this->validateOnly('cnicFront'); }
+    public function updatedCnicBack(): void     { $this->validateOnly('cnicBack'); }
+    public function updatedBusinessDoc(): void  { $this->validateOnly('businessDoc'); }
 
     // ── Submit ────────────────────────────────────────────────
     public function save(): void
@@ -104,6 +131,11 @@ class UploadDocuments extends Component
         }
 
         $retailer->update([
+            // Text identifiers
+            'cnic'                 => $this->cnicNumber ?: null,
+            'ntn'                  => $this->ntnNumber  ?: null,
+            'strn'                 => $this->strnNumber ?: null,
+            // Documents & status
             'kyc_documents'        => $existing,
             'kyc_status'           => 'pending',
             'kyc_rejection_reason' => null,
@@ -115,7 +147,7 @@ class UploadDocuments extends Component
         $this->existingPaths   = $existing;
         $this->hasExistingDocs = true;
 
-        // Clear file inputs
+        // Clear file inputs (text inputs retain their values)
         $this->cnicFront   = null;
         $this->cnicBack    = null;
         $this->businessDoc = null;

@@ -72,7 +72,7 @@ $soldLabel = $soldCount > 0
                 let next = this.tiers.find(t => t.min_qty > q);
                 if (!next) return '';
                 let gap = next.min_qty - q;
-                return 'Add ' + gap + ' more to unlock PKR ' + Number(next.price_pkr).toFixed(2) + '/unit';
+                return 'Add ' + gap + ' more to unlock PKR ' + Number(next.price_pkr).toFixed(2) + ' bundle total';
             },
 
             fmt(n) {
@@ -310,7 +310,7 @@ $soldLabel = $soldCount > 0
                                     <thead>
                                         <tr class="bg-orange-50/80 border-b border-orange-100">
                                             <th class="text-left px-3 py-2 text-slate-500 font-semibold uppercase tracking-wider">Qty Range</th>
-                                            <th class="text-right px-3 py-2 text-slate-500 font-semibold uppercase tracking-wider">Unit Price</th>
+                                            <th class="text-right px-3 py-2 text-slate-500 font-semibold uppercase tracking-wider">Bundle Price</th>
                                             <th class="w-6"></th>
                                         </tr>
                                     </thead>

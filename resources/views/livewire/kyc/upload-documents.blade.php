@@ -48,16 +48,114 @@
     {{-- ── Upload Form ─────────────────────────────────── --}}
     <form wire:submit.prevent="save" class="space-y-5">
 
-        {{-- CNIC Front --}}
-        <div>
-            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
-                CNIC Front
-                <span class="text-red-500">*</span>
-                @if (!empty($existingPaths['cnic_front']))
-                    <span class="ml-2 text-xs font-normal text-emerald-600 dark:text-emerald-400">✓ Already uploaded</span>
-                @endif
-            </label>
-            <div class="relative">
+        {{-- ──────────────────────────────────────────────────
+             SECTION 1: Identity Numbers
+        ────────────────────────────────────────────────── --}}
+        <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/50 px-5 py-4 space-y-4">
+            <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
+                <svg class="h-4 w-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2"/>
+                </svg>
+                Identity Numbers
+            </h3>
+
+            {{-- CNIC Number --}}
+            <div>
+                <label for="cnicNumber" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+                    CNIC Number <span class="text-red-500">*</span>
+                </label>
+                <input
+                    type="text"
+                    id="cnicNumber"
+                    wire:model.live.debounce.500ms="cnicNumber"
+                    placeholder="42101-1234567-9"
+                    maxlength="15"
+                    class="block w-full rounded-lg border px-3 py-2 text-sm
+                           bg-white dark:bg-zinc-900
+                           text-zinc-900 dark:text-zinc-100
+                           placeholder-zinc-400 dark:placeholder-zinc-600
+                           border-zinc-300 dark:border-zinc-600
+                           focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                           @error('cnicNumber') border-red-400 dark:border-red-600 @enderror"
+                >
+                <p class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">Format: XXXXX-XXXXXXX-X (13 digits with dashes)</p>
+                @error('cnicNumber')
+                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
+            </div>
+
+            {{-- NTN Number --}}
+            <div>
+                <label for="ntnNumber" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+                    NTN Number
+                    <span class="ml-1 text-xs font-normal text-zinc-400">(optional)</span>
+                </label>
+                <input
+                    type="text"
+                    id="ntnNumber"
+                    wire:model.live.debounce.500ms="ntnNumber"
+                    placeholder="1234567"
+                    maxlength="20"
+                    class="block w-full rounded-lg border px-3 py-2 text-sm
+                           bg-white dark:bg-zinc-900
+                           text-zinc-900 dark:text-zinc-100
+                           placeholder-zinc-400 dark:placeholder-zinc-600
+                           border-zinc-300 dark:border-zinc-600
+                           focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                           @error('ntnNumber') border-red-400 dark:border-red-600 @enderror"
+                >
+                <p class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">National Tax Number issued by FBR</p>
+                @error('ntnNumber')
+                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
+            </div>
+
+            {{-- STRN Number --}}
+            <div>
+                <label for="strnNumber" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+                    STRN / GST Number
+                    <span class="ml-1 text-xs font-normal text-zinc-400">(optional)</span>
+                </label>
+                <input
+                    type="text"
+                    id="strnNumber"
+                    wire:model.live.debounce.500ms="strnNumber"
+                    placeholder="12-00-1234-123-12"
+                    maxlength="20"
+                    class="block w-full rounded-lg border px-3 py-2 text-sm
+                           bg-white dark:bg-zinc-900
+                           text-zinc-900 dark:text-zinc-100
+                           placeholder-zinc-400 dark:placeholder-zinc-600
+                           border-zinc-300 dark:border-zinc-600
+                           focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                           @error('strnNumber') border-red-400 dark:border-red-600 @enderror"
+                >
+                <p class="mt-1 text-xs text-zinc-400 dark:text-zinc-500">Sales Tax Registration Number (if registered)</p>
+                @error('strnNumber')
+                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+
+        {{-- ──────────────────────────────────────────────────
+             SECTION 2: Document Uploads
+        ────────────────────────────────────────────────── --}}
+        <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/50 px-5 py-4 space-y-4">
+            <h3 class="text-sm font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
+                <svg class="h-4 w-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Supporting Documents
+            </h3>
+
+            {{-- CNIC Front --}}
+            <div>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+                    CNIC Front <span class="text-red-500">*</span>
+                    @if (!empty($existingPaths['cnic_front']))
+                        <span class="ml-2 text-xs font-normal text-emerald-600 dark:text-emerald-400">✓ Already uploaded</span>
+                    @endif
+                </label>
                 <input
                     type="file"
                     wire:model="cnicFront"
@@ -71,83 +169,82 @@
                            border border-zinc-300 dark:border-zinc-600 rounded-lg
                            bg-white dark:bg-zinc-900 p-2 cursor-pointer"
                 >
+                <div wire:loading wire:target="cnicFront" class="mt-1 text-xs text-zinc-400">Uploading…</div>
+                @error('cnicFront')
+                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
+                @if ($cnicFront)
+                    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Selected: {{ $cnicFront->getClientOriginalName() }}</p>
+                @endif
             </div>
-            <div wire:loading wire:target="cnicFront" class="mt-1 text-xs text-zinc-400">Uploading…</div>
-            @error('cnicFront')
-                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-            @enderror
-            @if ($cnicFront)
-                <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Selected: {{ $cnicFront->getClientOriginalName() }}</p>
-            @endif
-        </div>
 
-        {{-- CNIC Back --}}
-        <div>
-            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
-                CNIC Back
-                <span class="text-red-500">*</span>
-                @if (!empty($existingPaths['cnic_back']))
-                    <span class="ml-2 text-xs font-normal text-emerald-600 dark:text-emerald-400">✓ Already uploaded</span>
+            {{-- CNIC Back --}}
+            <div>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+                    CNIC Back <span class="text-red-500">*</span>
+                    @if (!empty($existingPaths['cnic_back']))
+                        <span class="ml-2 text-xs font-normal text-emerald-600 dark:text-emerald-400">✓ Already uploaded</span>
+                    @endif
+                </label>
+                <input
+                    type="file"
+                    wire:model="cnicBack"
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    class="block w-full text-sm text-zinc-600 dark:text-zinc-400
+                           file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0
+                           file:text-sm file:font-medium
+                           file:bg-zinc-100 dark:file:bg-zinc-800
+                           file:text-zinc-700 dark:file:text-zinc-300
+                           hover:file:bg-zinc-200 dark:hover:file:bg-zinc-700
+                           border border-zinc-300 dark:border-zinc-600 rounded-lg
+                           bg-white dark:bg-zinc-900 p-2 cursor-pointer"
+                >
+                <div wire:loading wire:target="cnicBack" class="mt-1 text-xs text-zinc-400">Uploading…</div>
+                @error('cnicBack')
+                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
+                @if ($cnicBack)
+                    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Selected: {{ $cnicBack->getClientOriginalName() }}</p>
                 @endif
-            </label>
-            <input
-                type="file"
-                wire:model="cnicBack"
-                accept=".jpg,.jpeg,.png,.pdf"
-                class="block w-full text-sm text-zinc-600 dark:text-zinc-400
-                       file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0
-                       file:text-sm file:font-medium
-                       file:bg-zinc-100 dark:file:bg-zinc-800
-                       file:text-zinc-700 dark:file:text-zinc-300
-                       hover:file:bg-zinc-200 dark:hover:file:bg-zinc-700
-                       border border-zinc-300 dark:border-zinc-600 rounded-lg
-                       bg-white dark:bg-zinc-900 p-2 cursor-pointer"
-            >
-            <div wire:loading wire:target="cnicBack" class="mt-1 text-xs text-zinc-400">Uploading…</div>
-            @error('cnicBack')
-                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-            @enderror
-            @if ($cnicBack)
-                <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Selected: {{ $cnicBack->getClientOriginalName() }}</p>
-            @endif
-        </div>
+            </div>
 
-        {{-- Business Document (optional) --}}
-        <div>
-            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
-                Business Registration / NTN Certificate
-                <span class="ml-1 text-xs font-normal text-zinc-400">(optional)</span>
-                @if (!empty($existingPaths['business_doc']))
-                    <span class="ml-2 text-xs font-normal text-emerald-600 dark:text-emerald-400">✓ Already uploaded</span>
+            {{-- Business Document (optional) --}}
+            <div>
+                <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+                    Business Registration / NTN Certificate
+                    <span class="ml-1 text-xs font-normal text-zinc-400">(optional)</span>
+                    @if (!empty($existingPaths['business_doc']))
+                        <span class="ml-2 text-xs font-normal text-emerald-600 dark:text-emerald-400">✓ Already uploaded</span>
+                    @endif
+                </label>
+                <input
+                    type="file"
+                    wire:model="businessDoc"
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    class="block w-full text-sm text-zinc-600 dark:text-zinc-400
+                           file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0
+                           file:text-sm file:font-medium
+                           file:bg-zinc-100 dark:file:bg-zinc-800
+                           file:text-zinc-700 dark:file:text-zinc-300
+                           hover:file:bg-zinc-200 dark:hover:file:bg-zinc-700
+                           border border-zinc-300 dark:border-zinc-600 rounded-lg
+                           bg-white dark:bg-zinc-900 p-2 cursor-pointer"
+                >
+                <div wire:loading wire:target="businessDoc" class="mt-1 text-xs text-zinc-400">Uploading…</div>
+                @error('businessDoc')
+                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
+                @if ($businessDoc)
+                    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Selected: {{ $businessDoc->getClientOriginalName() }}</p>
                 @endif
-            </label>
-            <input
-                type="file"
-                wire:model="businessDoc"
-                accept=".jpg,.jpeg,.png,.pdf"
-                class="block w-full text-sm text-zinc-600 dark:text-zinc-400
-                       file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0
-                       file:text-sm file:font-medium
-                       file:bg-zinc-100 dark:file:bg-zinc-800
-                       file:text-zinc-700 dark:file:text-zinc-300
-                       hover:file:bg-zinc-200 dark:hover:file:bg-zinc-700
-                       border border-zinc-300 dark:border-zinc-600 rounded-lg
-                       bg-white dark:bg-zinc-900 p-2 cursor-pointer"
-            >
-            <div wire:loading wire:target="businessDoc" class="mt-1 text-xs text-zinc-400">Uploading…</div>
-            @error('businessDoc')
-                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-            @enderror
-            @if ($businessDoc)
-                <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Selected: {{ $businessDoc->getClientOriginalName() }}</p>
-            @endif
-        </div>
+            </div>
 
-        {{-- ── Accepted formats note ──────────────────── --}}
-        <p class="text-xs text-zinc-400 dark:text-zinc-500">
-            Accepted formats: JPG, PNG, PDF — max 5 MB per file.
-            Photos must be clear, unobstructed, and fully visible.
-        </p>
+            {{-- Accepted formats note --}}
+            <p class="text-xs text-zinc-400 dark:text-zinc-500">
+                Accepted formats: JPG, PNG, PDF — max 5 MB per file.
+                Photos must be clear, unobstructed, and fully visible.
+            </p>
+        </div>
 
         {{-- ── Submit ──────────────────────────────────── --}}
         <div class="pt-1">

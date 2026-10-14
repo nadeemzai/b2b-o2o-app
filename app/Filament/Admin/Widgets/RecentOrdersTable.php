@@ -4,9 +4,12 @@ namespace App\Filament\Admin\Widgets;
 
 use App\Filament\Admin\Resources\OrderResource;
 use App\Models\Order;
+use Filament\Forms\Components\DatePicker;
 use Filament\Tables;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
+use Illuminate\Database\Eloquent\Builder;
 
 class RecentOrdersTable extends BaseWidget
 {
@@ -23,7 +26,6 @@ class RecentOrdersTable extends BaseWidget
                 Order::query()
                     ->with(['retailer', 'store'])
                     ->latest()
-                    ->limit(10)
             )
             ->columns([
                 Tables\Columns\TextColumn::make('id')
@@ -70,6 +72,42 @@ class RecentOrdersTable extends BaseWidget
                     ->dateTime('d M Y, H:i')
                     ->sortable(),
             ])
+            ->filters([
+                Filter::make('date_range')
+                    ->label('Date Range')
+                    ->form([
+                        DatePicker::make('from')
+                            ->label('From')
+                            ->native(false)
+                            ->displayFormat('d/m/Y'),
+                        DatePicker::make('until')
+                            ->label('Until')
+                            ->native(false)
+                            ->displayFormat('d/m/Y'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['from'],
+                                fn (Builder $q, $date) => $q->whereDate('created_at', '>=', $date)
+                            )
+                            ->when(
+                                $data['until'],
+                                fn (Builder $q, $date) => $q->whereDate('created_at', '<=', $date)
+                            );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['from'] ?? null) {
+                            $indicators[] = 'From ' . \Carbon\Carbon::parse($data['from'])->format('d M Y');
+                        }
+                        if ($data['until'] ?? null) {
+                            $indicators[] = 'Until ' . \Carbon\Carbon::parse($data['until'])->format('d M Y');
+                        }
+                        return $indicators;
+                    }),
+            ])
+            ->filtersFormColumns(2)
             ->actions([
                 Tables\Actions\Action::make('view')
                     ->label('View')
@@ -77,6 +115,7 @@ class RecentOrdersTable extends BaseWidget
                     ->url(fn (Order $record): string => OrderResource::getUrl('view', ['record' => $record]))
                     ->openUrlInNewTab(false),
             ])
-            ->paginated(false);
+            ->defaultPaginationPageOption(10)
+            ->paginated([10, 25, 50, 100]);
     }
 }

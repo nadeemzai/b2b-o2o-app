@@ -2,12 +2,15 @@
 
 namespace App\Filament\Admin\Resources\RetailerResource\Pages;
 
+use App\Events\KycApproved;
+use App\Events\KycRejected;
 use App\Filament\Admin\Resources\RetailerResource;
 use App\Models\Retailer;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Support\Facades\Event;
 
 class ViewRetailer extends ViewRecord
 {
@@ -27,7 +30,8 @@ class ViewRetailer extends ViewRecord
                 ->visible(fn (): bool => $this->record->kyc_status === 'pending')
                 ->action(function (): void {
                     $this->record->update(['kyc_status' => 'approved', 'kyc_rejection_reason' => null]);
-                    Notification::make()->title('Retailer approved successfully')->success()->send();
+                    Event::dispatch(new KycApproved($this->record));
+                    Notification::make()->title('Retailer approved — email notification sent')->success()->send();
                     $this->refreshFormData(['kyc_status', 'kyc_rejection_reason']);
                 }),
 
@@ -50,7 +54,8 @@ class ViewRetailer extends ViewRecord
                         'kyc_status'           => 'rejected',
                         'kyc_rejection_reason' => $data['reason'],
                     ]);
-                    Notification::make()->title('Retailer KYC rejected')->warning()->send();
+                    Event::dispatch(new KycRejected($this->record, $data['reason']));
+                    Notification::make()->title('Retailer KYC rejected — email notification sent')->warning()->send();
                     $this->refreshFormData(['kyc_status', 'kyc_rejection_reason']);
                 }),
 
@@ -65,7 +70,8 @@ class ViewRetailer extends ViewRecord
                 ->visible(fn (): bool => $this->record->kyc_status === 'rejected')
                 ->action(function (): void {
                     $this->record->update(['kyc_status' => 'approved', 'kyc_rejection_reason' => null]);
-                    Notification::make()->title('Retailer re-approved')->success()->send();
+                    Event::dispatch(new KycApproved($this->record));
+                    Notification::make()->title('Retailer re-approved — email notification sent')->success()->send();
                     $this->refreshFormData(['kyc_status', 'kyc_rejection_reason']);
                 }),
         ];

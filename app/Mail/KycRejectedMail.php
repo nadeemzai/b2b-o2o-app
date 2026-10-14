@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Mail;
+
+use App\Models\Retailer;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
+
+class KycRejectedMail extends Mailable implements ShouldQueue
+{
+    use Queueable, SerializesModels;
+
+    public function __construct(
+        public readonly Retailer $retailer,
+        public readonly string   $reason,
+    ) {}
+
+    public function envelope(): Envelope
+    {
+        return new Envelope(
+            subject: 'KYC Application Update — Action Required — OZ Group B2B',
+        );
+    }
+
+    public function content(): Content
+    {
+        return new Content(
+            view: 'emails.kyc.rejected',
+        );
+    }
+}
