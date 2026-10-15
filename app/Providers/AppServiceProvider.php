@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Category;
 use App\Models\Order;
 use App\Models\Retailer;
 use App\Models\StoreStaff;
 use App\Policies\AdminRetailerPolicy;
+use App\Policies\CategoryPolicy;
 use App\Policies\RetailerPolicy;
 use App\Policies\StoreStaffPolicy;
 use App\Events\KycApproved;
@@ -62,6 +64,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Order::class,      RetailerPolicy::class);
         Gate::policy(StoreStaff::class, StoreStaffPolicy::class);
         Gate::policy(Retailer::class,   AdminRetailerPolicy::class);
+        Gate::policy(Category::class,   CategoryPolicy::class);   // OZ Admin only: create/edit/soft delete
 
         // ── Event → Listener bindings ──────────────────────────────────
         Event::listen(KycApproved::class,      SendKycApprovedNotification::class);

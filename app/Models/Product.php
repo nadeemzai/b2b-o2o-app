@@ -46,7 +46,8 @@ class Product extends Model
 
     public function category(): BelongsTo
     {
-        return $this->belongsTo(Category::class);
+        // withTrashed: a soft-deleted category must not break product pages/APIs
+        return $this->belongsTo(Category::class)->withTrashed();
     }
 
     public function categories(): BelongsToMany

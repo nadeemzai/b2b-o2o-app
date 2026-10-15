@@ -15,7 +15,8 @@ class PricingService
         $row = CategoryCommission::query()
             ->where('category_id', $categoryId)
             ->where('effective_from', '<=', now()->toDateString())
-            ->latest('effective_from')
+            ->orderByDesc('effective_from')
+            ->orderByDesc('id')            // same-day rates: newest entry wins
             ->first();
 
         return $row ? (float) $row->commission_rate : 0.0;
@@ -54,6 +55,7 @@ class PricingService
             ->where('effective_from', '<=', $today)
             ->orderBy('category_id')
             ->orderByDesc('effective_from')
+            ->orderByDesc('id')            // same-day rates: newest entry wins
             ->get()
             ->groupBy('category_id')
             ->map(fn ($group) => (float) $group->first()->commission_rate)

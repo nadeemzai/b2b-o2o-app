@@ -12,6 +12,8 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CategoryResource extends Resource
 {
@@ -43,25 +45,47 @@ class CategoryResource extends Resource
                 TextColumn::make('name')->searchable()->sortable(),
                 TextColumn::make('slug')->searchable(),
                 TextColumn::make('products_count')->label('Products')->counts('products'),
-                TextColumn::make('commissions_count')
-                    ->label('Commission Rates')
-                    ->counts('commissions')
+                TextColumn::make('activeCommission.commission_rate')
+                    ->label('Current Commission')
+                    ->formatStateUsing(fn ($state): string => round((float) $state * 100, 2) . '%')
+                    ->placeholder('Not set')
                     ->badge()
-                    ->color(fn (int $state): string => $state > 0 ? 'success' : 'warning'),
+                    ->color(fn ($state): string => $state !== null ? 'success' : 'warning'),
+                TextColumn::make('commissions_count')
+                    ->label('Rate History')
+                    ->counts('commissions')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')->dateTime()->sortable()->toggleable(),
+                TextColumn::make('deleted_at')
+                    ->label('Deleted At')
+                    ->dateTime()
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make(),   // soft delete (sets deleted_at)
+                Tables\Actions\RestoreAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\RestoreBulkAction::make(),
+                    // No ForceDelete actions — categories are strictly soft deleted.
                 ]),
             ]);
     }
 
-    public static function getRelationManagers(): array
+    public static function getEloquentQuery(): Builder
+    {
+        // Let OZ Admin see/restore soft-deleted categories via the Trashed filter
+        return parent::getEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
+    }
+
+    public static function getRelations(): array
     {
         return [
             CommissionsRelationManager::class,

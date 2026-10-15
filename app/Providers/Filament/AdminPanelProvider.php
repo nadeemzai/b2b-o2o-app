@@ -6,6 +6,7 @@ use App\Filament\Admin\Resources\OrderAuditResource;
 use App\Filament\Admin\Resources\OrderResource;
 use App\Filament\Admin\Resources\RetailerResource;
 use App\Filament\Admin\Resources\TownshipStoreResource;
+use App\Filament\Admin\Resources\CategoryResource;
 use App\Filament\Admin\Resources\UserResource;
 use App\Filament\Admin\Pages\CommissionDashboard;
 use App\Filament\Admin\Widgets\DeviceTypeStatsWidget;
@@ -45,11 +46,13 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('B2B O2O — Admin')
             ->navigationGroups([
                 NavigationGroup::make('KYC & Retailers'),
+                NavigationGroup::make('Catalogue'),
                 NavigationGroup::make('Operations'),
                 NavigationGroup::make('System')
                     ->collapsed(),
             ])
             ->resources([
+                CategoryResource::class,
                 RetailerResource::class,
                 TownshipStoreResource::class,
                 OrderResource::class,

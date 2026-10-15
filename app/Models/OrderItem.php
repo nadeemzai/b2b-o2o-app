@@ -46,12 +46,20 @@ class OrderItem extends Model
     // Helpers
     // ──────────────────────────────────────────────
 
-    /** OZ commission for this line (retailer price spread × qty). */
+    /**
+     * OZ commission for this line item.
+     *
+     * Commission is the category-defined flat percentage of the retailer's
+     * payment (unit_price_pkr × qty × commission_rate). The rate is snapshotted
+     * from the active category commission at order-placement time, so it is
+     * locked and cannot be affected by future rate changes.
+     */
     public function ozCommissionPkr(): float
     {
-        if (! $this->huashu_unit_price_pkr) {
+        if (! $this->commission_rate || ! $this->unit_price_pkr) {
             return 0.0;
         }
-        return round(((float) $this->unit_price_pkr - (float) $this->huashu_unit_price_pkr) * $this->qty, 2);
+
+        return round((float) $this->unit_price_pkr * $this->qty * (float) $this->commission_rate, 2);
     }
 }

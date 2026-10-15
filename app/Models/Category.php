@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Category extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -21,7 +23,8 @@ class Category extends Model
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
+        'is_active'  => 'boolean',
+        'deleted_at' => 'datetime',
     ];
 
     // ──────────────────────────────────────────────
@@ -51,12 +54,14 @@ class Category extends Model
     /**
      * The current active commission rate for this category.
      */
-    public function activeCommission(): HasMany
+    public function activeCommission(): HasOne
     {
-        return $this->hasMany(CategoryCommission::class)
-            ->where('effective_from', '<=', now()->toDateString())
-            ->orderByDesc('effective_from')
-            ->limit(1);
+        // Latest effective date wins; if two rates share the same date,
+        // the most recently added one (highest id) wins.
+        return $this->hasOne(CategoryCommission::class)->ofMany(
+            ['effective_from' => 'max', 'id' => 'max'],
+            fn ($q) => $q->where('effective_from', '<=', now()->toDateString())
+        );
     }
 
     // ──────────────────────────────────────────────

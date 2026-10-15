@@ -12,6 +12,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class CategoryResource extends Resource
 {
@@ -19,6 +20,16 @@ class CategoryResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
     protected static ?string $navigationGroup = 'Catalogue';
     protected static ?int $navigationSort = 1;
+
+    // ── Read-only for Huashu: only OZ Admin (Admin panel) manages categories ──
+    public static function canCreate(): bool { return false; }
+    public static function canEdit(Model $record): bool { return false; }
+    public static function canDelete(Model $record): bool { return false; }
+    public static function canDeleteAny(): bool { return false; }
+    public static function canForceDelete(Model $record): bool { return false; }
+    public static function canForceDeleteAny(): bool { return false; }
+    public static function canRestore(Model $record): bool { return false; }
+    public static function canRestoreAny(): bool { return false; }
 
     public static function form(Form $form): Form
     {
@@ -44,25 +55,25 @@ class CategoryResource extends Resource
                 TextColumn::make('name')->searchable()->sortable(),
                 TextColumn::make('slug')->searchable(),
                 TextColumn::make('products_count')->label('Products')->counts('products'),
-                TextColumn::make('commissions_count')
-                    ->label('Commission Rates')
-                    ->counts('commissions')
+                TextColumn::make('activeCommission.commission_rate')
+                    ->label('Current Commission')
+                    ->formatStateUsing(fn ($state): string => round((float) $state * 100, 2) . '%')
+                    ->placeholder('Not set')
                     ->badge()
-                    ->color(fn (int $state): string => $state > 0 ? 'success' : 'warning'),
+                    ->color(fn ($state): string => $state !== null ? 'success' : 'warning'),
+                TextColumn::make('commissions_count')
+                    ->label('Rate History')
+                    ->counts('commissions')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')->dateTime()->sortable()->toggleable(),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ViewAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+            ->bulkActions([]);
     }
 
-    public static function getRelationManagers(): array
+    public static function getRelations(): array
     {
         return [
             CommissionsRelationManager::class,
@@ -72,9 +83,8 @@ class CategoryResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListCategories::route('/'),
-            'create' => Pages\CreateCategory::route('/create'),
-            'edit'   => Pages\EditCategory::route('/{record}/edit'),
+            'index' => Pages\ListCategories::route('/'),
+            'view'  => Pages\ViewCategory::route('/{record}'),
         ];
     }
 }

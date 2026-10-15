@@ -22,7 +22,7 @@ class CommissionsRelationManager extends RelationManager
                 ->label('Commission Rate')
                 ->numeric()
                 ->minValue(0)
-                ->maxValue(1)
+                ->maxValue(100)
                 ->step(0.0001)
                 ->suffix('%')
                 ->formatStateUsing(fn ($state) => $state !== null ? round($state * 100, 4) : null)
